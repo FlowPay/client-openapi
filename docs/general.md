@@ -1,4 +1,24 @@
+[![Run in Postman](https://run.pstmn.io/button.svg)](/postman_collection)
+<br><br><br>
 If you can't find what you're looking for, it doesn't mean we can't do it. Write to us and tell us about your idea.
+
+# API Support
+If you have any questions or need help with the APIs, you can open a ticket on our support portal. Click on the button below to open a ticket.
+<script src=https://youtrack.flowpay.it/static/simplified/form/form-entry.js?auto=false></script>
+<div id=form-button style="">
+    <button> Do you need help? Open a ticket! </button>
+</div>
+<script>  
+    YTFeedbackForm.renderFeedbackButton(
+        document.currentScript.previousElementSibling,
+        { 
+            backendURL: 'https://youtrack.flowpay.it', 
+            formUUID: '5365c66c-6295-4631-9a5e-7afc2d5b7abf', 
+            theme: 'auto', 
+            language: 'en'
+        }  
+    );
+</script>
 
 # FlowPay's commitment to the payments ecosystem
 
@@ -77,7 +97,7 @@ Within the developer portal access the "Applications" section and press the "+" 
 
 ## Be enabled as a third-party application
 
-Once the application has been created, it is already enabled for the sandbox environment, but is not yet able to act as a third-party application for the production environment. It is however possible to use client credentials to access the APIs for your own tenant in production.
+Once the application has been created, it is already enabled for the sandbox environment but is not yet able to act as a third-party application for the production environment. It is however possible to use client credentials to access the APIs for your own tenant in production.
 
 # Sandbox environment
 
@@ -86,10 +106,10 @@ We enable you to test the authentication as a third party by providing you with 
 
 ## Limitations of the public sandbox environment
 
-The sandbox uses sandbox open banking APIs, and doesn't have access to the FlowPay technical account, so some features are not available, or are limited.
+The sandbox uses sandbox open banking APIs and doesn't have access to the FlowPay technical account, so some features are not available or are limited.
 
 Open banking sandbox APIs don't allow us to monitor the status of the payment, so the webhook for the payment status change is not triggered, and the payment status is not updated.
-In addition, AIS data is not provided by the bank in the sandbox enviroment, so if you try to complete the AIS flow, you will be able to connect the bank account, but won't receive any balance and transactions data from it. We do however provide fake AIS data on the fake bank accounts that come with the sandbox users.
+In addition, AIS data is not provided by the bank in the sandbox environment, so if you try to complete the AIS flow, you will be able to connect the bank account, but won't receive any balance and transactions data from it. We do however provide fake AIS data on the fake bank accounts that come with the sandbox users.
 
 It is not possible to use the bulk payment service, as it requires the FlowPay technical account to be used.
 
