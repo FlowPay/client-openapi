@@ -32,7 +32,7 @@ jobs:
           node-version: 18.x
           
       - name: Install Redoc CLI
-        run: npx @redocly/cli build-docs openapi.json --quiet -o ./openapi.html
+        run: npx @redocly/cli build-docs openapi.json -o ./openapi.html
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v1.0.9
