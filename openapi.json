@@ -1,0 +1,3928 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "FlowPay API",
+        "version": "2.0.0-alpha",
+        "description": {
+            "$ref": "docs/general.md"
+        },
+        "termsOfService": "https://developer.flowpay.it/tos",
+        "license": {
+            "name": "FlowPay SRL",
+            "url": "https://developer.flowpay.it/tos"
+        },
+        "x-logo": {
+            "url": "https://flowpayproduction.blob.core.windows.net/img/flowpay_logo.png",
+            "altText": "FlowPay"
+        },
+        "contact": {
+            "name": "API Support",
+            "url": "https://developer.flowpay.it",
+            "email": "api-support@flowpay.it"
+        },
+        "x-json-schema-faker": {
+            "locale": "it-IT",
+            "omitNulls": true,
+            "fillProperties": true,
+            "reuseProperties": true
+        }
+    },
+    "servers": [
+        {
+            "url": "https://api.flowpay.it/v2",
+            "description": "Production server"
+        },
+        {
+            "url": "https://mock.flowpay.it/v2",
+            "description": "Mock server"
+        },
+        {
+            "url": "https://sandbox.{customerID}.flowpay.it/v2",
+            "description": "Customer-assigned sandbox server",
+            "variables": {
+                "customerID": {
+                    "default": "00000000-00000000-00000000-00000000",
+                    "description": "Unique customer identifier assigned after contract signature"
+                }
+            }
+        },
+        {
+            "url": "http://localhost:5002",
+            "description": "Debug"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "oAuth2": {
+                "type": "oauth2",
+                "description": "OAuth2 flow",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": "/openid/authenticate",
+                        "tokenUrl": "/oauth/token",
+                        "refreshUrl": "/oauth/token",
+                        "scopes": {
+                            "accounts:read": "Allow to read accounts",
+                            "accounts:write": "Allow to mediate accounts creation and open banking consent renewal",
+                            "invoices:read": "Allow to read invoices",
+                            "invoices:write": "Allow to create invoices and manage lifecycle",
+                            "bills:read": "Allow to read bills",
+                            "bills:write": "Allow to create bills and manage lifecycle",
+                            "openid": "Allow to read user profile",
+                            "transfers:read": "Allow to read transfers",
+                            "transfers:write": "Allow to create transfers and manage lifecycle"
+                        }
+                    },
+                    "clientCredentials": {
+                        "tokenUrl": "/oauth/token",
+                        "scopes": {
+                            "ade": "Allow to interact with Agenzia delle Entrate services",
+                            "invoices:read": "Allow to read invoices",
+                            "invoices:write": "Allow to create invoices and manage lifecycle"
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "Bank": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the bank",
+                        "example": "Intesa Sanpaolo",
+                        "x-faker": "Company.companyName"
+                    },
+                    "nationalID": {
+                        "type": "string",
+                        "description": "National identifier of the bank",
+                        "example": "03999",
+                        "x-faker": "finance.bic"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier of the bank",
+                        "example": "intesa_sanpaolo"
+                    },
+                    "countries": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "Countries where the bank operates in ISO 3166-1 alpha-2 format",
+                            "example": "IT",
+                            "x-faker": "address.countryCode"
+                        }
+                    },
+                    "logo": {
+                        "type": "string",
+                        "description": "URL of the bank logo",
+                        "example": "https://flowpayproduction.blob.core.windows.net/img/84036981-d004-40c4-a872-c81dd37e4acc.png",
+                        "x-faker": "image.imageUrl"
+                    },
+                    "features": {
+                        "type": "object",
+                        "description": "Features supported by the bank",
+                        "properties": {
+                            "futurePayments": {
+                                "type": "boolean",
+                                "description": "True if the bank supports future payments",
+                                "example": true
+                            },
+                            "sct": {
+                                "type": "array",
+                                "description": "List of SCT payment types supported by the bank",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "standard",
+                                        "instant"
+                                    ],
+                                    "description": "SCT payment type"
+                                }
+                            },
+                            "recurringPayments": {
+                                "type": "array",
+                                "description": "List of recurring payment types supported by the bank",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "monthly",
+                                        "everyTwoMonths",
+                                        "quarterly",
+                                        "semiAnnual",
+                                        "daily",
+                                        "everyFourMonths",
+                                        "weekly",
+                                        "everyTwoWeeks",
+                                        "annual"
+                                    ],
+                                    "description": "Recurring payment frequency"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "BankAccount": {
+                "type": "object",
+                "properties": {
+                    "owner": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the owner of the bank account"
+                    },
+                    "iban": {
+                        "type": "string",
+                        "description": "International Bank Account Number",
+                        "x-faker": "finance.iban",
+                        "example": "IT60X0542811101000000123456"
+                    },
+                    "currencies": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "Currencies supported by the bank account",
+                            "x-faker": "finance.currencyCode"
+                        },
+                        "example": [
+                            "EUR",
+                            "CHF",
+                            "GBP"
+                        ]
+                    },
+                    "bankName": {
+                        "type": "string",
+                        "description": "Identifier of the bank",
+                        "example": "intesa_sanpaolo"
+                    },
+                    "owners": {
+                        "type": "array",
+                        "description": "List of owners of the bank account",
+                        "items": {
+                            "type": "string",
+                            "description": "Name of the owner of the bank account",
+                            "x-faker": "person.fullName"
+                        },
+                        "example": [
+                            "Maria Fumagalli",
+                            "Luigi Verdi"
+                        ]
+                    },
+                    "consentStatus": {
+                        "$ref": "#/components/schemas/ConsentStatusEnum"
+                    }
+                }
+            },
+            "Bulk": {
+                "type": "object",
+                "properties": {
+                    "fingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 48223.07,
+                        "description": "Total amount of the bulk"
+                    },
+                    "allowWireTranfersAggregation": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Indicate if the wire transfers to the same beneficiary can be aggregated"
+                    },
+                    "documents": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/Fingerprint"
+                            }
+                        }
+                    }
+                }
+            },
+            "Checkout": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z\\d]{8}$",
+                        "description": "Unique identifier of the checkout session. This code is secret and should never be shared with anyone who is not the payer."
+                    },
+                    "fingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/DocumentKindEnum"
+                    },
+                    "creditor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the creditor",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "debtor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the debtor",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "collectionMethods": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CollectionMethodEnum"
+                        },
+                        "description": "Collection methods enabled for the payment.<br>Note that collection methods are the intersection of the collection methods techologies enabled for the creditor and the collection methods allowed by the client for checkout."
+                    }
+                }
+            },
+            "ConsentStatusEnum": {
+                "type": "string",
+                "enum": [
+                    "not_granted",
+                    "granted",
+                    "revoked",
+                    "expired",
+                    "all"
+                ],
+                "default": "all",
+                "description": "Status of the account information service (AIS) consent granted by account owner to FlowPay.<br/> - `not_granted`: owner has never granted a consent<br> - `granted`: consent granted by account owner<br> - `revoked`: consent revoked by account owner<br> - `expired`: consent expired<br> - `all`: all types of consent"
+            },
+            "CollectionMethodEnum": {
+                "type": "string",
+                "enum": [
+                    "sct",
+                    "sct-inst",
+                    "sdd",
+                    "card",
+                    "custom/<label>"
+                ],
+                "description": "Collection method enabled for the payment. <br> - `sct`: SEPA Credit Transfer (SCT)<br> - `sct-inst`: SEPA Credit Transfer Instant (SCT-INST)<br> - `sdd`: SEPA Direct Debit (SDD)<br> - `card`: Credit Card<br> - `custom/label`: Custom collection method, enabled by the client who created the checkout. Please see the `custom` section for more details: https://docs.flowpay.it/docs/custom-collection-method"
+            },
+            "CompanyVATNumber": {
+                "type": "string",
+                "description": "VAT number of the company, full european format",
+                "pattern": "/^((AT)(U\\d{8})|(BE)(0\\d{9})|(BG)(\\d{9,10})|(CY)(\\d{8}[LX])|(CZ)(\\d{8,10})|(DE)(\\d{9})|(DK)(\\d{8})|(EE)(\\d{9})|(EL|GR)(\\d{9})|(ES)([\\dA-Z]\\d{7}[\\dA-Z])|(FI)(\\d{8})|(FR)([\\dA-Z]{2}\\d{9})|(HU)(\\d{8})|(IE)(\\d{7}[A-Z]{2})|(IT)(\\d{11})|(LT)(\\d{9}|\\d{12})|(LU)(\\d{8})|(LV)(\\d{11})|(MT)(\\d{8})|(NL)(\\d{9}(B\\d{2}|BO2))|(PL)(\\d{10})|(PT)(\\d{9})|(RO)(\\d{2,10})|(SE)(\\d{12})|(SI)(\\d{8})|(SK)(\\d{10}))$",
+                "example": "IT12345678901",
+                "x-faker": "finance.vat"
+            },
+            "ConsumerNationalID": {
+                "type": "string",
+                "description": "National ID of the consumer, currently only italian format is supported",
+                "pattern": "/^([A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z])$",
+                "example": "RSSMRA80A01H501T"
+            },
+            "Contact": {
+                "type": "object",
+                "properties": {
+                    "fullName": {
+                        "description": "Full name of the contact, contains the concatenation of the name and surname of a consumer, or the name of a company.",
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "description": "Full name of the consumer",
+                                "example": "Mario Rossi",
+                                "x-faker": "person.fullName"
+                            },
+                            {
+                                "type": "string",
+                                "description": "Company name",
+                                "example": "Illustrious Company S.p.A.",
+                                "x-faker": "company.companyName"
+                            }
+                        ]
+                    },
+                    "fullVat": {
+                        "type": "string",
+                        "description": "VAT number of the company in full european format or national ID of the consumer ",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ConsumerNationalID"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CompanyVATNumber"
+                            }
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "consumer",
+                            "company"
+                        ],
+                        "description": "Type of the contact"
+                    }
+                }
+            },
+            "DocumentKindEnum": {
+                "type": "string",
+                "enum": [
+                    "bill",
+                    "bulk",
+                    "invoice",
+                    "transfer"
+                ],
+                "description": {
+                    "$ref": "types/DocumentKind.md"
+                }
+            },
+            "Fingerprint": {
+                "type": "string",
+                "description": "Fingerprint of the document",
+                "example": "d41d8cd98f00b204e9800998ecf8427e"
+            },
+            "Invoice": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "string",
+                        "description": "Invoice number",
+                        "x-faker": "finance.account"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "example": "2019-01-01T00:00:00Z",
+                        "description": "Invoice date of issue",
+                        "x-faker": "date.past"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Invoice amount",
+                        "x-faker": "finance.amount"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Invoice currency",
+                        "default": "EUR",
+                        "x-faker": "finance.currencyCode"
+                    },
+                    "stage": {
+                        "type": "string",
+                        "enum": [
+                            "proforma",
+                            "invoice",
+                            "creditNote"
+                        ],
+                        "default": "invoice",
+                        "description": "Invoice stage"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "b2b",
+                            "b2c"
+                        ],
+                        "description": "Invoice relations with the debtor. <br> - `b2b`: invoice issued to a business<br> - `b2c`: invoice issued to a private person. <br> Note:. Invoice relations with Public Administrations are not directly supported by FlowPay. However, you can use the `b2b` type to represent the invoice issued to a Public Administration."
+                    },
+                    "creditor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the creditor",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "debtor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the debtor",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentAttachment"
+                        },
+                        "description": "Attachments of the invoice"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentItem"
+                        },
+                        "description": "Items of the invoice"
+                    },
+                    "terms": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentTerm"
+                        },
+                        "description": "Terms of the invoice"
+                    },
+                    "invoice": {
+                        "$ref": "#/components/schemas/Fingerprint",
+                        "description": "Fingerprint of the invoice related to the proforma invoice or credit note, if any"
+                    },
+                    "proforma": {
+                        "$ref": "#/components/schemas/Fingerprint",
+                        "description": "Fingerprint of the proforma invoice related to the invoice, if any"
+                    },
+                    "creditNotes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        },
+                        "description": "Fingerprints of the credit notes related to the invoice, if any"
+                    }
+                },
+                "description": "Document representing an invoice at any stage.",
+                "required": [
+                    "number",
+                    "date",
+                    "amount",
+                    "currency",
+                    "stage",
+                    "type",
+                    "creditor",
+                    "debtor",
+                    "terms"
+                ]
+            },
+            "DocumentAttachment": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the attachment",
+                        "example": "ITAAABBB99T99X999W_00003.xml.p7m",
+                        "x-faker": "system.fileName"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the attachment",
+                        "example": "Electronic invoice signed with P7M format",
+                        "x-faker": "lorem.sentence"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the attachment",
+                        "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+                        "x-faker": "datatype.uuid"
+                    }
+                },
+                "description": "Attachment of the document.",
+                "required": [
+                    "name",
+                    "id"
+                ]
+            },
+            "DocumentItem": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the item",
+                        "example": "Super energy drink",
+                        "x-faker": "lorem.sentence"
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 8,
+                        "description": "Quantity of the item",
+                        "x-faker": "random.number"
+                    },
+                    "measureUnit": {
+                        "type": "string",
+                        "description": "Measure unit of the item",
+                        "example": "L",
+                        "maxLength": 10,
+                        "x-faker": "commerce.productAdjective"
+                    },
+                    "unitPrice": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 1.5,
+                        "description": "Unit price of the item",
+                        "x-faker": "finance.amount"
+                    },
+                    "tax": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 0.23,
+                        "description": "Tax rate of the item",
+                        "x-faker": "finance.amount"
+                    },
+                    "discount": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 0.0,
+                        "description": "Discount rate of the item",
+                        "x-faker": "finance.amount"
+                    }
+                },
+                "description": "Billing item. This is used only for UX and utility purposes and will not be used for the payment process.",
+                "required": [
+                    "description",
+                    "quantity",
+                    "unitPrice"
+                ]
+            },
+            "DocumentTerm": {
+                "type": "object",
+                "description": "A payment term of the document, it will be used to generate the payment schedule.",
+                "properties": {
+                    "dueDate": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "example": "2020-01-01T00:00:00Z",
+                        "description": "Due date of the payment",
+                        "x-faker": "date.future"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 100.01,
+                        "description": "Amount to be paid",
+                        "x-faker": "finance.amount"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency of the payment. <br> <b>Note: All payments must be in the same currency.</b>",
+                        "example": "EUR",
+                        "default": "EUR",
+                        "x-faker": "finance.currencyCode"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the payment. This will be shown to the customer when paying the invoice through the FlowPay checkout page.",
+                        "example": "Subscription to the premium plan",
+                        "x-faker": "lorem.sentence"
+                    },
+                    "remittance": {
+                        "type": "string",
+                        "description": "Remittance information. This will be shown to the customer during the payment process and will be included in the bank statement.<br> <b>Notes:</b> - This field is optional and will be automatically generated if not provided with the format: Invoice #<invoice_number> - <invoiceDate> - Remittance will also contain a FlowPay identifier",
+                        "maxLength": 100,
+                        "example": "Invoice #1234 - subscription to the premium plan",
+                        "x-faker": "lorem.sentence"
+                    }
+                },
+                "required": [
+                    "dueDate",
+                    "amount",
+                    "currency"
+                ]
+            },
+            "PaginatedResult": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "description": "Current page number"
+                    },
+                    "pageSize": {
+                        "type": "integer",
+                        "description": "Number of items per page"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of items"
+                    },
+                    "items": {
+                        "type": "array",
+                        "description": "List of items",
+                        "items": {}
+                    }
+                }
+            },
+            "pagoPA": {
+                "type": "object",
+                "description": "PagoPA payment information",
+                "properties": {
+                    "fingerprint": {
+                        "description": "Fingerprint generated for the document",
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                    "ec": {
+                        "$ref": "#/components/schemas/CompanyVATNumber",
+                        "description": "Public administration VAT number"
+                    },
+                    "debtor": {
+                        "$ref": "#/components/schemas/Contact",
+                        "description": "Debtor information"
+                    },
+                    "remittance": {
+                        "type": "string",
+                        "description": "Remittance information",
+                        "example": "Rata scuola A.S. 2019/2020"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 100.01,
+                        "description": "Amount to be paid",
+                        "x-faker": "finance.amount"
+                    }
+                }
+            },
+            "Payment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the payment assigned by FlowPay.",
+                        "x-faker": "random.uuid"
+                    },
+                    "sessionID": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the checkout session",
+                        "x-faker": "random.uuid"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Amount of the payment",
+                        "example": 100.00
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency of the payment",
+                        "example": "EUR"
+                    },
+                    "remittance": {
+                        "type": "string",
+                        "description": "Remittance information of the payment",
+                        "example": "Payment for invoice 1234"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentStatusEnum"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "description": "Date and time of the payment creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "description": "Date and time of the last payment update",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    }
+                }
+            },
+            "PaymentStatusEnum": {
+                "type": "string",
+                "enum": [
+                    "authorized",
+                    "arrived_to_technical_account",
+                    "outgoing_from_technical_account",
+                    "completed",
+                    "rejected",
+                    "revoked"
+                ],
+                "description": "Status of the payment.<br/> - `authorized`: payment authorized by the user<br> - `arrived_to_technical_account`: payment arrived to the FlowPay technical account. t<br> - `outgoing_from_technical_account`: payment outgoing from the technical account<br> - `completed`: funds has been transferred to the beneficiary<br> - `rejected`: payment rejected by the bank<br> - `revoked`: payment revoked by the user or by the client in case of conditional payment"
+            },
+            "RequestID": {
+                "type": "string",
+                "description": "Unique identifier of the request.<br> It is helpful to identify the request in case of errors, providing it to the support team. Please submit it in the support ticket.",
+                "format": "uuid",
+                "x-faker": "random.uuid"
+            },
+            "StatusCode": {
+                "type": "integer",
+                "description": "HTTP status code",
+                "example": 404
+            },
+            "Transaction": {
+                "type": "object",
+                "description": "Transaction",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the transaction assigned by FlowPay. This is not end to end transaction identifier, which is not provided by banks via Open Banking APIs.",
+                        "x-faker": "random.uuid"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Amount of the transaction",
+                        "example": 100.00,
+                        "x-faker": "finance.amount"
+                    },
+                    "bookingDate": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "description": "Booking date of the transaction",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "valueDate": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "description": "Value date of the transaction",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency of the transaction",
+                        "example": "EUR",
+                        "x-faker": "finance.currencyCode"
+                    },
+                    "remittance": {
+                        "type": "string",
+                        "description": "Remittance information",
+                        "example": "Payment for invoice 1234",
+                        "x-faker": "lorem.sentence"
+                    },
+                    "debtorName": {
+                        "type": "string",
+                        "description": "Name of the debtor",
+                        "example": "John Doe",
+                        "x-faker": "name.findName"
+                    },
+                    "debtorIBAN": {
+                        "type": "string",
+                        "description": "International Bank Account Number of the debtor",
+                        "example": "IT60X0542811101000000123456",
+                        "x-faker": "finance.iban"
+                    },
+                    "creditorName": {
+                        "type": "string",
+                        "description": "Name of the creditor",
+                        "example": "Jane Doe",
+                        "x-faker": "name.findName"
+                    },
+                    "creditorIBAN": {
+                        "type": "string",
+                        "description": "International Bank Account Number of the creditor",
+                        "example": "IT60X0542811101000000123456",
+                        "x-faker": "finance.iban"
+                    }
+                },
+                "required": [
+                    "id",
+                    "amount",
+                    "currency",
+                    "remittance"
+                ]
+            },
+            "Transfer": {
+                "type": "object",
+                "description": "Kind of document that allow clients to manage payment requests with low constraints. <br> Clients can use transfers to fast prototyping payment initiation use cases or to avoid specific document's lifecycle managment. <br><b>Note: </b> In order to use transfers in production, a more in-depth due diligence is required.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the transfer",
+                        "x-faker": "random.uuid"
+                    },
+                    "fingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Amount of the transfer",
+                        "example": 100.34,
+                        "x-faker": "finance.amount"
+                    },
+                    "remittance": {
+                        "type": "string",
+                        "description": "Remittance information of the transfer",
+                        "example": "Payment for invoice 123",
+                        "x-faker": "lorem.sentence"
+                    },
+                    "creditor": {
+                        "description": "Creditor of this transfer",
+                        "$ref": "#/components/schemas/Contact"
+                    },
+                    "debtor": {
+                        "description": "Debtor of this transfer",
+                        "$ref": "#/components/schemas/Contact"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "iso8601",
+                        "description": "Date and time of the transfer creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    }
+                }
+            }
+        },
+        "responses": {
+            "BadRequest": {
+                "description": "Client has provided invalid data",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statusCode": {
+                                    "$ref": "#/components/schemas/StatusCode"
+                                },
+                                "requestID": {
+                                    "$ref": "#/components/schemas/RequestID"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error message",
+                                    "example": "Proforma invoice can not have a due date later than the invoice date"
+                                },
+                                "additionalInfo": {
+                                    "type": "object",
+                                    "description": "Additional information about the error",
+                                    "properties": {
+                                        "path": {
+                                            "type": "string",
+                                            "description": "JSON path of the field that caused the error",
+                                            "example": ".dueDate"
+                                        },
+                                        "key": {
+                                            "type": "string",
+                                            "description": "JSON key of the field that caused the error",
+                                            "example": "dueDate"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "description": "Expected type of the field that caused the error",
+                                            "example": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "path"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "statusCode",
+                                "requestID",
+                                "message",
+                                "additionalInfo"
+                            ]
+                        }
+                    }
+                }
+            },
+            "Unauthorized": {
+                "description": "Client has not provided valid credentials to access the requested resource",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statusCode": {
+                                    "$ref": "#/components/schemas/StatusCode"
+                                },
+                                "requestID": {
+                                    "$ref": "#/components/schemas/RequestID"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error message",
+                                    "example": "You must provide a valid access token"
+                                }
+                            },
+                            "required": [
+                                "statusCode",
+                                "requestID",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "Client is not authorized to access the requested resource",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statusCode": {
+                                    "$ref": "#/components/schemas/StatusCode"
+                                },
+                                "requestID": {
+                                    "$ref": "#/components/schemas/RequestID"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error message",
+                                    "example": "You can't create a new invoice for this tenant"
+                                }
+                            },
+                            "required": [
+                                "statusCode",
+                                "requestID",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "The requested resource was not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statusCode": {
+                                    "$ref": "#/components/schemas/StatusCode"
+                                },
+                                "requestID": {
+                                    "$ref": "#/components/schemas/RequestID"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error message",
+                                    "example": "Invoice not found"
+                                }
+                            },
+                            "required": [
+                                "statusCode",
+                                "requestID",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "InternalServerError": {
+                "description": "Server encountered an unexpected condition that prevented it from fulfilling the request",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statusCode": {
+                                    "$ref": "#/components/schemas/StatusCode"
+                                },
+                                "requestID": {
+                                    "$ref": "#/components/schemas/RequestID"
+                                }
+                            },
+                            "required": [
+                                "statusCode",
+                                "requestID"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "webhooks": {
+        "AIS consent status": {
+            "post": {
+                "summary": "AIS consent status",
+                "description": "Notify the status of the account information service (AIS) ",
+                "operationId": "AISConsentStatus",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "account": {
+                                        "$ref": "#/components/schemas/BankAccount"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ACTIVATED",
+                                            "REVOKED",
+                                            "EXPIRED"
+                                        ],
+                                        "description": "Status of the account information service (AIS) consent granted by account owner to FlowPay.<br/> - `ACTIVATED`: consent granted by account owner<br> - `REVOKED`: consent revoked by account owner<br> - `EXPIRED`: consent expired"
+                                    },
+                                    "rejectionReason": {
+                                        "type": "string",
+                                        "description": "Reason of the rejection of the consent. It is present only if the status is `REVOKED`. <br> <b>Note: The majority of the banks do not provide this information</b>. Consent may be revoked from the bank for any reason or by the user from the bank website.",
+                                        "example": "Operation not allowed on ASPSP system"
+                                    }
+                                },
+                                "required": [
+                                    "consentId",
+                                    "status",
+                                    "account"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Accounts",
+                    "Webhooks"
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Accounts",
+            "description": "Manage accounts"
+        },
+        {
+            "name": "Assignments",
+            "description": "Manage assignments"
+        },
+        {
+            "name": "Authentication",
+            "description": "Manage authentication"
+        },
+        {
+            "name": "Banks",
+            "description": "Banks informations"
+        },
+        {
+            "name": "Bulk",
+            "description": {
+                "$ref": "docs/bulk_lifecycle.md"
+            }
+        },
+        {
+            "name": "Checkout",
+            "description": "This endpoint allows managing checkout sessions any document client has access to"
+        },
+        {
+            "name": "Invoices",
+            "description": {
+                "$ref": "docs/invoice_lifecycle.md"
+            }
+        },
+        {
+            "name": "pagoPA",
+            "description": "pagoPA is the italian national system that allows citizens to pay public administration. FlowPay is a direct pagoPA participant and allows users to pay with open banking"
+        },
+        {
+            "name": "Transactions",
+            "description": "Endpoint for retrieving transactions collected with AIS consent"
+        },
+        {
+            "name": "Transfers",
+            "description": "Lifecycle-free documents"
+        },
+        {
+            "name": "Payments",
+            "description": "Access to payments initiated by FlowPay"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Manage webhooks"
+        },
+        {
+            "name": "Documents",
+            "description": "CRUD operations on documents"
+        }
+    ],
+    "paths": {
+        "/oauth/token": {
+            "post": {
+                "summary": "Get an access token or refresh an existing one",
+                "description": "Get an access token or refresh an existing one",
+                "operationId": "GetAccessToken",
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "grant_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "authorization_code",
+                                            "client_credentials",
+                                            "refresh_token"
+                                        ]
+                                    },
+                                    "client_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "client_secret": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "redirect_uri": {
+                                        "type": "string",
+                                        "format": "uri"
+                                    },
+                                    "refresh_token": {
+                                        "type": "string"
+                                    },
+                                    "scope": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "grant_type",
+                                    "client_id",
+                                    "client_secret",
+                                    "scope"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token obtained",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "description": "Access token to be used to access protected resources"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600,
+                                            "x-faker": {
+                                                "datatype.number": {
+                                                    "min": 3000,
+                                                    "max": 3600
+                                                }
+                                            },
+                                            "description": "Number of seconds before the access token expires"
+                                        },
+                                        "refresh_token": {
+                                            "type": "string",
+                                            "description": "Refresh token to be used to obtain a new access token"
+                                        },
+                                        "scope": {
+                                            "type": "string",
+                                            "description": "List of scopes granted to the client, separated by a space"
+                                        }
+                                    },
+                                    "required": [
+                                        "access_token",
+                                        "expires_in",
+                                        "scope"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Authentication"
+                ],
+                "security": []
+            }
+        },
+        "/oauth/token/info": {
+            "post": {
+                "summary": "Get information about the token",
+                "description": "Get information about the token",
+                "operationId": "GetTokenInfo",
+                "security": [],
+                "tags": [
+                    "Authentication"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "description": "Token to be checked"
+                                    }
+                                },
+                                "required": [
+                                    "token"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "active": {
+                                            "type": "boolean",
+                                            "example": true,
+                                            "description": "Whether the token is active or not"
+                                        },
+                                        "scopes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "client_id": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+                                            "description": "Client identifier of the application that obtained the token"
+                                        },
+                                        "clientID": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+                                            "description": "Client identifier of the application that obtained the token"
+                                        },
+                                        "expiresAt": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2020-01-01T00:00:00Z",
+                                            "description": "Date and time when the token expires",
+                                            "x-faker": "date.recent"
+                                        },
+                                        "exp": {
+                                            "type": "number",
+                                            "example": 1577836800,
+                                            "description": "The unix timestamp indicating when this token will expire.",
+                                            "x-faker": "date.unix"
+                                        },
+                                        "consumer": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+                                            "description": "Consumer identifier that granted the token"
+                                        },
+                                        "companies": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+                                                "description": "Company identifier"
+                                            },
+                                            "description": "List of companies for which consumer has access to"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                }
+            }
+        },
+        "/accounts": {
+            "get": {
+                "summary": "Get the list of accounts",
+                "description": "Get the list of accounts associated to the token",
+                "operationId": "getAccounts",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "accounts:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number to retrieve",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "example": 1,
+                        "x-faker": "datatype.number"
+                    },
+                    {
+                        "name": "tenantID",
+                        "in": "query",
+                        "description": "Tenant identifier to filter accounts. <br /> This has effect only for token obtained with client_credentials grant type which could be associated to multiple tenants.  <br/> If not specified, response will contain all accounts associated to all tenants the token is authorized to access",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "x-faker": "datatype.uuid"
+                    },
+                    {
+                        "name": "bank",
+                        "in": "query",
+                        "description": "Bank identifier to filter accounts.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "intesa_sanpaolo"
+                    },
+                    {
+                        "name": "consent",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/ConsentStatusEnum"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of accounts. TODO: La paginazione non serve qui, è per prototipo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/BankAccount"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Accounts"
+                ]
+            },
+            "post": {
+                "summary": "Create account consent session",
+                "description": "Create a new session to allow an user to grant consent to FlowPay to access his accounts for AIS service.<br>Clients can use this endpoint to create a new session to allow an user to grant consent to FlowPay to access his accounts for AIS service.",
+                "operationId": "createAisConsentSession",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "accounts:write"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "tenantID": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Tenant identifier of user who will grant consent to FlowPay to access his accounts for AIS service"
+                                    },
+                                    "bank": {
+                                        "type": "string",
+                                        "description": "Bank identifier. If not specified, the user will be able to choose the bank from a list of supported banks",
+                                        "example": "intesa_sanpaolo"
+                                    }
+                                },
+                                "required": [
+                                    "tenantID"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Account created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "link": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "URL to be used to redirect the user to the bank website to grant consent to FlowPay to access his accounts for AIS service"
+                                        }
+                                    },
+                                    "required": [
+                                        "sessionID"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "callbacks": {
+                    "ok": {
+                        "/": {
+                            "get": {
+                                "summary": "Consent correctly granted",
+                                "description": "Redirect URL to be used by FlowPay to notify the client that user has granted consent to FlowPay to access his accounts for AIS service. <br> After the user has granted consent to FlowPay to access his accounts for AIS service, the bank will redirect to FlowPay server to notify the result of the operation, FlowPay will then redirect to the client to notify the result of the operation.<br> Use this redirect URL to manage user experience, for example, you can synchronously refresh token at backend and redirect the user to a specific page in your client application.<br> Note: You can be notified of the result of the operation also by using the webhook mechanism.",
+                                "operationId": "aisOkConsentSessionCallback",
+                                "parameters": [
+                                    {
+                                        "name": "owner",
+                                        "in": "query",
+                                        "description": "Identifier of the user who has granted consent.",
+                                        "required": true,
+                                        "schema": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "x-faker": "datatype.uuid"
+                                    }
+                                ],
+                                "security": []
+                            }
+                        }
+                    },
+                    "ko": {
+                        "/": {
+                            "get": {
+                                "summary": "Some error occured",
+                                "description": "Redirect URL to be used by FlowPay to notify the client that user has not granted consent to FlowPay to access his accounts for AIS service. <br>After user redirection to FlowPay server, FlowPay will then redirect to the client to notify the result of the operation.<br> Use this redirect URL to manage user experience.",
+                                "operationId": "aisKoConsentSessionCallback",
+                                "parameters": [
+                                    {
+                                        "name": "owner",
+                                        "in": "query",
+                                        "description": "Identifier of the user who has not granted consent.",
+                                        "required": true,
+                                        "schema": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "x-faker": "datatype.uuid"
+                                    },
+                                    {
+                                        "name": "reason",
+                                        "in": "query",
+                                        "description": "Reason why user has not granted consent. <b>Note: This parameter is optional and it is not supported by all banks.</b> User may voluntarily not grant consent or he may have not been able to grant consent due to some bank error.",
+                                        "required": false,
+                                        "schema": {
+                                            "type": "string"
+                                        }
+                                    }
+                                ],
+                                "security": []
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Accounts"
+                ]
+            }
+        },
+        "/accounts/{accountID}": {
+            "get": {
+                "summary": "Get account details",
+                "description": "Retrieve details of a specific account",
+                "operationId": "getAccount",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "accounts:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "accountID",
+                        "in": "path",
+                        "description": "Account identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "x-faker": "datatype.uuid"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BankAccount"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Accounts"
+                ]
+            }
+        },
+        "/banks": {
+            "get": {
+                "summary": "Get banks",
+                "description": "Retrieve the list of banks supported by FlowPay",
+                "operationId": "getBanks",
+                "security": [],
+                "tags": [
+                    "Banks"
+                ],
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "description": "Country code (ISO 3166-1 alpha-2) to filter banks by country",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "x-faker": "address.countryCode",
+                        "example": "IT"
+                    },
+                    {
+                        "name": "recurring",
+                        "in": "query",
+                        "description": "Filter banks by support at least one recurring payment type",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "recurringFrequency",
+                        "in": "query",
+                        "description": "Filter banks by support specified recurring payment frequency",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "monthly",
+                                    "everyTwoMonths",
+                                    "quarterly",
+                                    "semiAnnual",
+                                    "daily",
+                                    "everyFourMonths",
+                                    "weekly",
+                                    "everyTwoWeeks",
+                                    "annual"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "sctType",
+                        "in": "query",
+                        "description": "Filter banks by support specified SCT type",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "standard",
+                                    "instant"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of banks",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Bank"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    }
+                }
+            }
+        },
+        "/banks/{id}": {
+            "get": {
+                "summary": "Get bank details",
+                "description": "Retrieve details of a specific bank",
+                "operationId": "getBank",
+                "security": [],
+                "tags": [
+                    "Banks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Bank identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "cassa_di_risparmio_di_orvieto"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bank details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Bank"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/bulk": {
+            "post": {
+                "summary": "Create bulk document",
+                "description": "Create a new bulk document",
+                "operationId": "createBulkPayment",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "requestBody": {
+                    "description": "Dictionary of fingerprints to be linked to the bulk payment, each property name is the document type.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "minProperties": 1,
+                                "propertyNames": {
+                                    "$ref": "#/components/schemas/DocumentKindEnum"
+                                },
+                                "properties": {
+                                    "allowWireTranfersAggregation": {
+                                        "type": "boolean",
+                                        "description": "If true, wire transfer to the same beneficiary will be aggregated, this determines a saving. If false, wire transfer to the same beneficiary will not be aggregated, this allows beneficiary to have a more detailed view of the payments and keeps the payment remittance information.",
+                                        "default": true
+                                    }
+                                },
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Fingerprint"
+                                    },
+                                    "minItems": 1,
+                                    "uniqueItems": true,
+                                    "description": "List of fingerprints to be linked to the bulk payment. Property name is the document type."
+                                },
+                                "example": {
+                                    "invoice": [
+                                        "d41d8cd98f00b204e9800998ecf8427e",
+                                        "GskefcByhlsgCSUODJPWTRFaOVsPGDdq"
+                                    ],
+                                    "pagopa": [
+                                        "RXi4PrrsOTiPxUVsbo12TAAD9kmTH2cM"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Bulk payment created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Bulk"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "summary": "List bulk documents",
+                "description": "List bulk documents",
+                "operationId": "listBulkPayments",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "minimum": 1
+                        },
+                        "x-faker": "random.number",
+                        "x-fakerParams": [
+                            {
+                                "min": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "Page size",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "minimum": 1,
+                            "maximum": 100
+                        },
+                        "x-faker": "random.number",
+                        "x-fakerParams": [
+                            {
+                                "min": 1,
+                                "max": 100
+                            }
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk payments list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Bulk"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/bulk/{fingerprint}": {
+            "get": {
+                "summary": "Get document details",
+                "description": "Get bulk document details by ID",
+                "operationId": "getBulkPayment",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Bulk payment fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        },
+                        "x-faker": "datatype.uuid"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk payment details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Bulk"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete bulk payment",
+                "description": "Delete bulk payment by ID",
+                "operationId": "deleteBulkPayment",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Bulk payment fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        },
+                        "x-faker": "datatype.uuid"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Bulk payment deleted"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/checkout": {
+            "post": {
+                "summary": "Create checkout",
+                "description": "Create a new checkout",
+                "operationId": "createCheckout",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "requestBody": {
+                    "description": "Checkout details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "kind": {
+                                        "$ref": "#/components/schemas/DocumentKindEnum"
+                                    },
+                                    "fingerprint": {
+                                        "$ref": "#/components/schemas/Fingerprint"
+                                    }
+                                },
+                                "required": [
+                                    "kind",
+                                    "fingerprint"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Checkout created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Checkout"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Checkout"
+                ]
+            }
+        },
+        "/checkout/{code}": {
+            "get": {
+                "summary": "Get checkout details",
+                "description": "Retrieve details of a specific checkout",
+                "operationId": "getCheckout",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "checkout:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "description": "Checkout code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Checkout details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Checkout"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Checkout"
+                ]
+            },
+            "delete": {
+                "summary": "Delete checkout",
+                "description": "Delete checkout by code",
+                "operationId": "deleteCheckout",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Checkout"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "description": "Checkout code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Checkout deleted"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/creditNotes": {
+            "post": {
+                "summary": "Create credit note",
+                "description": "Create a credit note to be paid by a customer",
+                "operationId": "createCreditNote",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:read"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "description": "Credit note details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "number": {
+                                        "type": "string",
+                                        "description": "Credit note number",
+                                        "example": "CN-123456",
+                                        "x-faker": "lorem.sentence"
+                                    },
+                                    "invoice": {
+                                        "$ref": "#/components/schemas/Invoice",
+                                        "description": "Invoice to which this credit note refers to."
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "description": "Credit note amount. Amount must be equal or less than the invoice amount. If the credit note amount is less than the invoice amount, the remaining amount will be payable by the customer. Multiple credit notes can be created for the same invoice and the total amount of all credit notes must be equal or less than the invoice amount.",
+                                        "example": 100.00,
+                                        "x-faker": "finance.amount"
+                                    }
+                                },
+                                "required": [
+                                    "number",
+                                    "invoice",
+                                    "amount"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Credit note created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            },
+            "get": {
+                "summary": "List credit notes",
+                "description": "Retrieve a list of credit notes",
+                "operationId": "getCreditNotes",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Credit notes list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Invoice"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            }
+        },
+        "/creditNotes/{fingerprint}": {
+            "get": {
+                "summary": "Get credit note details",
+                "description": "Retrieve a credit note details by its fingerprint",
+                "operationId": "getCreditNote",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Credit note fingerprint",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Credit note",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            },
+            "delete": {
+                "summary": "Delete credit note",
+                "description": "Delete a credit note by its fingerprint",
+                "operationId": "deleteCreditNote",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:write"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Credit note fingerprint",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Credit note deleted"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            }
+        },
+        "/invoices": {
+            "post": {
+                "summary": "Create invoice",
+                "description": "Create an invoice to be paid by a customer <br> <iframe width=\"900\" height=\"600\" src=\"https://www.figma.com/embed?embed_host=astra&url=https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File>\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>",
+                "operationId": "createInvoice",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoices:write"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "description": "Invoice details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "number": {
+                                        "type": "string",
+                                        "description": "Invoice number",
+                                        "example": "INV-123456",
+                                        "x-faker": "lorem.sentence"
+                                    },
+                                    "creditor": {
+                                        "description": "Creditor VAT number, must be a company",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            }
+                                        ]
+                                    },
+                                    "debtor": {
+                                        "description": "Debtor VAT number, could be a company or a person",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            }
+                                        ]
+                                    },
+                                    "terms": {
+                                        "type": "array",
+                                        "description": "Payment terms used to generate payment requests",
+                                        "items": {
+                                            "$ref": "#/components/schemas/DocumentTerm"
+                                        }
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "description": "Invoice items",
+                                        "items": {
+                                            "$ref": "#/components/schemas/DocumentItem"
+                                        }
+                                    },
+                                    "attachments": {
+                                        "type": "array",
+                                        "description": "Invoice attachments",
+                                        "items": {
+                                            "$ref": "#/components/schemas/DocumentAttachment"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "creditor",
+                                    "debtor",
+                                    "terms",
+                                    "number"
+                                ]
+                            }
+                        },
+                        "application/xml; charset=utf-8": {
+                            "schema": {
+                                "type": "string",
+                                "format": "base64",
+                                "description": "Italian FatturaPA XML file encoded in base64. Both plain text invoice and .p7m signed invoice are supported.",
+                                "example": {
+                                    "$ref": "./examples/xmlpa.txt"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invoice created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            },
+            "get": {
+                "summary": "List invoices",
+                "description": "Retrieve invoices",
+                "operationId": "getInvoices",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoices:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date of the invoices to retrieve. If not specified, the default value is the first day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.past"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date of the invoices to retrieve. If not specified, the default value is the current date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.future"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Invoice status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "sent",
+                                "paid",
+                                "overdue",
+                                "canceled"
+                            ]
+                        },
+                        "x-faker": "random.arrayElement"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Page size",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoices retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Invoice"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            }
+        },
+        "/invoices/{fingerprint}": {
+            "get": {
+                "summary": "Get invoice details",
+                "description": "Retrieve invoice details by fingerprint",
+                "operationId": "getInvoice",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoices:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Invoice fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            }
+        },
+        "/pagopa": {
+            "post": {
+                "summary": "pagoPA payment",
+                "description": "pagoPA payment",
+                "operationId": "pagopaPayment",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "pagopa:write"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "pagoPA",
+                    "Documents"
+                ],
+                "requestBody": {
+                    "description": "Pagopa payment request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "noticeNumber": {
+                                        "type": "string",
+                                        "pattern": "^d{11}",
+                                        "description": "Notice number emitted by pagoPA",
+                                        "example": "1234567890123456"
+                                    },
+                                    "paVatCode": {
+                                        "type": "string",
+                                        "description": "VAT code of the public administration",
+                                        "pattern": "^d{11}",
+                                        "example": "12345678901"
+                                    },
+                                    "debtorVatCode": {
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            }
+                                        ]
+                                    },
+                                    "debtorMail": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "Debtor email address"
+                                    },
+                                    "fee": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "minimum": 0.01,
+                                        "description": "Fee amount"
+                                    }
+                                },
+                                "required": [
+                                    "noticeNumber",
+                                    "paVatCode",
+                                    "debtorVatCode"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pagopa payment request accepted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/pagoPA"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "summary": "pagoPA list",
+                "description": "Retrieve pagoPA list",
+                "operationId": "getPagopaList",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "pagopa:read"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "pagoPA",
+                    "Documents"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date of the pagoPA list to retrieve. If not specified, the default value is the first day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "x-faker": "date.past"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date of the pagoPA list to retrieve. If not specified, the default value is the current date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "x-faker": "date.future"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Status of the pagoPA list to retrieve. If not specified, the default value is 'all'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "pending",
+                                "paid",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number of the pagoPA list to retrieve. If not specified, the default value is 1",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "x-faker": "datatype.number"
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "Page size of the pagoPA list to retrieve. If not specified, the default value is 10",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        },
+                        "x-faker": "datatype.number"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagopa list retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/pagoPA"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/payments": {
+            "get": {
+                "summary": "Get payments",
+                "description": "Retrieve payments made through FlowPay",
+                "operationId": "getPayments",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "payments:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "accountID",
+                        "in": "query",
+                        "description": "Account identifier",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "x-faker": "datatype.uuid"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date of the payments to retrieve. If not specified, the default value is the first day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.past"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date of the payments to retrieve. If not specified, the default value is the last day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.future"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payments",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Payment"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Payments"
+                ]
+            }
+        },
+        "/payments/{paymentID}": {
+            "get": {
+                "summary": "Get payment details",
+                "description": "Retrieve details of a specific payment",
+                "operationId": "getPayment",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "payments:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "paymentID",
+                        "in": "path",
+                        "description": "Payment identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "x-faker": "datatype.uuid"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Payments"
+                ]
+            }
+        },
+        "/proforma": {
+            "post": {
+                "summary": "Create proforma invoice",
+                "description": "Create a proforma invoice",
+                "operationId": "createProformaInvoice",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:write"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "description": "Proforma invoice to create",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "number": {
+                                        "type": "string",
+                                        "description": "Proforma number. This field is optional, if not provided, FlowPay will generate a unique uuid",
+                                        "example": "PINV-123456",
+                                        "x-faker": "lorem.sentence"
+                                    },
+                                    "invoice": {
+                                        "$ref": "#/components/schemas/Fingerprint",
+                                        "description": "Invoice fingerprint to which the proforma invoice is related. Note that the invoice must be in a state that allows the creation of a proforma invoice (e.g. not already paid). If the invoice already has a proforma invoice, the request will fail"
+                                    },
+                                    "creditor": {
+                                        "description": "Creditor VAT number, must be a company",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            }
+                                        ]
+                                    },
+                                    "debtor": {
+                                        "description": "Debtor VAT number, could be a company or a person",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            }
+                                        ]
+                                    },
+                                    "terms": {
+                                        "type": "array",
+                                        "description": "Payment terms used to generate payment requests",
+                                        "items": {
+                                            "$ref": "#/components/schemas/DocumentTerm"
+                                        }
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "description": "Invoice items",
+                                        "items": {
+                                            "$ref": "#/components/schemas/DocumentItem"
+                                        }
+                                    },
+                                    "attachments": {
+                                        "type": "array",
+                                        "description": "Invoice attachments",
+                                        "items": {
+                                            "$ref": "#/components/schemas/DocumentAttachment"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "creditor",
+                                    "debtor",
+                                    "terms"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Proforma invoice created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "description": "Proforma invoice already exists for invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "statusCode": {
+                                            "$ref": "#/components/schemas/StatusCode"
+                                        },
+                                        "requestID": {
+                                            "$ref": "#/components/schemas/RequestID"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error message",
+                                            "example": "Proforma invoice already exists for invoice 123456"
+                                        },
+                                        "additionalInfo": {
+                                            "type": "object",
+                                            "description": "Additional information about the error",
+                                            "properties": {
+                                                "existingProforma": {
+                                                    "$ref": "#/components/schemas/Fingerprint"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "statusCode",
+                                        "requestID",
+                                        "message",
+                                        "additionalInfo"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            },
+            "get": {
+                "summary": "List proforma invoices",
+                "description": "Retrieve proforma invoices",
+                "operationId": "getProformaInvoices",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date of the proforma invoices to retrieve. If not specified, the default value is the first day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.past"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date of the proforma invoices to retrieve. If not specified, the default value is the last day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.future"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Proforma invoices",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Invoice"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            }
+        },
+        "/proforma/{fingerprint}": {
+            "get": {
+                "summary": "Get proforma details",
+                "description": "Retrieve a proforma invoice details",
+                "operationId": "getProformaInvoice",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Proforma invoice fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Proforma invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            },
+            "delete": {
+                "summary": "Delete proforma invoice",
+                "description": "Delete a proforma invoice. This operation is allowed only if the proforma invoice is not yet paid",
+                "operationId": "deleteProformaInvoice",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "invoice:write"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Proforma invoice fingerprint",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "x-faker": "finance.iban"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Proforma invoice deleted"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Invoices",
+                    "Documents"
+                ]
+            }
+        },
+        "/transactions": {
+            "get": {
+                "summary": "Get transactions",
+                "description": "Retrieve transactions of a specific account",
+                "operationId": "getTransactions",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "transactions:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "IBAN",
+                        "in": "query",
+                        "description": "Account IBAN",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "x-faker": "finance.iban"
+                    },
+                    {
+                        "name": "currency",
+                        "in": "query",
+                        "description": "Currency of the transactions to retrieve. If not specified, the default value is EUR",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "x-faker": "finance.currencyCode"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date of the period to retrieve transactions for. If not specified, the default value is the first day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.past"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date of the period to retrieve transactions for. If not specified, the default value is the current date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.future"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number to retrieve. If not specified, the default value is 1",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Number of transactions to retrieve. If not specified, the default value is 10",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    }
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transactions list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Transaction"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/transactions/{transactionID}": {
+            "get": {
+                "summary": "Get transaction details",
+                "description": "Retrieve details of a specific transaction.<br>If the transactions has been originated by a payment authorized using FlowPay, the payment details are included in the response, but only if the token used to call the API has the `payment:read` scope.",
+                "operationId": "getTransaction",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "transactions:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionID",
+                        "in": "path",
+                        "description": "Transaction identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "x-faker": "datatype.uuid"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaction details.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Transaction"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "description": "If the transactions has been originated by a payment authorized using FlowPay, the payment details are included in the response.<br>This field is present only if the token used to call the API has the `payment:read` scope.",
+                                            "properties": {
+                                                "payment": {
+                                                    "$ref": "#/components/schemas/Payment"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Transactions"
+                ]
+            }
+        },
+        "/transfers": {
+            "get": {
+                "summary": "Get transfers",
+                "description": "Retrieve transfers document list",
+                "operationId": "getTransfers",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "transfers:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date of the period to retrieve transfers for. If not specified, the default value is the first day of the current month",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.past"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date of the period to retrieve transfers for. If not specified, the default value is the current date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "iso8601"
+                        },
+                        "x-faker": "date.future"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number to retrieve. If not specified, the default value is 1",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Number of transfers to retrieve. If not specified, the default value is 10",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transfer documents list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Transfer"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Transfers"
+                ]
+            },
+            "post": {
+                "summary": "Create transfer",
+                "description": "Create a new transfer",
+                "operationId": "createTransfer",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "transfers:write"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "description": "Transfer details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "description": "Amount of the transfer",
+                                        "example": 100.34,
+                                        "x-faker": "finance.amount"
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "description": "Currency of the transfer",
+                                        "example": "EUR",
+                                        "default": "EUR",
+                                        "x-faker": "finance.currencyCode"
+                                    },
+                                    "remittance": {
+                                        "type": "string",
+                                        "description": "Remittance information of the SEPA Credit Transfer",
+                                        "example": "Pizza at Pizzeria da Mario. Thank you!",
+                                        "x-faker": "lorem.sentence"
+                                    },
+                                    "creditor": {
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            }
+                                        ]
+                                    },
+                                    "debtor": {
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "amount",
+                                    "remittance",
+                                    "creditor",
+                                    "debtor"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Transfer created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Transfer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Transfers",
+                    "Documents"
+                ]
+            }
+        },
+        "/transfers/{transferID}": {
+            "get": {
+                "summary": "Get transfer details",
+                "description": "Retrieve transfer document details",
+                "operationId": "getTransfer",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "transfers:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transferID",
+                        "in": "path",
+                        "description": "Transfer ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transfer document details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Transfer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Transfers"
+                ]
+            },
+            "delete": {
+                "summary": "Delete transfer",
+                "description": "Delete a transfer document",
+                "operationId": "deleteTransfer",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "transfers:write"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transferID",
+                        "in": "path",
+                        "description": "Transfer ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Transfer document deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Transfers"
+                ]
+            }
+        }
+    }
+}
