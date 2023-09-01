@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "FlowPay API",
-        "version": "2.0.0-alpha",
+        "version": "2.0.0-alpha.1",
         "description": {
             "$ref": "docs/general.md"
         },
@@ -30,7 +30,7 @@
     "servers": [
         {
             "url": "https://api.flowpay.it/v2",
-            "description": "Production server"
+            "description": "Production server (Not implementend)"
         },
         {
             "url": "https://mock.flowpay.it/v2",
@@ -68,6 +68,8 @@
                             "invoices:write": "Allow to create invoices and manage lifecycle",
                             "bills:read": "Allow to read bills",
                             "bills:write": "Allow to create bills and manage lifecycle",
+                            "constructions:read": "Allow to read information about construction sites",
+                            "constructions:write": "Allow to create construction sites and manage the lifecycle",
                             "openid": "Allow to read user profile",
                             "transfers:read": "Allow to read transfers",
                             "transfers:write": "Allow to create transfers and manage lifecycle"
@@ -85,6 +87,46 @@
             }
         },
         "schemas": {
+            "Address": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "Name of the city where the property is located."
+                    },
+                    "street": {
+                        "type": "string",
+                        "description": "This field contains the name of the street where the property is located. It must include the name with a type (e.g., Avenue, Street, Road, etc.) but not the number or any other information."
+                    },
+                    "number": {
+                        "type": "string",
+                        "description": "This field refers to the numeric or alphanumeric value assigned to a property on a street."
+                    },
+                    "unitNumber": {
+                        "type": "string",
+                        "description": "his field is used when a single property has multiple units, such as apartments or office suites. It differentiates one unit from another within the same property."
+                    },
+                    "postalCode": {
+                        "type": "string",
+                        "description": "Also known as ZIP code (or CAP in Italy)"
+                    },
+                    "province": {
+                        "type": "string",
+                        "description": "It refers to the name of the state or province where the property is located."
+                    },
+                    "country": {
+                        "type": "string",
+                        "description": "The name of the country where the property is located."
+                    }
+                },
+                "required": [
+                    "city",
+                    "street",
+                    "postalCode",
+                    "province",
+                    "country"
+                ]
+            },
             "Bank": {
                 "type": "object",
                 "properties": {
@@ -307,6 +349,71 @@
                 "example": "IT12345678901",
                 "x-faker": "finance.vat"
             },
+            "ConstructionProgress": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the construction progress",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "site": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the construction site",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the construction progress creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 45050.23,
+                        "description": "Total amount of the construction progress",
+                        "x-faker": "finance.amount"
+                    },
+                    "invoices": {
+                        "type": "object",
+                        "description": "Array of invoices related to each worker. Keys are the worker identifiers",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/Fingerprint"
+                            }
+                        }
+                    }
+                }
+            },
+            "ConstructionSite": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the construction site",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the construction site",
+                        "example": "Calenzano Payments Museum",
+                        "x-faker": "lorem.word"
+                    },
+                    "address": {
+                        "$ref": "#/components/schemas/Address"
+                    },
+                    "initialCreditFingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint",
+                        "description": "Fingerprint of the initial credit document, used to transfer money to the wallet"
+                    }
+                }
+            },
             "ConsumerNationalID": {
                 "type": "string",
                 "description": "National ID of the consumer, currently only italian format is supported",
@@ -360,7 +467,10 @@
                 "enum": [
                     "bill",
                     "bulk",
+                    "chain",
+                    "construction",
                     "invoice",
+                    "pagopa",
                     "transfer"
                 ],
                 "description": {
@@ -723,6 +833,33 @@
                 "format": "uuid",
                 "x-faker": "random.uuid"
             },
+            "SiteWorkerContract": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the contract ",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "site": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the construction site",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the contract creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/Contact"
+                    }
+                }
+            },
             "StatusCode": {
                 "type": "integer",
                 "description": "HTTP status code",
@@ -983,6 +1120,34 @@
                     }
                 }
             },
+            "Conflict": {
+                "description": "The requested resource is in conflict with the current state of the server",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "statusCode": {
+                                    "$ref": "#/components/schemas/StatusCode"
+                                },
+                                "requestID": {
+                                    "$ref": "#/components/schemas/RequestID"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error message",
+                                    "example": "Invoice already paid"
+                                }
+                            },
+                            "required": [
+                                "statusCode",
+                                "requestID",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
             "InternalServerError": {
                 "description": "Server encountered an unexpected condition that prevented it from fulfilling the request",
                 "content": {
@@ -1068,10 +1233,6 @@
             "description": "Manage accounts"
         },
         {
-            "name": "Assignments",
-            "description": "Manage assignments"
-        },
-        {
             "name": "Authentication",
             "description": "Manage authentication"
         },
@@ -1088,6 +1249,10 @@
         {
             "name": "Checkout",
             "description": "This endpoint allows managing checkout sessions any document client has access to"
+        },
+        {
+            "name": "Construction",
+            "description": "Manage construction sites and related entities lifecycle"
         },
         {
             "name": "Invoices",
@@ -1746,7 +1911,7 @@
         "/bulk": {
             "post": {
                 "summary": "Create bulk document",
-                "description": "Create a new bulk document",
+                "description": "Create a new bulk document. This endpoint allows to specificy a dictionary of fingerprints to be linked to the bulk payment, each property name is the document type. <br> Returns the bulk document created with a new fingerprint.",
                 "operationId": "createBulkPayment",
                 "security": [
                     {
@@ -1822,7 +1987,7 @@
             },
             "get": {
                 "summary": "List bulk documents",
-                "description": "List bulk documents",
+                "description": "List all bulk documents according to the specified filters. <br> Returns a paginated list of bulk documents.",
                 "operationId": "listBulkPayments",
                 "security": [
                     {
@@ -1966,7 +2131,7 @@
             },
             "delete": {
                 "summary": "Delete bulk payment",
-                "description": "Delete bulk payment by ID",
+                "description": "Delete bulk payment by ID.<br>Deleting a bulk payment will not delete the linked documents.",
                 "operationId": "deleteBulkPayment",
                 "security": [
                     {
@@ -2013,7 +2178,7 @@
         "/checkout": {
             "post": {
                 "summary": "Create checkout",
-                "description": "Create a new checkout",
+                "description": "This endpoint allows to create a new checkout specifying the document to be paid. <br> If the payment needs to be authorized by the user, the response will contain a link to be used to redirect the user to FlowPay payment page.",
                 "operationId": "createCheckout",
                 "security": [
                     {
@@ -2128,7 +2293,7 @@
             },
             "delete": {
                 "summary": "Delete checkout",
-                "description": "Delete checkout by code",
+                "description": "Allows to delete a checkout. <br> This endpoint can be used to delete a checkout that has not been paid yet. <br> If the checkout has been paid, it cannot be deleted and this endpoint will return an error.",
                 "operationId": "deleteCheckout",
                 "security": [
                     {
@@ -2446,10 +2611,682 @@
                 ]
             }
         },
+        "/constructions/contracts": {
+            "post": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "addSiteWorker",
+                "summary": "Add worker to site",
+                "description": "This endpoint manages the association between a site and a worker. Is not mandatory for the worker to be registered on FlowPay. This request must be authorized by the site owner, then the worker will be able to call the [PATCH] `/constructions/workers/{identifier}/workers` endpoint to complete the handshake.",
+                "requestBody": {
+                    "description": "Worker details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "site": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Site identifier",
+                                        "x-faker": "datatype.uuid"
+                                    },
+                                    "attachments": {
+                                        "type": "array",
+                                        "description": "List of files FlowPay will use to verify worker",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "Identifier of the file uploaded to FlowPay using the `/files` endpoint",
+                                            "x-faker": "datatype.uuid"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SiteWorkerContract"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "getWorkers",
+                "summary": "List workers",
+                "description": "Allows to retrieve a list of workers associated to the customer.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SiteWorkerContract"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/constructions/contracts/{identifier}": {
+            "patch": {
+                "summary": "Accept assignment",
+                "description": "This endpoint allows workers to accept the assignment to a site. The request must be authorized by the worker.",
+                "operationId": "acceptSiteAssignment",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "Construction"
+                ],
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Empty body",
+                    "content": {
+                        "application/json": {}
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/schemas/SiteWorkerContract"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Contract withdrawal",
+                "description": "This endpoint allows workers and site owners to withdraw from a contract. The request must be authorized by the worker or the site owner.",
+                "operationId": "withdrawFromSite",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "Construction"
+                ],
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/constructions/sites": {
+            "post": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "createConstructionSite",
+                "summary": "Open a new site",
+                "description": "Allows to define a new site to be managed with FlowPay. If the token has the `wallet:constructions` scope, amount estimation will be used to generate a document to be paid in order to transfer initial amount to the wallet.",
+                "requestBody": {
+                    "description": "Information needed to create and verify a new site",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "User friendly name to identify the site",
+                                        "example": "Cantiere di via Roma famiglia Verdi",
+                                        "x-faker": "lorem.word"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Information about the site and planned activities. Details are not mandatory but an exhaustive description is recommended to help during the verification process and to avoid delays or more information requests.",
+                                        "example": "Lavori di ristrutturazione completa dell'immobile, comprensivi di rifacimento tetti, creazione di un ulteriore vano e lavori al giardino",
+                                        "x-faker": "lorem.paragraph"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "description": "Address of the site in free format",
+                                        "example": "Via Roma -1, 50041 Calenzano, Italia",
+                                        "x-faker": "address.streetAddress"
+                                    },
+                                    "expectedAmount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 500.00,
+                                        "example": 75500.01,
+                                        "description": "Estimated amount for the site. If the token has `wallet:construction` scope, this amount will be used to generate a document to be paid in order to transfer initial amount to the wallet."
+                                    },
+                                    "expectedEndDate": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "description": "Estimated end date of the site"
+                                    },
+                                    "attachments": {
+                                        "type": "array",
+                                        "description": "List of files FlowPay will use to verify site operations",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "Identifier of the file uploaded to FlowPay using the `/files` endpoint",
+                                            "x-faker": "datatype.uuid"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "address",
+                                    "expectedAmount",
+                                    "expectedEndDate",
+                                    "attachments"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "authorization_code"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstructionSite"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "getConstructionSites",
+                "summary": "List sites",
+                "description": "Allows to retrieve a list of sites managed by the customer",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ConstructionSite"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/constructions/sites/{identifier}": {
+            "get": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "getConstructionSite",
+                "summary": "Get site details",
+                "description": "Allows to retrieve details of a specific site",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstructionSite"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/constructions/progress": {
+            "post": {
+                "summary": "Register work progress",
+                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the site owner (customer). <br> Each invoice between site owner and workers will be linked to a new site-related document, if there are multiple invoices for the same worker, a single document with multiple terms will be created.<br> Each invoice between workers and their suppliers will be linked to a new document, if there are multiple invoices for the same supplier, a single document with multiple terms will be created.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>, in case of a residual amount (for example, worker's labor) will be created a new document.",
+                "operationId": "registerWorkProgress",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "Construction"
+                ],
+                "requestBody": {
+                    "description": "List of invoices's fingerprints",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "site": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Site identifier",
+                                        "x-faker": "datatype.uuid"
+                                    },
+                                    "invoice": {
+                                        "type": "array",
+                                        "description": "List of invoices's fingerprints",
+                                        "minItems": 1,
+                                        "items": {
+                                            "$ref": "#/components/schemas/Fingerprint"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstructionProgress"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "summary": "List work progress",
+                "description": "Allows to retrieve a list of work progress registered by the customer",
+                "operationId": "getWorkProgress",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "Construction"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ConstructionProgress"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/constructions/progress/{identifier}": {
+            "get": {
+                "summary": "Get work progress details",
+                "description": "Allows to retrieve details of a specific work progress",
+                "operationId": "getWorkProgressDetails",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "Construction"
+                ],
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Work progress identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConstructionProgress"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
         "/invoices": {
             "post": {
                 "summary": "Create invoice",
-                "description": "Create an invoice to be paid by a customer <br> <iframe width=\"900\" height=\"600\" src=\"https://www.figma.com/embed?embed_host=astra&url=https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File>\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>",
+                "description": "Create an invoice to be paid by a customer",
                 "operationId": "createInvoice",
                 "security": [
                     {
@@ -2564,7 +3401,7 @@
             },
             "get": {
                 "summary": "List invoices",
-                "description": "Retrieve invoices",
+                "description": "Retrieve invoices list according to the specified filters",
                 "operationId": "getInvoices",
                 "security": [
                     {
@@ -2740,7 +3577,7 @@
         "/pagopa": {
             "post": {
                 "summary": "pagoPA payment",
-                "description": "pagoPA payment",
+                "description": "Allow to upload a pagoPA payment notice",
                 "operationId": "pagopaPayment",
                 "security": [
                     {
