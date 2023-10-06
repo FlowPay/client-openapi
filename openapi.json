@@ -379,8 +379,8 @@
                         "x-faker": "finance.amount"
                     },
                     "invoices": {
-                        "type": "object",
-                        "description": "Array of invoices related to each worker. Keys are the worker identifiers",
+                        "type": "object", 
+                        "description": "Array of invoices related to each worker. Keys are the creditor identifiers. For the worker-customer invoice the key is the worker identifier",
                         "additionalProperties": {
                             "type": "array",
                             "items": {
@@ -833,7 +833,33 @@
                 "format": "uuid",
                 "x-faker": "random.uuid"
             },
+            "SiteWorkerContractCreation": {
+                "description": "Request to create a new contract between a construction site and a worker",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the contract ",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "site": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the construction site",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the contract creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    }
+                }
+            },
             "SiteWorkerContract": {
+                "description": "Contract between a company and a worker for a construction site",
                 "type": "object",
                 "properties": {
                     "id": {
@@ -2618,7 +2644,7 @@
                 ],
                 "operationId": "addSiteWorker",
                 "summary": "Add worker to site",
-                "description": "This endpoint manages the association between a site and a worker. Is not mandatory for the worker to be registered on FlowPay. This request must be authorized by the site owner, then the worker will be able to call the [PATCH] `/constructions/workers/{identifier}/workers` endpoint to complete the handshake.",
+                "description": "This endpoint manages the association between a site and a worker. Is not mandatory for the worker to be registered on FlowPay. This request must be authorized by the site owner, then the worker will be able to call the [PATCH] `/constructions/contracts/{identifier}` endpoint to complete the handshake.",
                 "requestBody": {
                     "description": "Worker details",
                     "content": {
@@ -2661,7 +2687,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SiteWorkerContract"
+                                    "$ref": "#/components/schemas/SiteWorkerContractCreation"
                                 }
                             }
                         }
@@ -3088,7 +3114,7 @@
         "/constructions/progress": {
             "post": {
                 "summary": "Register work progress",
-                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the site owner (customer). <br> Each invoice between site owner and workers will be linked to a new site-related document, if there are multiple invoices for the same worker, a single document with multiple terms will be created.<br> Each invoice between workers and their suppliers will be linked to a new document, if there are multiple invoices for the same supplier, a single document with multiple terms will be created.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>, in case of a residual amount (for example, worker's labor) will be created a new document.",
+                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document, if there are multiple such invoices, a single document with multiple terms will be created.<br> Each invoice between the worker and their suppliers will be linked to a new document, if there are multiple invoices for the same supplier, a single document with multiple terms will be created.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>, in case of a residual amount (for example, worker's labor) a new document will be created.",
                 "operationId": "registerWorkProgress",
                 "security": [
                     {
@@ -3160,7 +3186,7 @@
             },
             "get": {
                 "summary": "List work progress",
-                "description": "Allows to retrieve a list of work progress registered by the customer",
+                "description": "Allows to retrieve a list of work progress registered by the worker",
                 "operationId": "getWorkProgress",
                 "security": [
                     {
