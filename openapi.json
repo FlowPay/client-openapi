@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "FlowPay API",
-        "version": "2.0.0-alpha.2",
+        "version": "2.0.0-alpha.3",
         "description": {
             "$ref": "docs/general.md"
         },
@@ -392,10 +392,7 @@
                         "type": "object", 
                         "description": "Array of invoices related to each supplier for the worker. Keys are the creditor identifiers.",
                         "additionalProperties": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/Fingerprint"
-                            }
+                            "$ref": "#/components/schemas/Fingerprint"
                         }
                     }
                 }
