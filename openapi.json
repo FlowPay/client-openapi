@@ -284,6 +284,26 @@
                     }
                 }
             },
+            "Chain": {
+                "type": "object",
+                "properties": {
+                    "fingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                    "targetType": {
+                        "$ref": "#/components/schemas/DocumentKindEnum"
+                    },
+                    "targetFingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                    "triggerType": {
+                        "$ref": "#/components/schemas/DocumentKindEnum"
+                    },
+                    "triggerFingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint"
+                    },
+                }
+            },
             "Checkout": {
                 "type": "object",
                 "properties": {
