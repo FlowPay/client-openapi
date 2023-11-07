@@ -285,6 +285,7 @@
                 }
             },
             "Chain": {
+                "description": "Chain of documents",
                 "type": "object",
                 "properties": {
                     "fingerprint": {
@@ -301,7 +302,7 @@
                     },
                     "triggerFingerprint": {
                         "$ref": "#/components/schemas/Fingerprint"
-                    },
+                    }
                 }
             },
             "Checkout": {
@@ -403,13 +404,13 @@
                         "example": "d41d8cd98f00b204e9800998ecf8427e",
                         "description": "Fingerprint of the document accounting for the labour costs"
                     },
-                    "expense":{
+                    "expense": {
                         "type": "string",
                         "example": "d41d8cd98f00b204e9800998ecf8427e",
                         "description": "Fingerprint of the document accounting for the total costs for the site owner"
                     },
                     "invoices": {
-                        "type": "object", 
+                        "type": "object",
                         "description": "Array of invoices related to each supplier for the worker. Keys are the creditor identifiers.",
                         "additionalProperties": {
                             "$ref": "#/components/schemas/Fingerprint"
@@ -1987,7 +1988,7 @@
                                 "properties": {
                                     "allowWireTranfersAggregation": {
                                         "type": "boolean",
-                                        "description": "If true, wire transfer to the same beneficiary will be aggregated, this determines a saving. If false, wire transfer to the same beneficiary will not be aggregated, this allows beneficiary to have a more detailed view of the payments and keeps the payment remittance information.",
+                                        "description": "If true, wire transfers to the same beneficiary will be aggregated, this determines a saving. If false, wire transfer to the same beneficiary will not be aggregated, this allows beneficiary to have a more detailed view of the payments and keeps the payment remittance information.",
                                         "default": true
                                     }
                                 },
@@ -2840,7 +2841,14 @@
                 },
                 "responses": {
                     "200": {
-                        "$ref": "#/components/schemas/SiteWorkerContract"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SiteWorkerContract"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
@@ -3720,7 +3728,7 @@
             },
             "get": {
                 "summary": "pagoPA list",
-                "description": "Retrieve pagoPA list",
+                "description": "Retrieve pagoPA list according to the specified filters",
                 "operationId": "getPagopaList",
                 "security": [
                     {
@@ -3987,7 +3995,7 @@
         "/proforma": {
             "post": {
                 "summary": "Create proforma invoice",
-                "description": "Create a proforma invoice",
+                "description": "Create a proforma invoice to be paid by a customer",
                 "operationId": "createProformaInvoice",
                 "security": [
                     {
@@ -4132,7 +4140,7 @@
             },
             "get": {
                 "summary": "List proforma invoices",
-                "description": "Retrieve proforma invoices",
+                "description": "Retrieve proforma invoices list according to the specified filters",
                 "operationId": "getProformaInvoices",
                 "security": [
                     {
@@ -4608,7 +4616,7 @@
             },
             "post": {
                 "summary": "Create transfer",
-                "description": "Create a new transfer",
+                "description": "Create a new transfer document",
                 "operationId": "createTransfer",
                 "security": [
                     {
@@ -4762,7 +4770,7 @@
             },
             "delete": {
                 "summary": "Delete transfer",
-                "description": "Delete a transfer document",
+                "description": "Delete a transfer document that has not yet been executed",
                 "operationId": "deleteTransfer",
                 "security": [
                     {

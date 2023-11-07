@@ -3,7 +3,9 @@
 If you can't find what you're looking for, it doesn't mean we can't do it. Write to us and tell us about your idea.
 
 # API Support
+
 If you have any questions or need help with the APIs, you can open a ticket on our support portal. Click on the button below to open a ticket.
+
 <script src=https://youtrack.flowpay.it/static/simplified/form/form-entry.js?auto=false></script>
 <div id=form-button style="">
     <button> Do you need help? Open a ticket! </button>
@@ -31,12 +33,14 @@ We believe that the best API a payment institution can provide is one that is ta
 On the end user side, FlowPay ensures that **users own their data, can access it at any time and fully manage it**. They can choose which data to share with third parties in the most transparent way possible.
 
 # Introduction
+
 FlowPay's services compose a multi-tenant platform, where each tenant is a user of FlowPay and can be a legal entity or an individual.
-Users can delegate third-party applications, called *clients*, to act on their behalf using the OAuth2 protocol.
+Users can delegate third-party applications, called _clients_, to act on their behalf using the OAuth2 protocol.
 
 The APIs provided are REST and accessible via HTTPS, some endpoints are protected by the OAuth2, so you need to register your application and obtain a valid access token to use them.
 
 ## Account Information Service (AIS)
+
 AIS (Account Information Service) is a financial service that allows third parties to access a user's account information from different banks or financial institutions. AIS works by using APIs provided to securely connect to the user's bank account and retrieve the necessary information.
 
 As a payment institution authorised by the Bank of Italy, FlowPay can offer AIS to its customers, allowing them to **access account information, balances and transaction history of the tenants' bank accounts** for which they are authorised.
@@ -45,25 +49,28 @@ These services enable many use cases such as account aggregation, personal finan
 In line with its principles, **FlowPay provides a seamless and compliant way to access tenants' bank details**, taking on the burden of negotiating PSD2 consent with the user and **providing a single API to access all banks**. All PSD2 consents are collected directly by FlowPay, so **there is no need for the client to implement a consent acquisition or renewal process**.
 If desired, a client can initiate a consent acquisition process themselves and manage the user experience.
 
-
 ## Payment Initiation Service (PIS)
+
 PIS (Payment Initiation Service) is a financial service that allows third-party providers to initiate a payment transaction from a user's bank account. PIS works by using APIs provided to securely connect to the user's bank account and initiate the payment.
 
 FlowPay is an authorised PIS Provider (PISP), which means that it can mediate between the user and the bank to authorise the payment.
 
 APIs allow users to initiate any traditional payment type:
+
 - Simple account-to-account payment: user can initiate a SEPA Credit Transfer (SCT) payment from one of its bank accounts.
 - Future date payment: the payer can schedule a payment for a future date.
 - Recurring payment: the payer can schedule a recurring payment with a fixed frequency.
 
 In addition, FlowPay extends traditional payment methods by providing value-added services such as
+
 - **Bulk payment**: payer can initiate a single payment with a single Strong Customer Authentication (SCA) to pay multiple payment requests or documents at once.
 - **Payment chain**: user can authorise a payment to be executed when a previous payment has been successfully received.
 - **Locked payment**: the user can authorise a payment to be executed if a previous payment has been successfully received. The check is performed by the client application that initiated the payment request.
-        
+
 Each of these services uses the FlowPay technical account, but the payment retains the original payer and payee information.
 
 # Onboarding
+
 Tenants can share their FlowPay resources with third-party applications by simply granting permission based on the OAuth2 protocol.
 
 A partner who intends to develop an integration to access tenants' data must first register its application and obtain the `client_id` and `client_secret` pair.
@@ -71,9 +78,10 @@ A partner who intends to develop an integration to access tenants' data must fir
 The developer portal can be reached at https://developer.flowpay.it, to access it's necessary to have a company account registered with FlowPay services.
 
 ## Become part of the FlowPay ecosystem
+
 To use FlowPay APIs you need to register your tenant, create your first application and obtain a valid access token. If you don't have an account, you need to register.
 
-The onboarding procedure takes a few minutes, to start you need to click the *Register* button at the bottom of the <a href="https://developer.flowpay.it">developer portal</a>.
+The onboarding procedure takes a few minutes, to start you need to click the _Register_ button at the bottom of the <a href="https://developer.flowpay.it">developer portal</a>.
 
 The first step of registration is to verify a bank account, this step is also one of the two requirements for verifying the company's identity, therefore the linked account must belong to the company you intend to register.
 
@@ -122,15 +130,18 @@ Onboarding users isn't allowed in the sandbox environment also.
 If you need to test the full functionality of the APIs, you can request a dedicated sandbox environment, and test all the features of the APIs, including the onboarding flow.
 
 # Oauth2 authentication flows
+
 FlowPay uses the OAuth2 protocol to authenticate third-party applications and users.
 Oauth2 is the industry standard for authentication and authorization, and is used by most of the major companies in the world.
 
 The scopes
 
 FlowPay supports the following authentication flows:
+
 ## Authorization code flow
 
 ## Client credentials flow
+
 The Client Credentials grant type is used by clients to obtain an access token outside of the context of a user.
 
 This is typically used by clients to access resources about themselves rather than to access a user's resources.
@@ -138,19 +149,19 @@ This is typically used by clients to access resources about themselves rather th
 The client makes a request to the token endpoint by sending the following parameters using the "application/x-www-form-urlencoded" format per Appendix B with a character encoding of UTF-8 in the HTTP request entity-body:
 
 - grant_type
-    - REQUIRED. Value MUST be set to "client_credentials".
+  - REQUIRED. Value MUST be set to "client_credentials".
 - scope
-    - OPTIONAL. The scope of the access request as described by Section 3.3.
+  - OPTIONAL. The scope of the access request as described by Section 3.3.
 - client_id
-    - REQUIRED. The client identifier as described by Section 2.2.
+  - REQUIRED. The client identifier as described by Section 2.2.
 - client_secret
-    - REQUIRED. The client secret as described by Section 2.3.1.
-
+  - REQUIRED. The client secret as described by Section 2.3.1.
 
 ## How token works and tenant filtering
+
 (negli header )
 
-# Pagination  
+# Pagination
 
 # Rate limits
 
