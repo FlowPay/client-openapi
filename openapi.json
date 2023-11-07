@@ -275,6 +275,7 @@
                     },
                     "documents": {
                         "type": "object",
+                        "description": "Dictionary of documents related to the bulk. Keys are the document type, values are the fingerprints of the documents.",
                         "additionalProperties": {
                             "type": "array",
                             "items": {
@@ -1976,7 +1977,7 @@
                     "Bulk"
                 ],
                 "requestBody": {
-                    "description": "Dictionary of fingerprints to be linked to the bulk payment, each property name is the document type.",
+                    "description": "Preferences and fingerprints that will be part of the bulk payment.",
                     "content": {
                         "application/json": {
                             "schema": {
@@ -1990,26 +1991,36 @@
                                         "type": "boolean",
                                         "description": "If true, wire transfers to the same beneficiary will be aggregated, this determines a saving. If false, wire transfer to the same beneficiary will not be aggregated, this allows beneficiary to have a more detailed view of the payments and keeps the payment remittance information.",
                                         "default": true
+                                    },
+                                    "documents": {
+                                        "type": "object",
+                                        "description": "Dictionary of fingerprints to be linked to the bulk payment, each property name is the document type.",
+                                        "additionalProperties": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Fingerprint"
+                                            },
+                                            "minItems": 1,
+                                            "uniqueItems": true,
+                                            "description": "List of fingerprints to be linked to the bulk payment. Property name is the document type."
+                                        }
                                     }
                                 },
-                                "additionalProperties": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Fingerprint"
-                                    },
-                                    "minItems": 1,
-                                    "uniqueItems": true,
-                                    "description": "List of fingerprints to be linked to the bulk payment. Property name is the document type."
-                                },
                                 "example": {
-                                    "invoice": [
-                                        "d41d8cd98f00b204e9800998ecf8427e",
-                                        "GskefcByhlsgCSUODJPWTRFaOVsPGDdq"
-                                    ],
-                                    "pagopa": [
-                                        "RXi4PrrsOTiPxUVsbo12TAAD9kmTH2cM"
-                                    ]
-                                }
+                                    "allowWireTranfersAggregation": true,
+                                    "documents": {
+                                        "invoice": [
+                                            "d41d8cd98f00b204e9800998ecf8427e",
+                                            "GskefcByhlsgCSUODJPWTRFaOVsPGDdq"
+                                        ],
+                                        "pagopa": [
+                                            "RXi4PrrsOTiPxUVsbo12TAAD9kmTH2cM"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "additionalProperties"
+                                ]
                             }
                         }
                     }
