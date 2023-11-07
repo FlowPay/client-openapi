@@ -2262,6 +2262,56 @@
                                     },
                                     "fingerprint": {
                                         "$ref": "#/components/schemas/Fingerprint"
+                                    },
+                                    "locked": {
+                                        "type": "boolean",
+                                        "default": false,
+                                        "description": "If true funds will be directed to FlowPay technical account and will not be available to the beneficiary until the payment is confirmed or revoked via API. <br> <b>See locked payments paragraph for more details.</b>"
+                                    },
+                                    "scaExempt": {
+                                        "type": "boolean",
+                                        "default": false,
+                                        "description": "If true, the payment will be exempted from SCA. <br> <b>Only some use cases are eligible for SCA exemption, see SCA exemption paragraph for more details.</b><br> In case of SCA exemption, if a supported payment method is specified, the payment will be instantly processed."
+                                    },
+                                    "okRedirectUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL to be used to redirect the user to the client application after the payment has been successfully processed. <br> If not specified, the user will be redirected to the default FlowPay payment page."
+                                    },
+                                    "koRedirectUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL to be used to redirect the user to the client application in case of payment failure. <br> If not specified, the user will be redirected to the default FlowPay payment page."
+                                    },
+                                    "preferences": {
+                                        "type": "object",
+                                        "description": "Useful to customize payer user experience on payment page",
+                                        "properties": {
+                                            "paymentMethod": {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "description": "Payer payment method to be used to pay the document. <br> If not specified, the user will be able to choose the payment method from a list of supported payment methods."
+                                            },
+                                            "canEditRemittance": {
+                                                "type": "boolean",
+                                                "default": true,
+                                                "description": "If true, the user will be able to edit the remittance information from the payment page."
+                                            },
+                                            "allowedMethods": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sct",
+                                                        "sctInst",
+                                                        "card",
+                                                        "sdd",
+                                                        "wallet"
+                                                    ]
+                                                },
+                                                "description": "List of allowed payment methods. <br> If not specified, all supported payment methods will be allowed."
+                                            }
+                                        }
                                     }
                                 },
                                 "required": [
@@ -2274,6 +2324,17 @@
                     "required": true
                 },
                 "responses": {
+                    "200": {
+                        "description": "Payment processed.<br> This response is returned only if the payment has been processed without requiring user authorization, i.e. in the case of a checkout created with SCA exemption (`scaExempt`) and consistent payment method (`preferences.paymentMethod`)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
                     "201": {
                         "description": "Checkout created",
                         "content": {
