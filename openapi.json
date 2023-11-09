@@ -1366,6 +1366,12 @@
             }
         },
         {
+            "name": "Chain",
+            "description": {
+                "$ref": "docs/chain_lifecycle.md"
+            }
+        },
+        {
             "name": "Checkout",
             "description": "This endpoint allows managing checkout sessions any document client has access to"
         },
@@ -2304,7 +2310,219 @@
                 }
             }
         },
-        "/checkout": {
+        "/chain": {
+            "post": {
+                "summary": "Create chain document",
+                "description": "Create a new chain document. This endpoint allows to specify the fingerprint of the document that will be paid and the trigger document for that payment, along with their type.",
+                "operationId": "createChainPayment",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Chain"
+                ],
+                "requestBody": {
+                    "description": "Dictionary of fingerprints to be linked to the bulk payment, each property name is the document type.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "triggerType": {
+                                        "$ref": "#/components/schemas/DocumentKindEnum"
+                                    },
+                                    "triggerFingerprint": {
+                                        "$ref": "#/components/schemas/Fingerprint"
+                                    },
+                                    "targetType": {
+                                        "$ref": "#/components/schemas/DocumentKindEnum"
+                                    },
+                                    "targetFingerprint": {
+                                        "$ref": "#/components/schemas/Fingerprint"
+                                    }
+                                },
+                                "required": [
+                                    "triggerType",
+                                    "triggerFingerprint",
+                                    "targetType",
+                                    "targetFingerprint"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Chain payment created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chain"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "summary": "List chain documents",
+                "description": "List all chain documents according to the specified filters. <br> Returns a paginated list of chain documents.",
+                "operationId": "listChainPayments",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Chain"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "minimum": 1
+                        },
+                        "x-faker": "random.number",
+                        "x-fakerParams": [
+                            {
+                                "min": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "Page size",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "minimum": 1,
+                            "maximum": 100
+                        },
+                        "x-faker": "random.number",
+                        "x-fakerParams": [
+                            {
+                                "min": 1,
+                                "max": 100
+                            }
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chain payments list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/chain/{fingerprint}": {
+            "get": {
+                "summary": "Get document details",
+                "description": "Get bulk document details by ID",
+                "operationId": "getChainPayment",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "tags": [
+                    "Chain"
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Chain payment fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        },
+                        "x-faker": "datatype.uuid"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chain payment details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chain"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },"/checkout": {
             "post": {
                 "summary": "Create checkout",
                 "description": "This endpoint allows to create a new checkout specifying the document to be paid. <br> If the payment needs to be authorized by the user, the response will contain a link to be used to redirect the user to FlowPay payment page.",
