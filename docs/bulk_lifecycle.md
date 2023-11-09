@@ -9,7 +9,7 @@ We assume the case in which a user has two invoices for beneficiary 1 (Ben1), on
 The user wants to pay all of them in a single operation.
 
 The user's client, which has access to all the documents, calls the bulk endpoint with the list of documents to pay, the endpoint returns a new document (Bulk) that is linked to all the documents to pay.
-The client gives the bulk document to the user, which can now pay it with a single Payment Initiation (PIS) operation. The wire transfer allowed with the PIS on the bulk document is addressed to the FlowPay technical account (TA).
+The client gives the bulk document to the user, who can now pay it with a single Payment Initiation (PIS) operation. The wire transfer allowed with the PIS on the bulk document is addressed to the FlowPay technical account (TA).
 When the TA receives the payment, it splits the amount among the beneficiaries and sends the payments to them with wire transfers.
 
 In case of a bulk payment to the same beneficiary, the payment initiation effective beneficiary is the beneficiary itself, so the payer can easily recognize the transaction. Otherwise, the payment initiation effective beneficiary is FlowPay.
