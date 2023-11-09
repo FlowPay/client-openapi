@@ -440,7 +440,8 @@
                     "initialCreditFingerprint": {
                         "$ref": "#/components/schemas/Fingerprint",
                         "description": "Fingerprint of the initial credit document, used to transfer money to the wallet"
-                    }
+                    },
+                    "availableBalance": {}
                 }
             },
             "ConsumerNationalID": {
@@ -861,6 +862,69 @@
                 "description": "Unique identifier of the request.<br> It is helpful to identify the request in case of errors, providing it to the support team. Please submit it in the support ticket.",
                 "format": "uuid",
                 "x-faker": "random.uuid"
+            },
+            "SiteQuote": {
+                "description": "Quote for a construction site",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the quote ",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "site": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the construction site",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the quote creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 45050.23,
+                        "description": "Total amount of the quote",
+                        "x-faker": "finance.amount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the quote",
+                        "example": "Construction of the new museum"
+                    },
+                    "reference": {
+                        "type": "string",
+                        "description": "Reference of the quote",
+                        "example": "123AF-4654Z"
+                    },
+                    "fingerprint": {
+                        "type": "string",
+                        "example": "d41d8cd98f00b204e9800998ecf8427e",
+                        "description": "Fingerprint of the document accounting for the quote"
+                    },
+                    "files": {
+                        "type": "array",
+                        "description": "List of files related to the quote",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "site",
+                    "createdAt",
+                    "amount",
+                    "fingerprint",
+                    "files"
+                ]
             },
             "SiteWorkerContractCreation": {
                 "description": "Request to create a new contract between a construction site and a worker",
@@ -2994,7 +3058,7 @@
                 ],
                 "operationId": "createConstructionSite",
                 "summary": "Open a new site",
-                "description": "Allows to define a new site to be managed with FlowPay. If the token has the `wallet:constructions` scope, amount estimation will be used to generate a document to be paid in order to transfer initial amount to the wallet.",
+                "description": "Allows to define a new site to be managed with FlowPay",
                 "requestBody": {
                     "description": "Information needed to create and verify a new site",
                     "content": {
@@ -3020,13 +3084,6 @@
                                         "example": "Via Roma -1, 50041 Calenzano, Italia",
                                         "x-faker": "address.streetAddress"
                                     },
-                                    "expectedAmount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "minimum": 500.00,
-                                        "example": 75500.01,
-                                        "description": "Estimated amount for the site. If the token has `wallet:construction` scope, this amount will be used to generate a document to be paid in order to transfer initial amount to the wallet."
-                                    },
                                     "expectedEndDate": {
                                         "type": "string",
                                         "format": "date-time",
@@ -3048,7 +3105,6 @@
                                     "name",
                                     "description",
                                     "address",
-                                    "expectedAmount",
                                     "expectedEndDate",
                                     "attachments"
                                 ]
@@ -3216,6 +3272,201 @@
                         "$ref": "#/components/responses/InternalServerError"
                     }
                 }
+            }
+        },
+        "/constructions/sites/{identifier}/quote": {
+            "post": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "createQuote",
+                "summary": "Create quote",
+                "description": "Allows to create a new quote for a specific site, useful to credit site owner wallet with the amount needed to start the site operations. <br> The request must be authorized by the site owner.",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Quote details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 75500.01,
+                                        "description": "Estimated amount for the site. If the token has `wallet:construction` scope, this amount will be used to generate a document to be paid in order to transfer initial amount to the wallet."
+                                    },
+                                    "expectedEndDate": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "description": "Estimated end date of the site"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Information about the site and planned activities. Details are not mandatory but an exhaustive description is recommended to help during the verification process and to avoid delays or more information requests.",
+                                        "example": "Giardino posteriore: rifacimento pavimentazione, installazione impianto di irrigazione, installazione impianto di illuminazione",
+                                        "x-faker": "lorem.paragraph"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Reference number of the quote",
+                                        "example": "Q-123456",
+                                        "x-faker": "lorem.sentence"
+                                    },
+                                    "attachments": {
+                                        "type": "array",
+                                        "description": "List of files FlowPay will use to verify site operations",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "Identifier of the file uploaded to FlowPay using the `/files` endpoint",
+                                            "x-faker": "datatype.uuid"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "site",
+                                    "amount",
+                                    "description",
+                                    "expectedEndDate",
+                                    "attachments"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write",
+                            "wallet:construction"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SiteQuote"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "getQuotes",
+                "summary": "List quotes",
+                "description": "Allows to retrieve a list of quotes for a specific site",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SiteQuote"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read",
+                            "wallet:construction"
+                        ]
+                    }
+                ]
             }
         },
         "/constructions/progress": {
