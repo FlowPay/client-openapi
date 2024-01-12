@@ -12,7 +12,7 @@
             "url": "https://developer.flowpay.it/tos"
         },
         "x-logo": {
-            "url": "https://flowpayproduction.blob.core.windows.net/img/flowpay_logo.png",
+            "url": "https://images.flowpay.it/logo",
             "altText": "FlowPay"
         },
         "contact": {
@@ -72,7 +72,8 @@
                             "constructions:write": "Allow to create construction sites and manage the lifecycle",
                             "openid": "Allow to read user profile",
                             "transfers:read": "Allow to read transfers",
-                            "transfers:write": "Allow to create transfers and manage lifecycle"
+                            "transfers:write": "Allow to create transfers and manage lifecycle",
+                            "wallet:`document_type`": "Allow to manage wallet for the specified use case"
                         }
                     },
                     "clientCredentials": {
@@ -338,8 +339,23 @@
                             "$ref": "#/components/schemas/CollectionMethodEnum"
                         },
                         "description": "Collection methods enabled for the payment.<br>Note that collection methods are the intersection of the collection methods techologies enabled for the creditor and the collection methods allowed by the client for checkout."
+                    },
+                    "payments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Payment"
+                        },
+                        "description": "List of payments related to the checkout"
                     }
-                }
+                },
+                "required": [
+                    "code",
+                    "fingerprint",
+                    "type",
+                    "creditor",
+                    "debtor",
+                    "collectionMethods"
+                ]
             },
             "ConsentStatusEnum": {
                 "type": "string",
@@ -618,6 +634,207 @@
                     "terms"
                 ]
             },
+            "KYCBankAccountDossier": {
+                "type": "object",
+                "properties": {
+                    "iban": {
+                        "type": "string",
+                        "description": "IBAN of the bank account",
+                        "x-faker": "finance.iban"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Label of the bank account",
+                        "example": "My bank account"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "True if the ownership of the bank account has been verified"
+                    },
+                    "consentExpiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the bank account PSD2 consent expiration",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.future"
+                    }
+                }
+            },
+            "KYCCompanyDossier": {
+                "type": "object",
+                "description": "Company information",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the company",
+                        "example": "Illustrious Company S.p.A.",
+                        "x-faker": "company.companyName"
+                    },
+                    "vat": {
+                        "$ref": "#/components/schemas/CompanyVATNumber",
+                        "description": "VAT number of the company"
+                    },
+                    "address": {
+                        "$ref": "#/components/schemas/Address",
+                        "description": "Address of the company"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email of the company",
+                        "x-faker": "internet.email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Phone number of the company",
+                        "example": "+393331234567",
+                        "x-faker": "phone.phoneNumber"
+                    },
+                    "sanctioned": {
+                        "type": "boolean",
+                        "description": "True if the company is present in the list of sanctioned subjects"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "True if the company information has been verified"
+                    },
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KYCBankAccountDossier"
+                        },
+                        "description": "List of bank accounts of the company"
+                    }
+                }
+            },
+            "KYCConsumerDossier": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the consumer",
+                        "example": "Mario",
+                        "x-faker": "person.firstName"
+                    },
+                    "surname": {
+                        "type": "string",
+                        "description": "Surname of the consumer",
+                        "example": "Rossi",
+                        "x-faker": "person.lastName"
+                    },
+                    "tin": {
+                        "$ref": "#/components/schemas/ConsumerNationalID",
+                        "description": "National ID of the consumer"
+                    },
+                    "birthDate": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Date of birth of the consumer",
+                        "example": "1980-01-01",
+                        "x-faker": "date.past"
+                    },
+                    "birthPlace": {
+                        "type": "string",
+                        "description": "Place of birth of the consumer",
+                        "example": "Milano",
+                        "x-faker": "address.city"
+                    },
+                    "birthCountry": {
+                        "type": "string",
+                        "description": "Country of birth of the consumer",
+                        "example": "IT",
+                        "x-faker": "address.countryCode"
+                    },
+                    "address": {
+                        "$ref": "#/components/schemas/Address",
+                        "description": "Address of the consumer"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email of the consumer",
+                        "x-faker": "internet.email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Phone number of the consumer",
+                        "example": "+393331234567",
+                        "x-faker": "phone.phoneNumber"
+                    },
+                    "sanctioned": {
+                        "type": "boolean",
+                        "description": "True if the consumer is present in the list of sanctioned subjects"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "True if the consumer information has been verified"
+                    },
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KYCBankAccountDossier"
+                        },
+                        "description": "List of bank accounts of the consumer"
+                    }
+                }
+            },
+            "KYCDossier": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the KYC session",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the KYC session creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the last KYC session update",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "lastAccessAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the last KYC session access",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/KYCFlow"
+                    },
+                    "canLogin": {
+                        "type": "boolean",
+                        "description": "True if the user can login to the KYC session. If true, the user can retrieve data verified in previous sessions and can skip some steps of the KYC flow.",
+                        "default": false
+                    },
+                    "consumer": {
+                        "$ref": "#/components/schemas/KYCConsumerDossier",
+                        "description": "Consumer information"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/KYCCompanyDossier",
+                        "description": "Company information"
+                    }
+                }
+            },
+            "KYCFlow": {
+                "type": "string",
+                "description": "KYC flow",
+                "enum": [
+                    "consumer",
+                    "company",
+                    "business"
+                ]
+            },
             "DocumentAttachment": {
                 "type": "object",
                 "properties": {
@@ -842,6 +1059,12 @@
                         "description": "Date and time of the last payment update",
                         "example": "2020-01-01T00:00:00Z",
                         "x-faker": "date.past"
+                    },
+                    "debtorIBAN": {
+                        "type": "string",
+                        "description": "IBAN of the debtor",
+                        "example": "IT60X0542811101000000123456",
+                        "x-faker": "finance.iban"
                     }
                 }
             },
@@ -1384,6 +1607,10 @@
             "description": {
                 "$ref": "docs/invoice_lifecycle.md"
             }
+        },
+        {
+            "name": "KYC",
+            "description": "Allows clients to perform full digital onboarding of their customers"
         },
         {
             "name": "pagoPA",
@@ -2522,7 +2749,8 @@
                     }
                 }
             }
-        },"/checkout": {
+        },
+        "/checkout": {
             "post": {
                 "summary": "Create checkout",
                 "description": "This endpoint allows to create a new checkout specifying the document to be paid. <br> If the payment needs to be authorized by the user, the response will contain a link to be used to redirect the user to FlowPay payment page.",
@@ -4173,6 +4401,233 @@
                 "tags": [
                     "Invoices",
                     "Documents"
+                ]
+            }
+        },
+        "/kyc": {
+            "post": {
+                "summary": "Start KYC",
+                "description": "Start KYC process for the current user",
+                "operationId": "startKyc",
+                "tags": [
+                    "KYC"
+                ],
+                "security": [
+                    {
+                        "oAuth2": [
+                            "kyc"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "description": "KYC request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "redirectURL": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL where the user will be redirected after the KYC process is completed. If not specified, user will be redirected to the `/kyc/:identifier` endpoint wich will return the KYC data in JSON format.",
+                                        "x-faker": "internet.url"
+                                    },
+                                    "canLogin": {
+                                        "type": "boolean",
+                                        "description": "If true, the user will be able to login using one of the supported identity providers and other information that FlowPay has about the user will be used to pre-fill the KYC data. If false, the user must provide all the required information even if FlowPay already has it.",
+                                        "default": false
+                                    },
+                                    "flow": {
+                                        "type": "string",
+                                        "description": "Flow to be used for the KYC process. If not specified, user will be able to choose the flow.",
+                                        "enum": [
+                                            "consumer",
+                                            "company",
+                                            "business"
+                                        ]
+                                    },
+                                    "consumer": {
+                                        "type": "object",
+                                        "description": "Consumer data to be used to pre-fill the KYC",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Consumer name",
+                                                "x-faker": "person.firstName"
+                                            },
+                                            "surname": {
+                                                "type": "string",
+                                                "description": "Consumer surname",
+                                                "x-faker": "person.lastName"
+                                            },
+                                            "tin": {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Consumer email address",
+                                                "x-faker": "internet.email"
+                                            },
+                                            "phone": {
+                                                "type": "string",
+                                                "format": "phone",
+                                                "description": "Consumer phone number",
+                                                "x-faker": "phone.phoneNumber"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "description": "Consumer address",
+                                                "x-faker": "address.streetAddress"
+                                            },
+                                            "birthDate": {
+                                                "type": "string",
+                                                "format": "datetime",
+                                                "description": "Consumer birth date",
+                                                "x-faker": "date.past"
+                                            },
+                                            "birthPlace": {
+                                                "type": "string",
+                                                "description": "Consumer birth place",
+                                                "x-faker": "address.city"
+                                            },
+                                            "iban": {
+                                                "type": "string",
+                                                "description": "Consumer IBAN. If provided, FlowPay will use it to pre-validate ownership of the account, if autonomous IBAN check is not possibile, the IBAN will be used to find the bank where the account is held and the user will be asked to perform a Strong Customer Authentication with the bank.",
+                                                "x-faker": "finance.iban"
+                                            },
+                                            "bank": {
+                                                "type": "string",
+                                                "description": "FlowPay identifier of the bank where the consumer holds the account. If provided, FlowPay will use it suggest the bank to the user during the Strong Customer Authentication process.<br> The identifier can be retrieved using the `/banks` endpoint.",
+                                                "example": "Intesa Sanpaolo"
+                                            }
+                                        }
+                                    },
+                                    "company": {
+                                        "type": "object",
+                                        "description": "Company data to be used to pre-fill the KYC",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Company name",
+                                                "x-faker": "company.companyName"
+                                            },
+                                            "tin": {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            },
+                                            "country": {
+                                                "type": "string",
+                                                "description": "Company country",
+                                                "x-faker": "address.country"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Company email address",
+                                                "x-faker": "internet.email"
+                                            },
+                                            "certifiedEmail": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Company certified email address",
+                                                "x-faker": "internet.email"
+                                            },
+                                            "phone": {
+                                                "type": "string",
+                                                "format": "phone",
+                                                "description": "Company phone number",
+                                                "x-faker": "phone.phoneNumber"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "description": "Company address",
+                                                "x-faker": "address.streetAddress"
+                                            },
+                                            "iban": {
+                                                "type": "string",
+                                                "description": "Company IBAN. If provided, FlowPay will use it to pre-validate ownership of the account, if autonomous IBAN check is not possibile, the IBAN will be used to find the bank where the account is held and the user will be asked to perform a Strong Customer Authentication with the bank.",
+                                                "x-faker": "finance.iban"
+                                            },
+                                            "bank": {
+                                                "type": "string",
+                                                "description": "FlowPay identifier of the bank where the company holds the account. If provided, FlowPay will use it suggest the bank to the user during the Strong Customer Authentication process.<br> The identifier can be retrieved using the `/banks` endpoint.",
+                                                "example": "Intesa Sanpaolo"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": []
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "KYC started",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KYCDossier"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/kyc/{identifier}": {
+            "get": {
+                "summary": "Get KYC data",
+                "description": "Retrieve KYC data for the specified session",
+                "operationId": "getKycStatus",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "kyc"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "KYC session identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KYC status retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KYCDossier"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "tags": [
+                    "KYC"
                 ]
             }
         },
