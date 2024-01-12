@@ -3720,7 +3720,7 @@
                 }
             }
         },
-        "/construction/sites/{identifier}/cashout": {
+        "/constructions/sites/{identifier}/cashout": {
             "post": {
                 "tags": [
                     "Construction"
@@ -3761,7 +3761,7 @@
                                     "description": {
                                         "type": "string",
                                         "description": "Remittance information to be used to generate the document. Details are not mandatory but an exhaustive description is recommended to help during the verification process and to avoid delays or more information requests.",
-                                        "example": "Pagamento stpendio dipendenti, pagamento fornitore XYZ",
+                                        "example": "Pagamento stipendio dipendenti, pagamento fornitore XYZ",
                                         "x-faker": "lorem.paragraph"
                                     },
                                     "reference": {
