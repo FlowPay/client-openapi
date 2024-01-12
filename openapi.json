@@ -3720,6 +3720,114 @@
                 }
             }
         },
+        "/construction/sites/{identifier}/cashout": {
+            "post": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "cashout",
+                "summary": "Cashout",
+                "description": "Allows to cashout residual money from a site. <br> The request acts on the site wallet owned by the owner of the oauth token used to call the endpoint.",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Cashout details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 75500.01,
+                                        "description": "Amount to be cashed out, this amount will be used to generate a document to be paid in order to transfer the amount from the wallet to the owner bank account."
+                                    },
+                                    "account": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifier of the bank account to be used to transfer the amount. If not specified, the default bank account will be used."
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Remittance information to be used to generate the document. Details are not mandatory but an exhaustive description is recommended to help during the verification process and to avoid delays or more information requests.",
+                                        "example": "Pagamento stpendio dipendenti, pagamento fornitore XYZ",
+                                        "x-faker": "lorem.paragraph"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Reference number of the cashout",
+                                        "example": "C-123456",
+                                        "x-faker": "lorem.sentence"
+                                    }
+                                },
+                                "required": [
+                                    "site",
+                                    "amount",
+                                    "description"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write",
+                            "wallet:construction"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fingerprint": {
+                                            "$ref": "#/components/schemas/Fingerprint"
+                                        }
+                                    },
+                                    "required": [
+                                        "fingerprint"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
         "/constructions/sites/{identifier}/quote": {
             "post": {
                 "tags": [
