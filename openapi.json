@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "FlowPay API",
-        "version": "2.0.0-alpha.3",
+        "version": "2.0.0-alpha.4",
         "description": {
             "$ref": "docs/general.md"
         },
@@ -12,7 +12,7 @@
             "url": "https://developer.flowpay.it/tos"
         },
         "x-logo": {
-            "url": "https://flowpayproduction.blob.core.windows.net/img/flowpay_logo.png",
+            "url": "https://images.flowpay.it/logo",
             "altText": "FlowPay"
         },
         "contact": {
@@ -72,7 +72,8 @@
                             "constructions:write": "Allow to create construction sites and manage the lifecycle",
                             "openid": "Allow to read user profile",
                             "transfers:read": "Allow to read transfers",
-                            "transfers:write": "Allow to create transfers and manage lifecycle"
+                            "transfers:write": "Allow to create transfers and manage lifecycle",
+                            "wallet:`document_type`": "Allow to manage wallet for the specified use case"
                         }
                     },
                     "clientCredentials": {
@@ -275,6 +276,7 @@
                     },
                     "documents": {
                         "type": "object",
+                        "description": "Dictionary of documents related to the bulk. Keys are the document type, values are the fingerprints of the documents.",
                         "additionalProperties": {
                             "type": "array",
                             "items": {
@@ -285,6 +287,7 @@
                 }
             },
             "Chain": {
+                "description": "Chain of documents",
                 "type": "object",
                 "properties": {
                     "fingerprint": {
@@ -301,7 +304,7 @@
                     },
                     "triggerFingerprint": {
                         "$ref": "#/components/schemas/Fingerprint"
-                    },
+                    }
                 }
             },
             "Checkout": {
@@ -336,8 +339,23 @@
                             "$ref": "#/components/schemas/CollectionMethodEnum"
                         },
                         "description": "Collection methods enabled for the payment.<br>Note that collection methods are the intersection of the collection methods techologies enabled for the creditor and the collection methods allowed by the client for checkout."
+                    },
+                    "payments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Payment"
+                        },
+                        "description": "List of payments related to the checkout"
                     }
-                }
+                },
+                "required": [
+                    "code",
+                    "fingerprint",
+                    "type",
+                    "creditor",
+                    "debtor",
+                    "collectionMethods"
+                ]
             },
             "ConsentStatusEnum": {
                 "type": "string",
@@ -399,7 +417,7 @@
                         "x-faker": "finance.amount"
                     },
                     "invoices": {
-                        "type": "object", 
+                        "type": "object",
                         "description": "Array of invoices related to each supplier for the worker. Keys are the creditor identifiers.",
                         "additionalProperties": {
                             "$ref": "#/components/schemas/Fingerprint"
@@ -428,7 +446,8 @@
                     "initialCreditFingerprint": {
                         "$ref": "#/components/schemas/Fingerprint",
                         "description": "Fingerprint of the initial credit document, used to transfer money to the wallet"
-                    }
+                    },
+                    "availableBalance": {}
                 }
             },
             "ConsumerNationalID": {
@@ -603,6 +622,207 @@
                     "creditor",
                     "debtor",
                     "terms"
+                ]
+            },
+            "KYCBankAccountDossier": {
+                "type": "object",
+                "properties": {
+                    "iban": {
+                        "type": "string",
+                        "description": "IBAN of the bank account",
+                        "x-faker": "finance.iban"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Label of the bank account",
+                        "example": "My bank account"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "True if the ownership of the bank account has been verified"
+                    },
+                    "consentExpiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the bank account PSD2 consent expiration",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.future"
+                    }
+                }
+            },
+            "KYCCompanyDossier": {
+                "type": "object",
+                "description": "Company information",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the company",
+                        "example": "Illustrious Company S.p.A.",
+                        "x-faker": "company.companyName"
+                    },
+                    "vat": {
+                        "$ref": "#/components/schemas/CompanyVATNumber",
+                        "description": "VAT number of the company"
+                    },
+                    "address": {
+                        "$ref": "#/components/schemas/Address",
+                        "description": "Address of the company"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email of the company",
+                        "x-faker": "internet.email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Phone number of the company",
+                        "example": "+393331234567",
+                        "x-faker": "phone.phoneNumber"
+                    },
+                    "sanctioned": {
+                        "type": "boolean",
+                        "description": "True if the company is present in the list of sanctioned subjects"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "True if the company information has been verified"
+                    },
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KYCBankAccountDossier"
+                        },
+                        "description": "List of bank accounts of the company"
+                    }
+                }
+            },
+            "KYCConsumerDossier": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the consumer",
+                        "example": "Mario",
+                        "x-faker": "person.firstName"
+                    },
+                    "surname": {
+                        "type": "string",
+                        "description": "Surname of the consumer",
+                        "example": "Rossi",
+                        "x-faker": "person.lastName"
+                    },
+                    "tin": {
+                        "$ref": "#/components/schemas/ConsumerNationalID",
+                        "description": "National ID of the consumer"
+                    },
+                    "birthDate": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Date of birth of the consumer",
+                        "example": "1980-01-01",
+                        "x-faker": "date.past"
+                    },
+                    "birthPlace": {
+                        "type": "string",
+                        "description": "Place of birth of the consumer",
+                        "example": "Milano",
+                        "x-faker": "address.city"
+                    },
+                    "birthCountry": {
+                        "type": "string",
+                        "description": "Country of birth of the consumer",
+                        "example": "IT",
+                        "x-faker": "address.countryCode"
+                    },
+                    "address": {
+                        "$ref": "#/components/schemas/Address",
+                        "description": "Address of the consumer"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email of the consumer",
+                        "x-faker": "internet.email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Phone number of the consumer",
+                        "example": "+393331234567",
+                        "x-faker": "phone.phoneNumber"
+                    },
+                    "sanctioned": {
+                        "type": "boolean",
+                        "description": "True if the consumer is present in the list of sanctioned subjects"
+                    },
+                    "verified": {
+                        "type": "boolean",
+                        "description": "True if the consumer information has been verified"
+                    },
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KYCBankAccountDossier"
+                        },
+                        "description": "List of bank accounts of the consumer"
+                    }
+                }
+            },
+            "KYCDossier": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the KYC session",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the KYC session creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the last KYC session update",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "lastAccessAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the last KYC session access",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/KYCFlow"
+                    },
+                    "canLogin": {
+                        "type": "boolean",
+                        "description": "True if the user can login to the KYC session. If true, the user can retrieve data verified in previous sessions and can skip some steps of the KYC flow.",
+                        "default": false
+                    },
+                    "consumer": {
+                        "$ref": "#/components/schemas/KYCConsumerDossier",
+                        "description": "Consumer information"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/KYCCompanyDossier",
+                        "description": "Company information"
+                    }
+                }
+            },
+            "KYCFlow": {
+                "type": "string",
+                "description": "KYC flow",
+                "enum": [
+                    "consumer",
+                    "company",
+                    "business"
                 ]
             },
             "DocumentAttachment": {
@@ -829,6 +1049,12 @@
                         "description": "Date and time of the last payment update",
                         "example": "2020-01-01T00:00:00Z",
                         "x-faker": "date.past"
+                    },
+                    "debtorIBAN": {
+                        "type": "string",
+                        "description": "IBAN of the debtor",
+                        "example": "IT60X0542811101000000123456",
+                        "x-faker": "finance.iban"
                     }
                 }
             },
@@ -849,6 +1075,69 @@
                 "description": "Unique identifier of the request.<br> It is helpful to identify the request in case of errors, providing it to the support team. Please submit it in the support ticket.",
                 "format": "uuid",
                 "x-faker": "random.uuid"
+            },
+            "SiteQuote": {
+                "description": "Quote for a construction site",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the quote ",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "site": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the construction site",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date and time of the quote creation",
+                        "example": "2020-01-01T00:00:00Z",
+                        "x-faker": "date.past"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 45050.23,
+                        "description": "Total amount of the quote",
+                        "x-faker": "finance.amount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the quote",
+                        "example": "Construction of the new museum"
+                    },
+                    "reference": {
+                        "type": "string",
+                        "description": "Reference of the quote",
+                        "example": "123AF-4654Z"
+                    },
+                    "fingerprint": {
+                        "type": "string",
+                        "example": "d41d8cd98f00b204e9800998ecf8427e",
+                        "description": "Fingerprint of the document accounting for the quote"
+                    },
+                    "files": {
+                        "type": "array",
+                        "description": "List of files related to the quote",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "site",
+                    "createdAt",
+                    "amount",
+                    "fingerprint",
+                    "files"
+                ]
             },
             "SiteWorkerContractCreation": {
                 "description": "Request to create a new contract between a construction site and a worker",
@@ -1308,6 +1597,10 @@
             "description": {
                 "$ref": "docs/invoice_lifecycle.md"
             }
+        },
+        {
+            "name": "KYC",
+            "description": "Allows clients to perform full digital onboarding of their customers"
         },
         {
             "name": "pagoPA",
@@ -1971,7 +2264,7 @@
                     "Bulk"
                 ],
                 "requestBody": {
-                    "description": "Dictionary of fingerprints to be linked to the bulk payment, each property name is the document type.",
+                    "description": "Preferences and fingerprints that will be part of the bulk payment.",
                     "content": {
                         "application/json": {
                             "schema": {
@@ -1983,28 +2276,38 @@
                                 "properties": {
                                     "allowWireTranfersAggregation": {
                                         "type": "boolean",
-                                        "description": "If true, wire transfer to the same beneficiary will be aggregated, this determines a saving. If false, wire transfer to the same beneficiary will not be aggregated, this allows beneficiary to have a more detailed view of the payments and keeps the payment remittance information.",
+                                        "description": "If true, wire transfers to the same beneficiary will be aggregated, this determines a saving. If false, wire transfer to the same beneficiary will not be aggregated, this allows beneficiary to have a more detailed view of the payments and keeps the payment remittance information.",
                                         "default": true
+                                    },
+                                    "documents": {
+                                        "type": "object",
+                                        "description": "Dictionary of fingerprints to be linked to the bulk payment, each property name is the document type.",
+                                        "additionalProperties": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Fingerprint"
+                                            },
+                                            "minItems": 1,
+                                            "uniqueItems": true,
+                                            "description": "List of fingerprints to be linked to the bulk payment. Property name is the document type."
+                                        }
                                     }
                                 },
-                                "additionalProperties": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Fingerprint"
-                                    },
-                                    "minItems": 1,
-                                    "uniqueItems": true,
-                                    "description": "List of fingerprints to be linked to the bulk payment. Property name is the document type."
-                                },
                                 "example": {
-                                    "invoice": [
-                                        "d41d8cd98f00b204e9800998ecf8427e",
-                                        "GskefcByhlsgCSUODJPWTRFaOVsPGDdq"
-                                    ],
-                                    "pagopa": [
-                                        "RXi4PrrsOTiPxUVsbo12TAAD9kmTH2cM"
-                                    ]
-                                }
+                                    "allowWireTranfersAggregation": true,
+                                    "documents": {
+                                        "invoice": [
+                                            "d41d8cd98f00b204e9800998ecf8427e",
+                                            "GskefcByhlsgCSUODJPWTRFaOVsPGDdq"
+                                        ],
+                                        "pagopa": [
+                                            "RXi4PrrsOTiPxUVsbo12TAAD9kmTH2cM"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "additionalProperties"
+                                ]
                             }
                         }
                     }
@@ -2436,7 +2739,8 @@
                     }
                 }
             }
-        },"/checkout": {
+        },
+        "/checkout": {
             "post": {
                 "summary": "Create checkout",
                 "description": "This endpoint allows to create a new checkout specifying the document to be paid. <br> If the payment needs to be authorized by the user, the response will contain a link to be used to redirect the user to FlowPay payment page.",
@@ -2458,6 +2762,56 @@
                                     },
                                     "fingerprint": {
                                         "$ref": "#/components/schemas/Fingerprint"
+                                    },
+                                    "locked": {
+                                        "type": "boolean",
+                                        "default": false,
+                                        "description": "If true funds will be directed to FlowPay technical account and will not be available to the beneficiary until the payment is confirmed or revoked via API. <br> <b>See locked payments paragraph for more details.</b>"
+                                    },
+                                    "scaExempt": {
+                                        "type": "boolean",
+                                        "default": false,
+                                        "description": "If true, the payment will be exempted from SCA. <br> <b>Only some use cases are eligible for SCA exemption, see SCA exemption paragraph for more details.</b><br> In case of SCA exemption, if a supported payment method is specified, the payment will be instantly processed."
+                                    },
+                                    "okRedirectUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL to be used to redirect the user to the client application after the payment has been successfully processed. <br> If not specified, the user will be redirected to the default FlowPay payment page."
+                                    },
+                                    "koRedirectUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL to be used to redirect the user to the client application in case of payment failure. <br> If not specified, the user will be redirected to the default FlowPay payment page."
+                                    },
+                                    "preferences": {
+                                        "type": "object",
+                                        "description": "Useful to customize payer user experience on payment page",
+                                        "properties": {
+                                            "paymentMethod": {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "description": "Payer payment method to be used to pay the document. <br> If not specified, the user will be able to choose the payment method from a list of supported payment methods."
+                                            },
+                                            "canEditRemittance": {
+                                                "type": "boolean",
+                                                "default": true,
+                                                "description": "If true, the user will be able to edit the remittance information from the payment page."
+                                            },
+                                            "allowedMethods": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sct",
+                                                        "sctInst",
+                                                        "card",
+                                                        "sdd",
+                                                        "wallet"
+                                                    ]
+                                                },
+                                                "description": "List of allowed payment methods. <br> If not specified, all supported payment methods will be allowed."
+                                            }
+                                        }
                                     }
                                 },
                                 "required": [
@@ -2470,6 +2824,17 @@
                     "required": true
                 },
                 "responses": {
+                    "200": {
+                        "description": "Payment processed.<br> This response is returned only if the payment has been processed without requiring user authorization, i.e. in the case of a checkout created with SCA exemption (`scaExempt`) and consistent payment method (`preferences.paymentMethod`)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
                     "201": {
                         "description": "Checkout created",
                         "content": {
@@ -3048,7 +3413,14 @@
                 },
                 "responses": {
                     "200": {
-                        "$ref": "#/components/schemas/SiteWorkerContract"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SiteWorkerContract"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
@@ -3122,7 +3494,7 @@
                 ],
                 "operationId": "createConstructionSite",
                 "summary": "Open a new site",
-                "description": "Allows to define a new site to be managed with FlowPay. If the token has the `wallet:constructions` scope, amount estimation will be used to generate a document to be paid in order to transfer initial amount to the wallet.",
+                "description": "Allows to define a new site to be managed with FlowPay",
                 "requestBody": {
                     "description": "Information needed to create and verify a new site",
                     "content": {
@@ -3148,13 +3520,6 @@
                                         "example": "Via Roma -1, 50041 Calenzano, Italia",
                                         "x-faker": "address.streetAddress"
                                     },
-                                    "expectedAmount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "minimum": 500.00,
-                                        "example": 75500.01,
-                                        "description": "Estimated amount for the site. If the token has `wallet:construction` scope, this amount will be used to generate a document to be paid in order to transfer initial amount to the wallet."
-                                    },
                                     "expectedEndDate": {
                                         "type": "string",
                                         "format": "date-time",
@@ -3176,7 +3541,6 @@
                                     "name",
                                     "description",
                                     "address",
-                                    "expectedAmount",
                                     "expectedEndDate",
                                     "attachments"
                                 ]
@@ -3346,10 +3710,323 @@
                 }
             }
         },
-        "/constructions/progress": {
+        "/constructions/sites/{identifier}/cashout": {
             "post": {
                 "summary": "Register work progress",
                 "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document.<br> Each invoice between the worker and their suppliers will be linked to a new document.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>.",
+                "operationId": "registerWorkProgress",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "cashout",
+                "summary": "Cashout",
+                "description": "Allows to cashout residual money from a site. <br> The request acts on the site wallet owned by the owner of the oauth token used to call the endpoint.",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Cashout details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 75500.01,
+                                        "description": "Amount to be cashed out, this amount will be used to generate a document to be paid in order to transfer the amount from the wallet to the owner bank account."
+                                    },
+                                    "account": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifier of the bank account to be used to transfer the amount. If not specified, the default bank account will be used."
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Remittance information to be used to generate the document. Details are not mandatory but an exhaustive description is recommended to help during the verification process and to avoid delays or more information requests.",
+                                        "example": "Pagamento stipendio dipendenti, pagamento fornitore XYZ",
+                                        "x-faker": "lorem.paragraph"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Reference number of the cashout",
+                                        "example": "C-123456",
+                                        "x-faker": "lorem.sentence"
+                                    }
+                                },
+                                "required": [
+                                    "site",
+                                    "amount",
+                                    "description"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write",
+                            "wallet:construction"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fingerprint": {
+                                            "$ref": "#/components/schemas/Fingerprint"
+                                        }
+                                    },
+                                    "required": [
+                                        "fingerprint"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/constructions/sites/{identifier}/quote": {
+            "post": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "createQuote",
+                "summary": "Create quote",
+                "description": "Allows to create a new quote for a specific site, useful to credit site owner wallet with the amount needed to start the site operations. <br> The request must be authorized by the site owner.",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Quote details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 75500.01,
+                                        "description": "Estimated amount for the site. If the token has `wallet:construction` scope, this amount will be used to generate a document to be paid in order to transfer initial amount to the wallet."
+                                    },
+                                    "expectedEndDate": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "description": "Estimated end date of the site"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Information about the site and planned activities. Details are not mandatory but an exhaustive description is recommended to help during the verification process and to avoid delays or more information requests.",
+                                        "example": "Giardino posteriore: rifacimento pavimentazione, installazione impianto di irrigazione, installazione impianto di illuminazione",
+                                        "x-faker": "lorem.paragraph"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Reference number of the quote",
+                                        "example": "Q-123456",
+                                        "x-faker": "lorem.sentence"
+                                    },
+                                    "attachments": {
+                                        "type": "array",
+                                        "description": "List of files FlowPay will use to verify site operations",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "Identifier of the file uploaded to FlowPay using the `/files` endpoint",
+                                            "x-faker": "datatype.uuid"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "site",
+                                    "amount",
+                                    "description",
+                                    "expectedEndDate",
+                                    "attachments"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write",
+                            "wallet:construction"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SiteQuote"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Construction"
+                ],
+                "operationId": "getQuotes",
+                "summary": "List quotes",
+                "description": "Allows to retrieve a list of quotes for a specific site",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Site identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SiteQuote"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:read",
+                            "wallet:construction"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/constructions/progress": {
+            "post": {
+                "summary": "Register work progress",
+                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document, if there are multiple such invoices, a single document with multiple terms will be created.<br> Each invoice between the worker and their suppliers will be linked to a new document, if there are multiple invoices for the same supplier, a single document with multiple terms will be created.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>",
                 "operationId": "registerWorkProgress",
                 "security": [
                     {
@@ -3835,6 +4512,233 @@
                 ]
             }
         },
+        "/kyc": {
+            "post": {
+                "summary": "Start KYC",
+                "description": "Start KYC process for the current user",
+                "operationId": "startKyc",
+                "tags": [
+                    "KYC"
+                ],
+                "security": [
+                    {
+                        "oAuth2": [
+                            "kyc"
+                        ]
+                    }
+                ],
+                "requestBody": {
+                    "description": "KYC request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "redirectURL": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL where the user will be redirected after the KYC process is completed. If not specified, user will be redirected to the `/kyc/:identifier` endpoint wich will return the KYC data in JSON format.",
+                                        "x-faker": "internet.url"
+                                    },
+                                    "canLogin": {
+                                        "type": "boolean",
+                                        "description": "If true, the user will be able to login using one of the supported identity providers and other information that FlowPay has about the user will be used to pre-fill the KYC data. If false, the user must provide all the required information even if FlowPay already has it.",
+                                        "default": false
+                                    },
+                                    "flow": {
+                                        "type": "string",
+                                        "description": "Flow to be used for the KYC process. If not specified, user will be able to choose the flow.",
+                                        "enum": [
+                                            "consumer",
+                                            "company",
+                                            "business"
+                                        ]
+                                    },
+                                    "consumer": {
+                                        "type": "object",
+                                        "description": "Consumer data to be used to pre-fill the KYC",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Consumer name",
+                                                "x-faker": "person.firstName"
+                                            },
+                                            "surname": {
+                                                "type": "string",
+                                                "description": "Consumer surname",
+                                                "x-faker": "person.lastName"
+                                            },
+                                            "tin": {
+                                                "$ref": "#/components/schemas/ConsumerNationalID"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Consumer email address",
+                                                "x-faker": "internet.email"
+                                            },
+                                            "phone": {
+                                                "type": "string",
+                                                "format": "phone",
+                                                "description": "Consumer phone number",
+                                                "x-faker": "phone.phoneNumber"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "description": "Consumer address",
+                                                "x-faker": "address.streetAddress"
+                                            },
+                                            "birthDate": {
+                                                "type": "string",
+                                                "format": "datetime",
+                                                "description": "Consumer birth date",
+                                                "x-faker": "date.past"
+                                            },
+                                            "birthPlace": {
+                                                "type": "string",
+                                                "description": "Consumer birth place",
+                                                "x-faker": "address.city"
+                                            },
+                                            "iban": {
+                                                "type": "string",
+                                                "description": "Consumer IBAN. If provided, FlowPay will use it to pre-validate ownership of the account, if autonomous IBAN check is not possibile, the IBAN will be used to find the bank where the account is held and the user will be asked to perform a Strong Customer Authentication with the bank.",
+                                                "x-faker": "finance.iban"
+                                            },
+                                            "bank": {
+                                                "type": "string",
+                                                "description": "FlowPay identifier of the bank where the consumer holds the account. If provided, FlowPay will use it suggest the bank to the user during the Strong Customer Authentication process.<br> The identifier can be retrieved using the `/banks` endpoint.",
+                                                "example": "Intesa Sanpaolo"
+                                            }
+                                        }
+                                    },
+                                    "company": {
+                                        "type": "object",
+                                        "description": "Company data to be used to pre-fill the KYC",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Company name",
+                                                "x-faker": "company.companyName"
+                                            },
+                                            "tin": {
+                                                "$ref": "#/components/schemas/CompanyVATNumber"
+                                            },
+                                            "country": {
+                                                "type": "string",
+                                                "description": "Company country",
+                                                "x-faker": "address.country"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Company email address",
+                                                "x-faker": "internet.email"
+                                            },
+                                            "certifiedEmail": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Company certified email address",
+                                                "x-faker": "internet.email"
+                                            },
+                                            "phone": {
+                                                "type": "string",
+                                                "format": "phone",
+                                                "description": "Company phone number",
+                                                "x-faker": "phone.phoneNumber"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "description": "Company address",
+                                                "x-faker": "address.streetAddress"
+                                            },
+                                            "iban": {
+                                                "type": "string",
+                                                "description": "Company IBAN. If provided, FlowPay will use it to pre-validate ownership of the account, if autonomous IBAN check is not possibile, the IBAN will be used to find the bank where the account is held and the user will be asked to perform a Strong Customer Authentication with the bank.",
+                                                "x-faker": "finance.iban"
+                                            },
+                                            "bank": {
+                                                "type": "string",
+                                                "description": "FlowPay identifier of the bank where the company holds the account. If provided, FlowPay will use it suggest the bank to the user during the Strong Customer Authentication process.<br> The identifier can be retrieved using the `/banks` endpoint.",
+                                                "example": "Intesa Sanpaolo"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": []
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "KYC started",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KYCDossier"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/kyc/{identifier}": {
+            "get": {
+                "summary": "Get KYC data",
+                "description": "Retrieve KYC data for the specified session",
+                "operationId": "getKycStatus",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "kyc"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "KYC session identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KYC status retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KYCDossier"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "tags": [
+                    "KYC"
+                ]
+            }
+        },
         "/pagopa": {
             "post": {
                 "summary": "pagoPA payment",
@@ -3928,7 +4832,7 @@
             },
             "get": {
                 "summary": "pagoPA list",
-                "description": "Retrieve pagoPA list",
+                "description": "Retrieve pagoPA list according to the specified filters",
                 "operationId": "getPagopaList",
                 "security": [
                     {
@@ -4195,7 +5099,7 @@
         "/proforma": {
             "post": {
                 "summary": "Create proforma invoice",
-                "description": "Create a proforma invoice",
+                "description": "Create a proforma invoice to be paid by a customer",
                 "operationId": "createProformaInvoice",
                 "security": [
                     {
@@ -4340,7 +5244,7 @@
             },
             "get": {
                 "summary": "List proforma invoices",
-                "description": "Retrieve proforma invoices",
+                "description": "Retrieve proforma invoices list according to the specified filters",
                 "operationId": "getProformaInvoices",
                 "security": [
                     {
@@ -4816,7 +5720,7 @@
             },
             "post": {
                 "summary": "Create transfer",
-                "description": "Create a new transfer",
+                "description": "Create a new transfer document",
                 "operationId": "createTransfer",
                 "security": [
                     {
@@ -4970,7 +5874,7 @@
             },
             "delete": {
                 "summary": "Delete transfer",
-                "description": "Delete a transfer document",
+                "description": "Delete a transfer document that has not yet been executed",
                 "operationId": "deleteTransfer",
                 "security": [
                     {
