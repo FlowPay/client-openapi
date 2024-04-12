@@ -3711,6 +3711,7 @@
             }
         },
         "/constructions/sites/{identifier}/cashout": {
+            "post": {
                 "operationId": "cashout",
                 "summary": "Cashout",
                 "description": "Allows to cashout residual money from a site. <br> The request acts on the site wallet owned by the owner of the oauth token used to call the endpoint.",
