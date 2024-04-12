@@ -416,11 +416,6 @@
                         "description": "Total amount of the construction progress",
                         "x-faker": "finance.amount"
                     },
-                    "expense": {
-                        "type": "string",
-                        "example": "d41d8cd98f00b204e9800998ecf8427e",
-                        "description": "Fingerprint of the document accounting for the total costs for the site owner"
-                    },
                     "invoices": {
                         "type": "object",
                         "description": "Array of invoices related to each supplier for the worker. Keys are the creditor identifiers.",
@@ -3717,6 +3712,16 @@
         },
         "/constructions/sites/{identifier}/cashout": {
             "post": {
+                "summary": "Register work progress",
+                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document.<br> Each invoice between the worker and their suppliers will be linked to a new document.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>.",
+                "operationId": "registerWorkProgress",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "construction:write"
+                        ]
+                    }
+                ],
                 "tags": [
                     "Construction"
                 ],
