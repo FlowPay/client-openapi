@@ -3711,20 +3711,6 @@
             }
         },
         "/constructions/sites/{identifier}/cashout": {
-            "post": {
-                "summary": "Register work progress",
-                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document.<br> Each invoice between the worker and their suppliers will be linked to a new document.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>.",
-                "operationId": "registerWorkProgress",
-                "security": [
-                    {
-                        "oAuth2": [
-                            "construction:write"
-                        ]
-                    }
-                ],
-                "tags": [
-                    "Construction"
-                ],
                 "operationId": "cashout",
                 "summary": "Cashout",
                 "description": "Allows to cashout residual money from a site. <br> The request acts on the site wallet owned by the owner of the oauth token used to call the endpoint.",
@@ -4026,7 +4012,7 @@
         "/constructions/progress": {
             "post": {
                 "summary": "Register work progress",
-                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document, if there are multiple such invoices, a single document with multiple terms will be created.<br> Each invoice between the worker and their suppliers will be linked to a new document, if there are multiple invoices for the same supplier, a single document with multiple terms will be created.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>",
+                "description": "You can register work progress by passing a list of the invoices previously uploaded using the `/invoices` endpoint. <br> The request must be authorized by the worker. <br> Each invoice between site owner and worker will be linked to a new site-related document.<br> Each invoice between the worker and their suppliers will be linked to a new document.<br><b>Note: The sum of the worker-to-customer invoices must be at least equal to the sum of the supplier-to-worker invoices</b>.",
                 "operationId": "registerWorkProgress",
                 "security": [
                     {
