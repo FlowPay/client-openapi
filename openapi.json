@@ -1005,7 +1005,31 @@
                         "example": 100.01,
                         "description": "Amount to be paid",
                         "x-faker": "finance.amount"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/pagoPAStatus"
                     }
+                },
+                "required": [
+                    "fingerprint",
+                    "ec",
+                    "debtor",
+                    "remittance",
+                    "amount",
+                    "status"
+                ]
+            },
+            "pagoPAStatus": {
+                "type": "string",
+                "enum": [
+                    "ready",
+                    "activated",
+                    "locked",
+                    "paid",
+                    "paidOnAnotherProvider"
+                ],
+                "description": {
+                    "$ref": "docs/pagopa_status.md"
                 }
             },
             "Payment": {
@@ -1605,11 +1629,19 @@
         },
         {
             "name": "KYC",
-            "description": "Allows clients to perform full digital onboarding of their customers"
+            "description": {
+                "$ref": "docs/kyc_description.md"
+            }
         },
         {
             "name": "pagoPA",
-            "description": "pagoPA is the italian national system that allows citizens to pay public administration. FlowPay is a direct pagoPA participant and allows users to pay with open banking"
+            "description": {
+                "$ref": "docs/pagopa_lifecycle.md"
+            }
+        },
+        {
+            "name": "Payments",
+            "description": "Access to payments initiated by FlowPay"
         },
         {
             "name": "Transactions",
@@ -1618,10 +1650,6 @@
         {
             "name": "Transfers",
             "description": "Lifecycle-free documents"
-        },
-        {
-            "name": "Payments",
-            "description": "Access to payments initiated by FlowPay"
         },
         {
             "name": "Webhooks",
@@ -4759,7 +4787,7 @@
                                 "properties": {
                                     "noticeNumber": {
                                         "type": "string",
-                                        "pattern": "^d{11}",
+                                        "pattern": "^d{18}",
                                         "description": "Notice number emitted by pagoPA",
                                         "example": "1234567890123456"
                                     },
@@ -4793,8 +4821,7 @@
                                 },
                                 "required": [
                                     "noticeNumber",
-                                    "paVatCode",
-                                    "debtorVatCode"
+                                    "paVatCode"
                                 ]
                             }
                         }
@@ -4941,6 +4968,119 @@
                         "$ref": "#/components/responses/InternalServerError"
                     }
                 }
+            }
+        },
+        "/pagopa/{fingerprint}": {
+            "get": {
+                "summary": "Get pagoPA details",
+                "description": "Retrieve pagoPA details by fingerprint",
+                "operationId": "getPagopaDetails",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "pagopa:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Pagopa fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagopa details retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/pagoPA"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "pagoPA",
+                    "Documents"
+                ]
+            }
+        },
+        "/pagopa/{fingerprint}/receipt": {
+            "get": {
+                "summary": "Get pagoPA receipt",
+                "description": "Retrieve pagoPA receipt by fingerprint",
+                "operationId": "getPagopaReceipt",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "pagopa:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "description": "Pagopa fingerprint",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagopa receipt retrieved",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "pagoPA",
+                    "Documents"
+                ]
             }
         },
         "/payments": {
