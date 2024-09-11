@@ -12,7 +12,6 @@ It is also possible to specify whether the fee is calculated as a percentage of 
 
 # Lifecycle
 
-a
 When the user selects the payment method to be used, the fee calculation is done automatically by the payment gateway retrieving the most up-to-date rule applicable to that specific payment. Once the calculation is performed, the gateway automatically inserts the fee document into an aggregated document (Bulk).
 
 In accordance with the documentation related to bulk payments, if a user accesses a checkout linked to a document that has subsequently been included in a Bulk document, the payment gateway will automatically retrieve the final Bulk document. This ensures that the payment process is always aligned with the most recent information, simplifying the management of fees and their application to multiple payments.
