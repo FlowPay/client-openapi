@@ -565,7 +565,7 @@
                     }
                 }
             },
-            "FeeRule"{
+            "FeeRule": {
                 "type": "object",
                 "properties": {
                     "id": {
