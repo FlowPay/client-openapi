@@ -71,6 +71,8 @@
                             "constructions:read": "Allow to read information about construction sites",
                             "constructions:write": "Allow to create construction sites and manage the lifecycle",
                             "openid": "Allow to read user profile",
+                            "pagopa:read": "Allow to retrieve users' PagoPA payment notices",
+                            "pagopa:write": "Allow to create PagoPA payment notices",
                             "transfers:read": "Allow to read transfers",
                             "transfers:write": "Allow to create transfers and manage lifecycle",
                             "wallet:`document_type`": "Allow to manage wallet for the specified use case"
@@ -80,8 +82,20 @@
                         "tokenUrl": "/oauth/token",
                         "scopes": {
                             "ade": "Allow to interact with Agenzia delle Entrate services",
+                            "accounts:read": "Allow to read accounts",
+                            "accounts:write": "Allow to mediate accounts creation and open banking consent renewal",
                             "invoices:read": "Allow to read invoices",
-                            "invoices:write": "Allow to create invoices and manage lifecycle"
+                            "invoices:write": "Allow to create invoices and manage lifecycle",
+                            "bills:read": "Allow to read bills",
+                            "bills:write": "Allow to create bills and manage lifecycle",
+                            "constructions:read": "Allow to read information about construction sites",
+                            "constructions:write": "Allow to create construction sites and manage the lifecycle",
+                            "openid": "Allow to read user profile",
+                            "pagopa:read": "Allow to retrieve users' PagoPA payment notices",
+                            "pagopa:write": "Allow to create PagoPA payment notices",
+                            "transfers:read": "Allow to read transfers",
+                            "transfers:write": "Allow to create transfers and manage lifecycle",
+                            "wallet:`document_type`": "Allow to manage wallet for the specified use case"
                         }
                     }
                 }
@@ -512,6 +526,109 @@
                 "description": {
                     "$ref": "types/DocumentKind.md"
                 }
+            },
+            "Fee": {
+                "type": "object",
+                "properties": {
+                    "fingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint",
+                        "description": "Fingerprint of the fee"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "example": 0.5,
+                        "description": "Amount of the fee"
+                    },
+                    "targetFingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint",
+                        "description": "Fingerprint of the document the fee is related to"
+                    },
+                    "targetType": {
+                        "$ref": "#/components/schemas/DocumentKindEnum",
+                        "description": "Type of the document the fee is related to"
+                    },
+                    "ruleID": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the rule that generated the fee"
+                    },
+                    "linkedFingerprint": {
+                        "$ref": "#/components/schemas/Fingerprint",
+                        "description": "Fingerprint of the document the fee is linked to. Can be related to a `bulk` if the payer is the debtor of the target or to a `chain` if the payer is the creditor of the target."
+                    }
+                }
+            },
+            "FeeRule": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the fee rule",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "clientID": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the client that created the rule",
+                        "x-faker": "datatype.uuid"
+                    },
+                    "useCase": {
+                        "$ref": "#/components/schemas/DocumentKindEnum",
+                        "description": "Use case of the rule"
+                    },
+                    "method": {
+                        "type": "string",
+                        "enum": [
+                            "pis",
+                            "sdd",
+                            "card"
+                        ],
+                        "description": "Payment method the rule applies to"
+                    },
+                    "lowerBound": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Lower bound of the rule. If the amount is lower than this value, the rule does not apply."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "fixed",
+                            "percentage"
+                        ],
+                        "description": "Calculation method of the fee. <br> - `fixed`: the fee is a fixed amount<br> - `percentage`: the fee is a percentage of the target's amount"
+                    },
+                    "numeric": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Value of the fee. If the kind is `percentage`, the value is a percentage of the target's amount and can assume values between 0 and 1."
+                    },
+                    "remittance": {
+                        "type": "string",
+                        "description": "Remittance information of the fee charged to the payer"
+                    },
+                    "payer": {
+                        "type": "string",
+                        "enum": [
+                            "debtor",
+                            "creditor"
+                        ],
+                        "description": "Payer of the fee. <br> - `debtor`: the debtor of the target document pays the fee using a bulk<br> - `creditor`: the creditor of the target document pays the fee using a chain"
+                    }
+                },
+                "required": [
+                    "id",
+                    "clientID",
+                    "useCase",
+                    "method",
+                    "kind",
+                    "numeric",
+                    "payer",
+                    "lowerBound"
+                ]
             },
             "Fingerprint": {
                 "type": "string",
@@ -1615,6 +1732,12 @@
         {
             "name": "Construction",
             "description": "Manage construction sites and related entities lifecycle"
+        },
+        {
+            "name": "Fee",
+            "description": {
+                "$ref": "docs/fee_description.md"
+            }
         },
         {
             "name": "Invoices",
@@ -4234,6 +4357,148 @@
                         "$ref": "#/components/responses/InternalServerError"
                     }
                 }
+            }
+        },
+        "/fees": {
+            "get": {
+                "summary": "List fees",
+                "description": "Retrieve the list of fees applied to the customer for the services provided by the client",
+                "operationId": "getFees",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "fees:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Page size",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fees list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Fee"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Fee"
+                ]
+            }
+        },
+        "/fees/rules": {
+            "get": {
+                "summary": "List fee rules",
+                "description": "Retrieve the list of rules applied to the customer for the services provided by the client",
+                "operationId": "getFeeRules",
+                "security": [
+                    {
+                        "oAuth2": [
+                            "fees:read"
+                        ]
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Page size",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "x-faker": "random.number"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fee rules list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/FeeRule"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "tags": [
+                    "Fee"
+                ]
             }
         },
         "/invoices": {
