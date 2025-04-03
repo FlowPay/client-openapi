@@ -635,6 +635,21 @@
                     "e56d7ef1234567890abcde1234567890": 0.10
                 }
             },
+            "FeeRuleAmountMap": {
+                "type": "object",
+                "description": "A dictionary mapping payment methods to payment amounts including fees for a specific document",
+                "propertyNames": {
+                    "$ref": "#/components/schemas/FeeRuleMethods"
+                },
+                "additionalProperties": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "example": {
+                    "pis": 0.05,
+                    "card": 0.10
+                }
+            },
             "FeeRuleMethods": {
                 "type": "string",
                 "enum": [
@@ -4381,7 +4396,7 @@
                 }
             }
         },
-        "/fees": {
+        "/fee": {
             "get": {
                 "summary": "List fees",
                 "description": "Retrieve the list of fees applied to the customer for the services provided by the client",
@@ -4644,7 +4659,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/FeeRuleMap"
+                                    "$ref": "#/components/schemas/FeeRuleAmountMap"
                                 }
                             }
                         }
