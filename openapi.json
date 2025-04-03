@@ -580,13 +580,7 @@
                         "description": "Use case of the rule"
                     },
                     "method": {
-                        "type": "string",
-                        "enum": [
-                            "pis",
-                            "sdd",
-                            "card"
-                        ],
-                        "description": "Payment method the rule applies to"
+                        "$ref": "#/components/schemas/FeeRuleMethods"
                     },
                     "lowerBound": {
                         "type": "number",
@@ -611,11 +605,7 @@
                         "description": "Remittance information of the fee charged to the payer"
                     },
                     "payer": {
-                        "type": "string",
-                        "enum": [
-                            "debtor",
-                            "creditor"
-                        ],
+                        "$ref": "#/components/schemas/FeeRulePayer",
                         "description": "Payer of the fee. <br> - `debtor`: the debtor of the target document pays the fee using a bulk<br> - `creditor`: the creditor of the target document pays the fee using a chain"
                     }
                 },
@@ -629,6 +619,38 @@
                     "payer",
                     "lowerBound"
                 ]
+            },
+            "FeeRuleMap": {
+                "type": "object",
+                "description": "A dictionary mapping document fingerprints to fee amounts.",
+                "propertyNames": {
+                    "$ref": "#/components/schemas/Fingerprint"
+                },
+                "additionalProperties": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "example": {
+                    "d41d8cd98f00b204e9800998ecf8427e": 0.05,
+                    "e56d7ef1234567890abcde1234567890": 0.10
+                }
+            },
+            "FeeRuleMethods": {
+                "type": "string",
+                "enum": [
+                    "pis",
+                    "card",
+                    "sdd"
+                ],
+                "description": "Payment methods applicable for fee rules.\n\n- **pis**: Used for bank transfers, including standard bank transfers and instant transfers (bonifico istantaneo).\n- **card**: Used for card payments, including mobile wallet transactions.\n- **sdd**: Used for direct debit payments."
+            },
+            "FeeRulePayer": {
+                "type": "string",
+                "enum": [
+                    "debtor",
+                    "creditor"
+                ],
+                "description": "Payer types applicable for fee rules.\n\n- **debtor**: The fees are paid by the debtor via a bulk payment.\n- **creditor**: The fees are paid by the creditor via a split payment."
             },
             "Fingerprint": {
                 "type": "string",
@@ -4436,45 +4458,64 @@
                 ]
             }
         },
-        "/fees/rules": {
+        "/fee/rules": {
             "get": {
                 "summary": "List fee rules",
-                "description": "Retrieve the list of rules applied to the customer for the services provided by the client",
-                "operationId": "getFeeRules",
+                "operationId": "list_fee_rules",
+                "description": "Retrieve a list of fee rules based on query parameters.",
                 "security": [
                     {
-                        "oAuth2": [
-                            "fees:read"
-                        ]
+                        "oAuth2": []
                     }
+                ],
+                "tags": [
+                    "Fee"
                 ],
                 "parameters": [
                     {
-                        "name": "page",
+                        "name": "types",
                         "in": "query",
-                        "description": "Page number",
+                        "description": "Filter fee rules by document kind (e.g., invoice, bill, etc.)",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        },
-                        "x-faker": "random.number"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/DocumentKindEnum"
+                            }
+                        }
                     },
                     {
-                        "name": "size",
+                        "name": "methods",
                         "in": "query",
-                        "description": "Page size",
+                        "description": "Filter fee rules by payment method (e.g., card, sdd, pis)",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        },
-                        "x-faker": "random.number"
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "pis",
+                                    "sdd",
+                                    "card"
+                                ],
+                                "description": "Payment method the rule applies to"
+                            }
+                        }
+                    },
+                    {
+                        "name": "lowerBound",
+                        "in": "query",
+                        "description": "Filter fee rules by lower bound",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "double"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Fee rules list",
+                        "description": "List of fee rules",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4486,19 +4527,141 @@
                             }
                         }
                     },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
                     },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/fee/rules/{kind}/{fingerprint}": {
+            "get": {
+                "summary": "Retrieve fee rules for a document",
+                "description": "Retrieve fee rules for a document identified by its type and fingerprint. The response is a mapping of payment methods (e.g., card, sdd, pis) to the corresponding fee rule.",
+                "operationId": "getFeeRules",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/DocumentKindEnum"
+                        }
+                    },
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Fee"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mapping of fee rules retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeeRuleMap"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
                     "500": {
                         "$ref": "#/components/responses/InternalServerError"
                     }
-                },
+                }
+            }
+        },
+        "/fee/rules/{kind}/{fingerprint}/{payer}": {
+            "get": {
+                "summary": "Retrieve fee rule for a specific payer",
+                "description": "Retrieve fee rule(s) for a document identified by its type and fingerprint, filtered by the specified payer. Optionally, an 'amount' query parameter can be provided to influence fee calculation.",
+                "operationId": "getFeeRuleForPayer",
+                "security": [
+                    {
+                        "oAuth2": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/DocumentKindEnum"
+                        }
+                    },
+                    {
+                        "name": "fingerprint",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Fingerprint"
+                        }
+                    },
+                    {
+                        "name": "payer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/FeeRulePayer"
+                        }
+                    }
+                ],
                 "tags": [
                     "Fee"
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fee rule for the specified payer retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeeRuleMap"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
             }
         },
         "/invoices": {
