@@ -660,7 +660,9 @@
             "Fingerprint": {
                 "type": "string",
                 "description": "Fingerprint of the document",
-                "example": "d41d8cd98f00b204e9800998ecf8427e"
+                "maxLength": 64,
+                "minLength": 64,
+                "pattern": "\b[a-fA-F0-9]{64}\b"
             },
             "Invoice": {
                 "type": "object",
@@ -6459,14 +6461,7 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Transfer document deleted",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Transfer document deleted"
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
