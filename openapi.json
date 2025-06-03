@@ -495,7 +495,7 @@
                             }
                         ]
                     },
-                    "fullVat": {
+                    "tin": {
                         "type": "string",
                         "description": "VAT number of the company in full european format or national ID of the consumer ",
                         "oneOf": [
