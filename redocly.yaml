@@ -28,4 +28,49 @@ theme:
         - lang: Python
     disableSearch: false
     requiredPropsFirst: true
-    sortPropsAlphabetically: false
+    sortPropsAlphabetically: true
+    codeSamples: 
+      languages: 
+        - lang: curl
+        - lang: Node.js
+        - lang: Python
+    hideDownloadButton: false
+    mockServer:
+      description: "Mock server for testing purposes"
+      position: first
+      url: "https://mock.flowpay.it/v2s"
+    feedback: 
+      type: mood
+    
+    
+      
+
+    # theme:
+       
+      # colorMode:
+      #   default: system
+      #   disableSwitch: false
+
+      # sidebar:
+      #   backgroundColor: "#121212"
+      #   textColor:       "#e0e0e0"
+
+      # rightPanel:
+      #   backgroundColor: "#1e1e1e"
+      #   textColor:       "#e0e0e0"
+
+      # typography:
+      #   fontSize: "14px"
+      #   links:
+      #     color: "#8ab4f8"
+
+      # colors:
+      #   primary:
+      #     main: "#8ab4f8"
+      #   text:
+      #     primary:   "#e0e0e0"
+      #     secondary: "#cfcfcf"
+
+      # codeBlock:
+      #   backgroundColor: "#1f1f1f"
+      #   textColor:       "#e0e0e0"
