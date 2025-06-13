@@ -666,6 +666,278 @@
                 }
             }
         },
+        "/payment-methods": {
+            "get": {
+                "summary": "Elenca tutti i metodi di pagamento",
+                "description": "Restituisce un elenco paginato dei metodi di pagamento tokenizzati.",
+                "operationId": "listPaymentMethods",
+                "tags": [
+                    "Payment Method"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OffsetParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Elenco paginato dei metodi di pagamento.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PaymentMethod"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Tokenizza un nuovo metodo di pagamento",
+                "description": "<span class='beta-badge'></span><br>Crea un nuovo metodo di pagamento tokenizzato per futuri utilizzi.",
+                "operationId": "createPaymentMethod",
+                "x-beta": true,
+                "tags": [
+                    "Payment Method"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "card",
+                                            "bankAccount"
+                                        ]
+                                    },
+                                    "callbackUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "URL di callback per notifiche sullo stato del metodo di pagamento."
+                                    },
+                                    "customerId": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "ID del cliente associato al metodo di pagamento. Se non specificato, il metodo sarà associato al cliente corrente."
+                                    }
+                                },
+                                "required": [
+                                    "type"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Metodo di pagamento creato con successo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "link": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "Link alla pagina di tokenizzazione del metodo di pagamento."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/payment-methods/{paymentMethodId}": {
+            "get": {
+                "summary": "Recupera un metodo di pagamento",
+                "description": "Restituisce i dettagli di un metodo di pagamento tokenizzato.",
+                "operationId": "getPaymentMethodById",
+                "tags": [
+                    "Payment Method"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "paymentMethodId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "UUID del metodo di pagamento."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dettagli del metodo di pagamento.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentMethod"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Aggiorna un metodo di pagamento",
+                "description": "Aggiorna i metadati di un metodo di pagamento tokenizzato.",
+                "operationId": "updatePaymentMethod",
+                "tags": [
+                    "Payment Method"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "paymentMethodId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "UUID del metodo di pagamento."
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Flag per abilitare o disabilitare il metodo."
+                                    }
+                                },
+                                "required": [
+                                    "enabled"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Metodo di pagamento aggiornato con successo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentMethod"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Elimina un metodo di pagamento",
+                "description": "Rimuove un metodo di pagamento tokenizzato.",
+                "operationId": "deletePaymentMethod",
+                "tags": [
+                    "Payment Method"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "paymentMethodId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "UUID del metodo di pagamento da eliminare."
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Metodo di pagamento eliminato con successo."
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
         "/customers": {
             "post": {
                 "summary": "Start KYC",
