@@ -3,10 +3,7 @@
 <link rel="stylesheet" href="./theme/darkmode.css">
 <link rel="stylesheet" href="./theme/beta.css">
 
-
-[![Run in Postman](https://run.pstmn.io/button.svg)](/postman_collection)
-<br><br><br>
-If you can't find what you're looking for, it doesn't mean we can't do it. Write to us and tell us about your idea.
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.postman.com/run-collection/postman_collection.json)
 
 # API Support
 
@@ -35,6 +32,12 @@ As a Payment Service Provider (PSP), FlowPay is regulated by the Bank of Italy a
 We believe that the best API a payment institution can provide is one that is tailored to the payment use case, **allowing customers to focus on their business and not the payment process**.
 
 On the end user side, FlowPay ensures that **users own their data, can access it at any time and fully manage it**. They can choose which data to share with third parties in the most transparent way possible.
+
+## Contributi
+
+FlowPay accoglie con favore i contributi da parte dei partner. Il file OpenAPI è disponibile pubblicamente su GitHub: [FlowPay/client-openapi](https://github.com/FlowPay/client-openapi).
+
+I partner possono proporre modifiche effettuando un _fork_ del repository e inviando una _pull request_.
 
 # Introduction
 
@@ -107,24 +110,155 @@ Once the application has been created, it is already enabled for the sandbox env
 
 # Sandbox environment
 
-#TODO: add sandbox description
+FlowPay provides a sandbox environment to allow partners to test the APIs before going into production. The sandbox is a safe space where you can experiment with the APIs without affecting real accounts or transactions.
 
-## Limitations of the public sandbox environment
+## Available sandbox types
 
-Open banking sandbox APIs don't allow us to monitor the status of the payment, so the callback for the payment status change is not triggered, and the payment status is not updated.
-In addition, AIS data is not provided by the bank in the sandbox environment, so if you try to complete the AIS flow, you will be able to connect the bank account, but won't receive any balance and transactions data from it. We do however provide fake AIS data on the fake bank accounts that come with the sandbox users.
+FlowPay provides two types of sandbox environments to allow partners to test API integration:
 
-It is not possible to use the bulk payment service, as it requires the FlowPay technical account to be used.
+1. **Public sandbox**  
+   Available to all developers who register an application through the portal. It provides an initial experience with FlowPay APIs, useful to explore functionalities and simulate standard flows. However, it comes with several functional limitations.
 
-Also, due to the nature of the sandbox environment, it is not possible to use the payment chain service, as it requires a real payment to be executed.
+2. **Private sandbox**  
+   Upon request, FlowPay can activate a dedicated sandbox for a specific partner. This environment enables testing of advanced features such as onboarding flows, bulk payment, payment chain, and more realistic behaviors.
 
-Onboarding users isn't allowed in the sandbox environment also.
+## Public sandbox limitations
 
-## Request a dedicated sandbox environment
+The public sandbox environment has the following functional limitations:
 
-If you need to test the full functionality of the APIs, you can request a dedicated sandbox environment, and test all the features of the APIs, including the onboarding flow.
+- **Payment status update callbacks are not triggered**, as the APIs do not receive responses from banks.
+- **AIS data (balances and transactions) is not returned** for real bank accounts.
+- Only **fake AIS data** is available on preconfigured test accounts.
+- **Bulk payment service is not available**.
+- **Payment chain service is not available**, since it requires real payments.
+- **User onboarding is not supported**.
+
+## Requesting a private sandbox
+
+If you need to test full API capabilities, you can request a private sandbox by submitting a contact form or opening a ticket via the support portal.
+
+# Mock environment
+
+FlowPay provides a mock environment designed to help developers quickly prototype and validate their integration without connecting to real systems. This environment is built using [Prism](https://github.com/stoplightio/prism), which serves the OpenAPI specification as live endpoints, and uses [faker.js](https://fakerjs.dev/) to generate random but realistic data.
+
+## How it works
+
+The mock server validates all requests against the OpenAPI specification and returns mocked responses that match the expected output schema. Each field in the response is populated with context-aware fake data, such as realistic names, IBANs, dates, or UUIDs.
+he mock environment is available at: `https://api.mock-flowpay.it/v3`, all endpoints mirror those defined in the OpenAPI specification.
+
+Mock srver automatically checks:
+
+- required query parameters and headers
+- request body structure and content
+- response conformance to schema
+
+This allows you to focus on building your application without worrying about backend logic or data consistency.
+
+You can use the mock environment to:
+
+- Test your application's integration with FlowPay APIs
+- Front-end integration without backend logic
+- Early validation of request formats
+- Automated tests with predictable structure
+
+Example request to list payment requests:
+
+```
+GET https://mock.flowpay.it/platform/payment-requests
+Authorization: Bearer test-token
+```
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "req_82ae0947",
+      "amount": 1250,
+      "currency": "EUR",
+      "created_at": "2024-06-01T14:30:00Z",
+      "description": "Mocked request",
+      "status": "created"
+    }
+  ],
+  "next_cursor": "abc123",
+  "has_more": false
+}
+```
+
+## Validating your requests
+
+You can deliberately send incorrect requests (e.g. missing required fields) to confirm how the system returns validation errors. This helps ensure that your integration meets the expected structure before switching to a real sandbox or production environment.
+
+Example invalid request (missing `Authorization` header):
+
+```
+GET https://mock.flowpay.it/platform/payment-requests
+```
+
+Response:
+
+```json
+{
+  "type": "https://stoplight.io/prism/errors#MISSING_HEADER",
+  "title": "Authorization header is required",
+  "status": 400,
+  "detail": "Missing required header: Authorization"
+}
+```
 
 # Pagination
+
+FlowPay APIs implement offset-based pagination on all list endpoints, following a standard response structure.
+
+## Query parameters
+
+When requesting a paginated resource, the following query parameters are supported:
+
+- `limit` (integer): the maximum number of items to return. Default is 50, maximum is 100.
+- `offset` (integer): the number of items to skip before starting to return results.
+
+## Response structure
+
+Each paginated response follows the `PaginatedResult` format:
+
+- `total`: total number of available items.
+- `limit`: maximum number of items returned in this page (as requested).
+- `offset`: number of items skipped from the beginning of the collection.
+- `count`: number of items actually returned in this response.
+- `items`: array of objects representing the current page results.
+
+## Example
+
+### Request
+
+```
+GET /platform/payment-requests?limit=20&amp;offset=0
+Authorization: Bearer {token}
+```
+
+### Response
+
+```json
+{
+  "total": 147,
+  "limit": 20,
+  "offset": 0,
+  "count": 20,
+  "items": [
+    {
+      "id": "req_12345",
+      "amount": 1000,
+      "currency": "EUR",
+      "created_at": "2024-06-01T10:00:00Z",
+      "status": "created"
+    }
+  ]
+}
+```
+
+This structure allows clients to calculate pagination UI and control navigation across multiple pages using `offset` and `limit`.
 
 # Rate limits
 
