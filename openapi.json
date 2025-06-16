@@ -160,10 +160,10 @@
                                     "paymentMethodId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "ID del metodo di pagamento da utilizzare per il pagamento. Se non specificato, verrà utilizzato il metodo di pagamento predefinito del cliente."
+                                        "description": "ID del metodo di pagamento da utilizzare per il pagamento. Se non specificato, verrà utilizzato il metodo di pagamento predefinito del cliente, se presente."
                                     },
                                     "debtor": {
-                                        "description": "Informazioni sul debitore effettivo del pagamento. Se non valorizzato, verrà utilizzato il valore di `payer`.",
+                                        "description": "Informazioni sul debitore effettivo del pagamento. Se non valorizzato, verrà utilizzato il customer associato al metodo di pagamento fornito.",
                                         "oneOf": [
                                             {
                                                 "$ref": "#/components/schemas/ConsumerTIN"

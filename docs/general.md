@@ -3,8 +3,7 @@
 <link rel="stylesheet" href="./theme/darkmode.css">
 <link rel="stylesheet" href="./theme/beta.css">
 
-
-[![Run in Postman](https://run.pstmn.io/button.svg)](/postman_collection)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.postman.com/run-collection/postman_collection.json)
 <br><br><br>
 If you can't find what you're looking for, it doesn't mean we can't do it. Write to us and tell us about your idea.
 
