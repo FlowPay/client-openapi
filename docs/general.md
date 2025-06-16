@@ -4,8 +4,6 @@
 <link rel="stylesheet" href="./theme/beta.css">
 
 [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.postman.com/run-collection/postman_collection.json)
-<br><br><br>
-If you can't find what you're looking for, it doesn't mean we can't do it. Write to us and tell us about your idea.
 
 # API Support
 
@@ -34,6 +32,12 @@ As a Payment Service Provider (PSP), FlowPay is regulated by the Bank of Italy a
 We believe that the best API a payment institution can provide is one that is tailored to the payment use case, **allowing customers to focus on their business and not the payment process**.
 
 On the end user side, FlowPay ensures that **users own their data, can access it at any time and fully manage it**. They can choose which data to share with third parties in the most transparent way possible.
+
+## Contributi
+
+FlowPay accoglie con favore i contributi da parte dei partner. Il file OpenAPI è disponibile pubblicamente su GitHub: [FlowPay/client-openapi](https://github.com/FlowPay/client-openapi).
+
+I partner possono proporre modifiche effettuando un _fork_ del repository e inviando una _pull request_.
 
 # Introduction
 
@@ -106,24 +110,44 @@ Once the application has been created, it is already enabled for the sandbox env
 
 # Sandbox environment
 
-#TODO: add sandbox description
+FlowPay provides a sandbox environment to allow partners to test the APIs before going into production. The sandbox is a safe space where you can experiment with the APIs without affecting real accounts or transactions.
 
-## Limitations of the public sandbox environment
+## Available sandbox types
 
-Open banking sandbox APIs don't allow us to monitor the status of the payment, so the callback for the payment status change is not triggered, and the payment status is not updated.
-In addition, AIS data is not provided by the bank in the sandbox environment, so if you try to complete the AIS flow, you will be able to connect the bank account, but won't receive any balance and transactions data from it. We do however provide fake AIS data on the fake bank accounts that come with the sandbox users.
+FlowPay provides two types of sandbox environments to allow partners to test API integration:
 
-It is not possible to use the bulk payment service, as it requires the FlowPay technical account to be used.
+1. **Public sandbox**  
+   Available to all developers who register an application through the portal. It provides an initial experience with FlowPay APIs, useful to explore functionalities and simulate standard flows. However, it comes with several functional limitations.
 
-Also, due to the nature of the sandbox environment, it is not possible to use the payment chain service, as it requires a real payment to be executed.
+2. **Private sandbox**  
+   Upon request, FlowPay can activate a dedicated sandbox for a specific partner. This environment enables testing of advanced features such as onboarding flows, bulk payment, payment chain, and more realistic behaviors.
 
-Onboarding users isn't allowed in the sandbox environment also.
+## Public sandbox limitations
 
-## Request a dedicated sandbox environment
+The public sandbox environment has the following functional limitations:
 
-If you need to test the full functionality of the APIs, you can request a dedicated sandbox environment, and test all the features of the APIs, including the onboarding flow.
+- **Payment status update callbacks are not triggered**, as the APIs do not receive responses from banks.
+- **AIS data (balances and transactions) is not returned** for real bank accounts.
+- Only **fake AIS data** is available on preconfigured test accounts.
+- **Bulk payment service is not available**.
+- **Payment chain service is not available**, since it requires real payments.
+- **User onboarding is not supported**.
+
+## Requesting a private sandbox
+
+If you need to test full API capabilities, you can request a private sandbox by submitting a contact form or opening a ticket via the support portal.
 
 # Pagination
+
+All endpoints that return a list of items use cursor-based pagination.
+
+The response includes the following fields:
+
+- `data`: the list of items returned in the current page
+- `next_cursor`: a string value to be used as the `cursor` query parameter to retrieve the next page
+- `has_more`: a boolean indicating whether more results are available
+
+To paginate through results, pass the `cursor` parameter with the value of `next_cursor` from the previous response. If `has_more` is false or `next_cursor` is null, there are no additional pages.
 
 # Rate limits
 

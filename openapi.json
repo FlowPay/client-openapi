@@ -9,6 +9,10 @@
         "license": {
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
+        },
+        "x-repository": {
+            "url": "https://github.com/FlowPay/client-openapi",
+            "contributionGuidelines": "Invitiamo i partner a suggerire modifiche facendo un fork del repository e inviando una pull request."
         }
     },
     "servers": [
