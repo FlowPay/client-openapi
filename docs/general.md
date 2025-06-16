@@ -210,15 +210,55 @@ Response:
 
 # Pagination
 
-All endpoints that return a list of items use cursor-based pagination.
+FlowPay APIs implement offset-based pagination on all list endpoints, following a standard response structure.
 
-The response includes the following fields:
+## Query parameters
 
-- `data`: the list of items returned in the current page
-- `next_cursor`: a string value to be used as the `cursor` query parameter to retrieve the next page
-- `has_more`: a boolean indicating whether more results are available
+When requesting a paginated resource, the following query parameters are supported:
 
-To paginate through results, pass the `cursor` parameter with the value of `next_cursor` from the previous response. If `has_more` is false or `next_cursor` is null, there are no additional pages.
+- `limit` (integer): the maximum number of items to return. Default is 50, maximum is 100.
+- `offset` (integer): the number of items to skip before starting to return results.
+
+## Response structure
+
+Each paginated response follows the `PaginatedResult` format:
+
+- `total`: total number of available items.
+- `limit`: maximum number of items returned in this page (as requested).
+- `offset`: number of items skipped from the beginning of the collection.
+- `count`: number of items actually returned in this response.
+- `items`: array of objects representing the current page results.
+
+## Example
+
+### Request
+
+```
+GET /platform/payment-requests?limit=20&amp;offset=0
+Authorization: Bearer {token}
+```
+
+### Response
+
+```json
+{
+  "total": 147,
+  "limit": 20,
+  "offset": 0,
+  "count": 20,
+  "items": [
+    {
+      "id": "req_12345",
+      "amount": 1000,
+      "currency": "EUR",
+      "created_at": "2024-06-01T10:00:00Z",
+      "status": "created"
+    }
+  ]
+}
+```
+
+This structure allows clients to calculate pagination UI and control navigation across multiple pages using `offset` and `limit`.
 
 # Rate limits
 
