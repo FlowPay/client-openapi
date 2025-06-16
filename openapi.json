@@ -21,6 +21,10 @@
             "description": "Server di produzione"
         },
         {
+            "url": "https://api.sandbox-flowpay.it/v3",
+            "description": "Server di sandbox condiviso per test e sviluppo. I dati vengono resettati periodicamente, quindi non utilizzare per dati di produzione."
+        },
+        {
             "url": "https://api.{clientID}-flowpay.it/v3",
             "description": "Server di sandbox personale",
             "variables": {
@@ -42,6 +46,10 @@
     ],
     "tags": [
         {
+            "name": "Banks",
+            "description": "Operazioni relative alle banche e ai metodi di pagamento supportati."
+        },
+        {
             "name": "Charge",
             "description": "Operazioni relative agli addebiti su metodi tokenizzati."
         },
@@ -52,10 +60,6 @@
         {
             "name": "Files",
             "description": "Operazioni relative alla gestione dei file allegati ai pagamenti."
-        },
-        {
-            "name": "Payments",
-            "description": "Operazioni di pagamento generiche come rimborsi e transazioni."
         },
         {
             "name": "Payment Method",
@@ -75,6 +79,137 @@
         }
     ],
     "paths": {
+        "/banks": {
+            "get": {
+                "summary": "Get banks",
+                "description": "Retrieve the list of banks supported by FlowPay",
+                "operationId": "getBanks",
+                "security": [],
+                "tags": [
+                    "Banks"
+                ],
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "description": "Country code (ISO 3166-1 alpha-2) to filter banks by country",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "x-faker": "address.countryCode",
+                        "example": "IT"
+                    },
+                    {
+                        "name": "recurring",
+                        "in": "query",
+                        "description": "Filter banks by support at least one recurring payment type",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "recurringFrequency",
+                        "in": "query",
+                        "description": "Filter banks by support specified recurring payment frequency",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "monthly",
+                                    "everyTwoMonths",
+                                    "quarterly",
+                                    "semiAnnual",
+                                    "daily",
+                                    "everyFourMonths",
+                                    "weekly",
+                                    "everyTwoWeeks",
+                                    "annual"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "sctType",
+                        "in": "query",
+                        "description": "Filter banks by support specified SCT type",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "standard",
+                                    "instant"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of banks",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Bank"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    }
+                }
+            }
+        },
+        "/banks/{id}": {
+            "get": {
+                "summary": "Get bank details",
+                "description": "Retrieve details of a specific bank",
+                "operationId": "getBank",
+                "security": [],
+                "tags": [
+                    "Banks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Bank identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "cassa_di_risparmio_di_orvieto"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bank details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Bank"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
         "/charges": {
             "get": {
                 "summary": "Elenca tutte le richieste di pagamento",
@@ -298,6 +433,226 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/files": {
+            "post": {
+                "summary": "Carica un file",
+                "description": "Carica un file e restituisce l'ID del file caricato.",
+                "operationId": "uploadFile",
+                "tags": [
+                    "Files"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Il file da caricare."
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "filename": {
+                                        "type": "string",
+                                        "description": "Nome del file, incluso il suffisso estensione, es: 'documento.pdf'."
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Descrizione del file, utile per identificare il contenuto."
+                                    },
+                                    "contentType": {
+                                        "type": "string",
+                                        "description": "Tipo MIME del file, es: 'application/pdf'."
+                                    },
+                                    "data": {
+                                        "type": "string",
+                                        "format": "byte",
+                                        "description": "Contenuto del file codificato in base64."
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "File caricato con successo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/File"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "get": {
+                "summary": "Elenca i file caricati",
+                "description": "Restituisce un elenco paginato di file caricati.",
+                "operationId": "listFiles",
+                "tags": [
+                    "Files"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OffsetParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Elenco paginato dei file caricati.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/File"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/files/{fileId}": {
+            "get": {
+                "summary": "Recupera un file caricato",
+                "description": "Recupera i dettagli di un file caricato specificato dall'ID.",
+                "operationId": "getFile",
+                "tags": [
+                    "Files"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "ID del file da recuperare."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dettagli del file richiesto.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/File"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Cancella un file caricato",
+                "description": "Cancella un file caricato specificato dall'ID. La cancellazione è definitiva solo se il file non è associato a nessuna richiesta di pagamento, altrimenti il file verrà rimosso solo dalla visione pubblica ma rimarrà disponibile per i controlli di conformità.",
+                "operationId": "deleteFile",
+                "tags": [
+                    "Files"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "ID del file da cancellare."
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "File cancellato con successo."
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -836,7 +1191,7 @@
                 "description": "Risorsa principale per query globale sulle sessioni di pagamento. Supporta filtri, incluso requestId per selezionare le sessioni di una specifica richiesta.",
                 "operationId": "listPaymentSessions",
                 "tags": [
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "security": [
                     {
@@ -1624,11 +1979,11 @@
     "webhooks": {
         "paymentWebhook": {
             "post": {
-                "summary": "Endpoint per webhook di aggiornamento pagamento",
+                "summary": "Aggiornamento stato pagamento",
                 "operationId": "paymentWebhook",
                 "description": "Riceve notifiche relative allo stato del pagamento (es. succeeded, failed).",
                 "tags": [
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "requestBody": {
                     "description": "Payload inviato dal provider di pagamento contenente dettagli dell'evento.",
@@ -1857,6 +2212,85 @@
             }
         },
         "schemas": {
+            "Bank": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the bank",
+                        "example": "Intesa Sanpaolo",
+                        "x-faker": "Company.companyName"
+                    },
+                    "nationalID": {
+                        "type": "string",
+                        "description": "National identifier of the bank",
+                        "example": "03999",
+                        "x-faker": "finance.bic"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier of the bank",
+                        "example": "intesa_sanpaolo"
+                    },
+                    "countries": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "Countries where the bank operates in ISO 3166-1 alpha-2 format",
+                            "example": "IT",
+                            "x-faker": "address.countryCode"
+                        }
+                    },
+                    "logo": {
+                        "type": "string",
+                        "description": "URL of the bank logo",
+                        "example": "https://flowpayproduction.blob.core.windows.net/img/84036981-d004-40c4-a872-c81dd37e4acc.png",
+                        "x-faker": "image.imageUrl"
+                    },
+                    "features": {
+                        "type": "object",
+                        "description": "Features supported by the bank",
+                        "properties": {
+                            "futurePayments": {
+                                "type": "boolean",
+                                "description": "True if the bank supports future payments",
+                                "example": true
+                            },
+                            "sct": {
+                                "type": "array",
+                                "description": "List of SCT payment types supported by the bank",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "standard",
+                                        "instant"
+                                    ],
+                                    "description": "SCT payment type"
+                                }
+                            },
+                            "recurringPayments": {
+                                "type": "array",
+                                "description": "List of recurring payment types supported by the bank",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "monthly",
+                                        "everyTwoMonths",
+                                        "quarterly",
+                                        "semiAnnual",
+                                        "daily",
+                                        "everyFourMonths",
+                                        "weekly",
+                                        "everyTwoWeeks",
+                                        "annual"
+                                    ],
+                                    "description": "Recurring payment frequency"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "Customer": {
                 "type": "object",
                 "description": "Informazioni sul cliente registrato da una richiesta di pagamento.",
@@ -2100,6 +2534,48 @@
                     }
                 },
                 "required": []
+            },
+            "File": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identificativo univoco del file."
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp ISO 8601 di creazione del file."
+                    },
+                    "fileName": {
+                        "type": "string",
+                        "description": "Nome del file."
+                    },
+                    "fileSize": {
+                        "type": "integer",
+                        "description": "Dimensione del file in byte."
+                    },
+                    "fileType": {
+                        "type": "string",
+                        "description": "Tipo MIME del file (es. 'application/pdf')."
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "URL per scaricare il file."
+                    },
+                    "urlExpiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp ISO 8601 in cui l'URL per scaricare il file scade."
+                    }
+                },
+                "required": [
+                    "id",
+                    "createdAt",
+                    "url"
+                ]
             },
             "PaymentRequest": {
                 "type": "object",
