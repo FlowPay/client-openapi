@@ -15,6 +15,20 @@
         {
             "url": "https://api.flowpay.it/v3",
             "description": "Server di produzione"
+        },
+        {
+            "url": "https://api.{clientID}-flowpay.it/v3",
+            "description": "Server di sandbox personale",
+            "variables": {
+                "clientID": {
+                    "default": "test",
+                    "description": "ID del cliente per l'ambiente di test. Sostituisci con il tuo ID cliente."
+                }
+            }
+        },
+        {
+            "url": "https://api.mock-flowpay.it/v3",
+            "description": "Server di mock per test e sviluppo.<br> Le risposte sono simulate e non interagiscono con il sistema reale. I dati vengono generati utilizzando [Faker.js.](https://fakerjs.dev/) coerentemente con le specifiche descritte in openapi. <br> Le risposte vengono fornite da un server [Prism](https://github.com/stoplightio/prism) che simula le risposte dell'API in base alle specifiche OpenAPI, è possibile consultare gli header di risposta per ulteriori informazioni sulla validazione"
         }
     ],
     "security": [
@@ -24,35 +38,276 @@
     ],
     "tags": [
         {
-            "name": "Request To Pay",
-            "description": "Operazioni relative alla creazione e gestione di richieste di pagamento."
+            "name": "Charge",
+            "description": "Operazioni relative agli addebiti su metodi tokenizzati."
         },
         {
-            "name": "Payment Method",
-            "description": "Operazioni relative alla gestione dei metodi di pagamento tokenizzati."
+            "name": "Customers",
+            "description": "Operazioni relative ai clienti registrati."
+        },
+        {
+            "name": "Files",
+            "description": "Operazioni relative alla gestione dei file allegati ai pagamenti."
         },
         {
             "name": "Payments",
             "description": "Operazioni di pagamento generiche come rimborsi e transazioni."
         },
         {
-            "name": "Wallet",
-            "description": "Operazioni relative al wallet del cliente e gestione dei fondi."
+            "name": "Payment Method",
+            "description": "Operazioni relative alla gestione dei metodi di pagamento tokenizzati."
         },
         {
-            "name": "Customers",
-            "description": "Operazioni relative ai clienti registrati."
+            "name": "Refunds",
+            "description": "Operazioni relative ai rimborsi dei pagamenti"
+        },
+        {
+            "name": "Request To Pay",
+            "description": "Operazioni relative alla creazione e gestione di richieste di pagamento."
+        },
+        {
+            "name": "Wallet",
+            "description": "Operazioni relative al wallet del cliente e gestione dei fondi."
         }
     ],
     "paths": {
+        "/charges": {
+            "get": {
+                "summary": "Elenca tutte le richieste di pagamento",
+                "description": "Restituisce un elenco paginato di tutte le richieste di pagamento create.",
+                "operationId": "listCharges",
+                "tags": [
+                    "Charge"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        },
+                        "description": "Numero massimo di elementi per pagina."
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        },
+                        "description": "Numero di elementi da saltare."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Elenco paginato delle richieste di pagamento.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Charge"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Crea una nuova richiesta di pagamento",
+                "description": "Endpoint per creare una richiesta di pagamento tra due attori, specificando dati di pagatore e beneficiario.",
+                "operationId": "createCharge",
+                "tags": [
+                    "Charge"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "description": "Oggetto contenente informazioni su debitore, creditore e dettagli di pagamento.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "paymentMethodId": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "ID del metodo di pagamento da utilizzare per il pagamento. Se non specificato, verrà utilizzato il metodo di pagamento predefinito del cliente."
+                                    },
+                                    "debtor": {
+                                        "description": "Informazioni sul debitore effettivo del pagamento. Se non valorizzato, verrà utilizzato il valore di `payer`.",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/ConsumerTIN"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/BusinessTIN"
+                                            },
+                                            {
+                                                "title": "UUID del customer debitore.",
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "description": "UUID del customer debitore."
+                                            }
+                                        ]
+                                    },
+                                    "ultimateDebtor": {
+                                        "type": "string",
+                                        "enum": [
+                                            "debtor",
+                                            "payee",
+                                            "payer",
+                                            "tenant",
+                                            "anonymous"
+                                        ],
+                                        "description": {
+                                            "$ref": "./docs/description_ultimate_debtor.md"
+                                        },
+                                        "default": "debtor"
+                                    },
+                                    "privateAttachments": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "Identificativo univoco del file."
+                                        },
+                                        "description": "Elenco di UUID dei file allegati al pagamento che saranno visibili solo a FlowPay per i controlli di conformità. Questi file non saranno mostrati al pagatore durante il processo di pagamento."
+                                    },
+                                    "remittanceInformation": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 100,
+                                        "description": "Informazioni di rimessa per il pagamento, visibili al pagatore e al beneficiario all'accredito sul conto."
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
+                                    }
+                                },
+                                "required": [],
+                                "oneOf": [
+                                    {
+                                        "title": "Pagamento standard",
+                                        "properties": {
+                                            "amount": {
+                                                "type": "number",
+                                                "format": "decimal",
+                                                "minimum": 0.01,
+                                                "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                            },
+                                            "payee": {
+                                                "description": "Informazioni sul payee del pagamento. Se non specificato, di default verrà utilizzato il partner associato al client e l'IBAN configurato per il client.",
+                                                "oneOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/PhoneNumber"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "name": {
+                                                                "type": "string",
+                                                                "description": "Nome del beneficiario."
+                                                            },
+                                                            "iban": {
+                                                                "description": "IBAN del conto del beneficiario.",
+                                                                "$ref": "#/components/schemas/IBAN"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "name",
+                                                            "iban"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "lockedUntil": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "description": "Se valorizzato, i fondi di questo pagamento verranno dirottati su un conto tecnico FlowPay fino alla data specificata. Entro tale data sarà possibile sbloccare i fondi verso il payee o restituirli al payer. Se i fondi saranno ancora presenti alla scadenza, verranno restituiti automaticamente al payer."
+                                            }
+                                        },
+                                        "required": []
+                                    },
+                                    {
+                                        "title": "PagoPA",
+                                        "properties": {
+                                            "pagopaEcFiscalCode": {
+                                                "type": "string",
+                                                "description": "Codice fiscale della persona per PagoPA."
+                                            },
+                                            "pagopaPaymentNotice": {
+                                                "type": "string",
+                                                "description": "Codice di avviso pagamento PagoPA."
+                                            }
+                                        },
+                                        "required": [
+                                            "pagopaEcFiscalCode",
+                                            "pagopaPaymentNotice",
+                                            "email"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Richiesta di pagamento creata con successo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Charge"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
         "/payment-requests": {
             "get": {
                 "summary": "Elenca tutte le richieste di pagamento create",
                 "description": "Restituisce un elenco paginato di tutte le richieste di pagamento create.",
                 "operationId": "listPaymentRequests",
                 "tags": [
-                    "Request To Pay",
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "security": [
                     {
@@ -117,8 +372,7 @@
                 "description": "Endpoint per creare una richiesta di pagamento tra due attori, specificando dati di pagatore e beneficiario.",
                 "operationId": "createPaymentRequest",
                 "tags": [
-                    "Request To Pay",
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "security": [
                     {
@@ -426,8 +680,7 @@
                 "description": "Restituisce dettagli e stato della richiesta di pagamento specificata.<br>Il documento PDF che include i dettagli della richiesta di pagamento e un QR code per apertura mobile. Se la richiesta è stata pagata, contiene anche le informazioni di pagamento e funge da ricevuta.",
                 "operationId": "getPaymentRequest",
                 "tags": [
-                    "Request To Pay",
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "security": [
                     {
@@ -489,8 +742,7 @@
                 "description": "Cancella la richiesta di pagamento specificata. Può essere fatta solo se non è stato avviato alcun pagamento.",
                 "operationId": "deletePaymentRequest",
                 "tags": [
-                    "Request To Pay",
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "security": [
                     {
@@ -532,8 +784,7 @@
                 "description": "Convenience endpoint: restituisce l'elenco delle sessioni di pagamento (tentativi) per la richiesta specificata. Ideale per navigazione gerarchica.",
                 "operationId": "listPaymentRequestSessions",
                 "tags": [
-                    "Request To Pay",
-                    "Payments"
+                    "Request To Pay"
                 ],
                 "security": [
                     {
@@ -1779,6 +2030,72 @@
                     "paymentSessionId",
                     "methodIdentifier"
                 ]
+            },
+            "Charge": {
+                "type": "object",
+                "properties": {
+                    "chargeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identificativo univoco dell'addebito."
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp ISO 8601 di creazione dell'addebito."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "decimal",
+                        "minimum": 0.01,
+                        "description": "Importo totale del pagamento (es. 10.50)."
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Valuta utilizzata (es. 'EUR')."
+                    },
+                    "payerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "ID univoco dell’entità che ha avviato la richiesta di pagamento (può coincidere con debtorId se non diversamente specificato)."
+                    },
+                    "debtorId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "ID del debitore effettivo. Se non valorizzato, verrà usato lo stesso `payerId`."
+                    },
+                    "privateAttachments": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "UUID di file allegati privati (visibili solo a FlowPay per controlli interni)."
+                        },
+                        "description": "Elenco di UUID dei file riservati per controlli di conformità (non mostrati al pagatore)."
+                    },
+                    "remittanceInformation": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 100,
+                        "description": "Informazioni di rimessa (ad es. causale), visibili sia al pagatore che al beneficiario."
+                    },
+                    "paymentMethodId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "ID del metodo di pagamento utilizzato per questo addebito."
+                    },
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID del cliente associato a questa richiesta di pagamento."
+                    },
+                    "refundId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID del rimborso associato a questa richiesta, se presente."
+                    }
+                },
+                "required": []
             },
             "PaymentRequest": {
                 "type": "object",
