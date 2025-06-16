@@ -21,6 +21,10 @@
             "description": "Server di produzione"
         },
         {
+            "url": "https://api.sandbox-flowpay.it/v3",
+            "description": "Server di sandbox condiviso per test e sviluppo. I dati vengono resettati periodicamente, quindi non utilizzare per dati di produzione."
+        },
+        {
             "url": "https://api.{clientID}-flowpay.it/v3",
             "description": "Server di sandbox personale",
             "variables": {
