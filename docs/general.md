@@ -137,6 +137,77 @@ The public sandbox environment has the following functional limitations:
 
 If you need to test full API capabilities, you can request a private sandbox by submitting a contact form or opening a ticket via the support portal.
 
+# Mock environment
+
+FlowPay provides a mock environment designed to help developers quickly prototype and validate their integration without connecting to real systems. This environment is built using [Prism](https://github.com/stoplightio/prism), which serves the OpenAPI specification as live endpoints, and uses [faker.js](https://fakerjs.dev/) to generate random but realistic data.
+
+## How it works
+
+The mock server validates all requests against the OpenAPI specification and returns mocked responses that match the expected output schema. Each field in the response is populated with context-aware fake data, such as realistic names, IBANs, dates, or UUIDs.
+he mock environment is available at: `https://api.mock-flowpay.it/v3`, all endpoints mirror those defined in the OpenAPI specification.
+
+Mock srver automatically checks:
+
+- required query parameters and headers
+- request body structure and content
+- response conformance to schema
+
+This allows you to focus on building your application without worrying about backend logic or data consistency.
+
+You can use the mock environment to:
+
+- Test your application's integration with FlowPay APIs
+- Front-end integration without backend logic
+- Early validation of request formats
+- Automated tests with predictable structure
+
+Example request to list payment requests:
+
+```
+GET https://mock.flowpay.it/platform/payment-requests
+Authorization: Bearer test-token
+```
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "req_82ae0947",
+      "amount": 1250,
+      "currency": "EUR",
+      "created_at": "2024-06-01T14:30:00Z",
+      "description": "Mocked request",
+      "status": "created"
+    }
+  ],
+  "next_cursor": "abc123",
+  "has_more": false
+}
+```
+
+## Validating your requests
+
+You can deliberately send incorrect requests (e.g. missing required fields) to confirm how the system returns validation errors. This helps ensure that your integration meets the expected structure before switching to a real sandbox or production environment.
+
+Example invalid request (missing `Authorization` header):
+
+```
+GET https://mock.flowpay.it/platform/payment-requests
+```
+
+Response:
+
+```json
+{
+  "type": "https://stoplight.io/prism/errors#MISSING_HEADER",
+  "title": "Authorization header is required",
+  "status": 400,
+  "detail": "Missing required header: Authorization"
+}
+```
+
 # Pagination
 
 All endpoints that return a list of items use cursor-based pagination.
