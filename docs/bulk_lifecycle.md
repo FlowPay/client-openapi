@@ -1,18 +1,48 @@
-This endpoint enables bulk payments on documents that could be of different types. <br> Note: API of this endpoint does not require specific scopes, the authorization token used must have access to documents it wants to bulk pay
+You can allow users to pay multiple payees in a single operation using the additionalPayees parameter when creating a payment request.
 
 <p align="center">
-<img src="https://mermaid.ink/svg/pako:eNqFkl9rwjAUxb9KyB58qWCryOjDwO4PCGOIle2lL7fNrQs2iUtT0YnffYmtGjdhebo553dPEm72tFAMaUxrAwafOCw1iEwSuxjXWBiuJHmdt8pUbhQvMExQhv3-A0maanXlRM4hNy3XFP2yZrBUs4kTL5qrjthsmnbUND0Ki0m7Xxw7yIe9njvulhjRgArUAjizT9s7JKPmEwVmNLZlDrWtAk9_B80hr7B2wL7NzGippHkBwatd29ebq1wZ1QvIBjUDCQFxfVWXdWpJ-Xd3UDhebz1zrbkAvXtUldItcMcYDsviL5MozVD75Gg8LMrSI8FOZwNuQslq6ZNlVN5fZXrk_7HdBRa4NT4XDoaDEXpcjV8NygLfGpFfR57e5MhDJg92GtAYle5kQWOjGwxos2aX_0bjEqr6rD4zbpTuxMMPPNfQrg" width="50%">
+<img src="https://mermaid.ink/svg/pako:eNqFk8GOmzAQhl8FTQ97YSPAARwOlcK2PVXVKhu1UsXFwUPWKtipMauwUS59nj7VPkkNJA10Nyone-abf_6xzQFyxRESqA0z-EGwrWZVJh37caExN0JJ5_NqiKQosRC5YLpdOre3750l56IjWHnPWsQ6cXzPe_n1-xWeXsHDN-m7K3QQvkVfsxJf6H-TfcVqfT9k7aIPrJddi4uj9aD8zZ6DbWeT_khymkwno0xzdyfj4MJWCw6J0Q26UKGuWLeFQ1eVgXnECjNI7HLDartyR_GvTAu2KbHugMPQJoNCSfOJVaJsh7qbldooo25c5wk1Z5K5TldXnrTOJQ_i-dTIj3b7UXKnRdWdvyqVHoB3nCMp8tdMqjRHPSbnEcmLYkQy-3qeWHfu6Y_tmCyCgk40R-T_ZU8G1rg3Y873iDfHEVfjzwZljl-aajOVPM_UkcdMHu3N7Jj8rlR1vhytmu0jJAUra7trdvzyc_yNapS91UYaSBbeoheB5AB7SPyYzOKAkJBGIfUjErrQ2igls4Xvk8DO5BEa0vDownPf1pvN4zgMojiK6ZxGlMYusMaoh1bmZ1ODjY_2KSt9cnH8A6xMMAI" width="50%">
 </p>
 
 The above diagram shows how bulk works.
-We assume the case in which a user has two invoices for beneficiary 1 (Ben1), one invoice for beneficiary 2 (Ben2), and one PagoPA payment
-The user wants to pay all of them in a single operation.
+We assume the case in which a user wants to pay Beneficiary A for 100€, Beneficiary B for 50€ and Beneficiary C for 25€ and again Beneficiary A for 75€.
+The additionalPayees parameter will be populated like this:
 
-The user's client, which has access to all the documents, calls the bulk endpoint with the list of documents to pay, the endpoint returns a new document (Bulk) that is linked to all the documents to pay.
-The client gives the bulk document to the user, who can now pay it with a single Payment Initiation (PIS) operation. The wire transfer allowed with the PIS on the bulk document is addressed to the FlowPay technical account (TA).
-When the TA receives the payment, it splits the amount among the beneficiaries and sends the payments to them with wire transfers.
+```json
+{
+  "additionalPayees": [
+    {
+      "iban": "IT79Q0300203280941591243326",
+      "name": "Beneficiary A",
+      "amount": 100
+    },
+    {
+      "iban": "IT79Q0300203280941591243327",
+      "name": "Beneficiary B",
+      "amount": 50
+    },
+    {
+      "iban": "IT79Q0300203280941591243328",
+      "name": "Beneficiary C",
+      "amount": 25
+    },
+    {
+      "iban": "IT79Q0300203280941591243326",
+      "name": "Beneficiary A",
+      "amount": 75
+    }
+  ]
+}
+```
+
+The payment request created will have an amount of 250€, payer can now pay it with a single payments.
+The wire transfer allowed with the PIS on a bulk payment is addressed to the FlowPay technical account (TA).
+When the TA receives the payment, it splits the amount among the beneficiaries, groups them by their IBANs and names, and sends the payments to them with wire transfers.
 
 In case of a bulk payment to the same beneficiary, the payment initiation effective beneficiary is the beneficiary itself, so the payer can easily recognize the transaction. Otherwise, the payment initiation effective beneficiary is FlowPay.
 Wire transfers to beneficiaries are sent with the same original payer, so beneficiaries can easily identify the payer.
 
-Note: pagoPA payments recipient is FlowPay itself, so related payments are not counted in the split operations.
+<div class="info">
+ <div class="title">In case of pagoPA payments</div>
+    The bulk service is not natively supported with pagoPA payment, please contact us for more information and workarounds.
+</div>
