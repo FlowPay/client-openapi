@@ -328,7 +328,7 @@
                                             "anonymous"
                                         ],
                                         "description": {
-                                            "$ref": "./docs/description_ultimate_debtor.md"
+                                            "$ref": "./docs/ultimate_debtor.md"
                                         },
                                         "default": "debtor"
                                     },
