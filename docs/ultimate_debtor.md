@@ -1,16 +1,14 @@
-Determina chi compare come ordinante sul conto o sulla ricevuta. 
+Determina chi compare come ordinante sul conto o sulla ricevuta.
+
 <!-- <br>
-Può assuValori: 
-- `debtor` 
+Può assuValori:
+- `debtor`
 - `payee`
-- `payer` 
-- `tenant` 
+- `payer`
+- `tenant`
 - `anonymous` -->
 
-
-Nel caso di pagamento PagoPA, questo valore viene utilizzato per generare la ricevuta. 
-
-
+Nel caso di pagamento PagoPA, questo valore viene utilizzato per generare la ricevuta.
 
 <div class="critical">
     <div class="title"> <span>&#9888;&#65039;</span>Attenzione</div>
