@@ -1,4 +1,3 @@
-# Payment Request
 This endpoint enables clients to allow their users to pay with FlowPay using different payment methods.
 By default, the client creates a Request To Pay for which they are the creditor. If a debtor isn't specified, the payer will be identified during the payment session.
 The client can also specify a different creditor if they are not the intended recipient of the payment.
@@ -73,4 +72,33 @@ Wire transfers to beneficiaries are sent with the same original payer, so benefi
 </div>
 
 
+## Split Payment
+[![](https://mermaid.ink/img/pako:eNqFk82OmzAQx18FTQ97YSM7QAIcKoV-nNpqlY1aqeLi4CFrFezUmFXYKJc-T5-qT1Jjwi50D-Vg2TO_-c8ff5yhUBwhhcYwg-8FO2hW59KzHxcaCyOU9D5th0iGEktRCKa7jXd7-9a7Yx1i6lFC_vz6_YrJHLPhXPQqrHJ0k3rRM_xvzhVsd3dD1sXmITtxgd2m7_oitBv8fLOWrYHN3NI8mY0GwIeDFhxSo1v0oUZds34J574sB_OANeaQ2umeNXbmT-JfmRZsX2HTA-ehTw6lkuYjq0XVDXU3W7VXRt343iNqziTzvb6uumqNJffi6dqIro6nSfKoRW038p2qlB6AN5xjUBavmUxpjnpKhqugKMsJyexpPrJ-v7MfhylZLst4pjkh_y97NbDDk5lylAQkxAnX4M8WZYFf2no_lxz_qScvubzYkzky-V2pejwcrdrDA6Qlqxq7ao_85bI-RzVKZ7WVBlJKAycC6RlOkK6TRZgkNIlCQqPlivrQWSYOF5QkwZoQe11WQRhcfHhyXckijgIax2s7LmMS0dgHtHdV6c_Dc3GvxgfWGnXfyWL0OTj74Mirsctf7aUOvw?type=png)](https://mermaid.live/edit#pako:eNqFk82OmzAQx18FTQ97YSM7QAIcKoV-nNpqlY1aqeLi4CFrFezUmFXYKJc-T5-qT1Jjwi50D-Vg2TO_-c8ff5yhUBwhhcYwg-8FO2hW59KzHxcaCyOU9D5th0iGEktRCKa7jXd7-9a7Yx1i6lFC_vz6_YrJHLPhXPQqrHJ0k3rRM_xvzhVsd3dD1sXmITtxgd2m7_oitBv8fLOWrYHN3NI8mY0GwIeDFhxSo1v0oUZds34J574sB_OANeaQ2umeNXbmT-JfmRZsX2HTA-ehTw6lkuYjq0XVDXU3W7VXRt343iNqziTzvb6uumqNJffi6dqIro6nSfKoRW038p2qlB6AN5xjUBavmUxpjnpKhqugKMsJyexpPrJ-v7MfhylZLst4pjkh_y97NbDDk5lylAQkxAnX4M8WZYFf2no_lxz_qScvubzYkzky-V2pejwcrdrDA6Qlqxq7ao_85bI-RzVKZ7WVBlJKAycC6RlOkK6TRZgkNIlCQqPlivrQWSYOF5QkwZoQe11WQRhcfHhyXckijgIax2s7LmMS0dgHtHdV6c_Dc3GvxgfWGnXfyWL0OTj74Mirsctf7aUOvw)
 
+The above diagram shows how split works.
+In case we want to pay beneficiary A 100€ and beneficiary B takes a 5€ commission on that payment, all that is needed is to add the beneficiary B to the additional Payees array.
+
+
+```json
+{
+  "amount": 105,
+  "currency": "EUR",
+  "payee": {
+    "iban": "IT79Q0300203280941591243326",
+    "name": "Beneficiary A"
+  },
+  "additionalPayees": [
+    {
+      "iban": "IT79Q0300203280941591243327",
+      "name": "Beneficiary B",
+      "amount": 5
+    }
+  ]
+}
+```
+
+The total amount of the payment request must be specified, and the payee will receive the remaining amount after the split.
+The wire transfer allowed with the PIS on a split payment is addressed to the FlowPay technical account (TA).
+When the TA receives the payment, it splits the amount among the beneficiaries, groups them by their IBANs and names, and sends the payments to them with wire transfers.
+
+The Wire transfer to the payee is sent with the original payer, the additional Payees receive the commission as a wire transfer with the payee as the payer.
