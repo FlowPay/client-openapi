@@ -71,7 +71,9 @@
         },
         {
             "name": "Request To Pay",
-            "description": "Operazioni relative alla creazione e gestione di richieste di pagamento."
+            "description": {
+                "$ref": "docs/payment_request.md"
+            }
         },
         {
             "name": "Wallet",
