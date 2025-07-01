@@ -22,6 +22,15 @@ In addition, FlowPay extends traditional payment methods by providing value-adde
 
 Each of these services uses the FlowPay technical account, but the payment retains the original payer and payee information.
 
+
+## Locked Payment
+
+If the lockedUntil field is used, the sum will be kept until the date is reached. Until then the client is able to issue a refund of this payment by using  the "Refunds" endpoint, or unlock the payment earlier using the "Charge" endpoint.
+
+When a request to pay is locked a paymentMethod is returned that can be used on the "Charge" endpoint, to unlock the payment. When unlocking the payment no other field is necessary but a validation will be carried on in order to mantain data integrity.
+
+
+
 ## Bulk Payment
 
 You can allow users to pay multiple payees in a single operation using the additionalPayees parameter when creating a payment request.
