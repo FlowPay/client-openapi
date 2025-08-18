@@ -78,64 +78,9 @@ A partner who intends to develop an integration to access tenants' data must fir
 
 The developer portal can be reached at https://developer.flowpay.it, to access it's necessary to have a company account registered with FlowPay services.
 
-## Become part of the FlowPay ecosystem
-
-To use FlowPay APIs you need to register your tenant, create your first application and obtain a valid access token. If you don't have an account, you need to register.
-
-The onboarding procedure takes a few minutes, to start you need to click the _Register_ button at the bottom of the <a href="https://developer.flowpay.it">developer portal</a>.
-
-The first step of registration is to verify a bank account, this step is also one of the two requirements for verifying the company's identity, therefore the linked account must belong to the company you intend to register.
-
-Once the bank account has been verified, the system will automatically retrieve the company's details. Finally, you need to provide your personal information as a contact person for the company. If you want, you can also proceed with your identity verification and obtain your personal FlowPay account, this adds a level of security and helps to track tokens granted for your company and could be mandatory to grant a token for some advanced services.
-
-In addition to bank account ownership, a second identity verification step is required, which may vary depending on the services requested.
-In most cases, digital identity verification or verification of a certified email address is sufficient.
-Failure of the second identity verification step will not prevent registration, but it will be necessary to provide all requested information before the client can operate in the production environment.
-
-## Register your application
-
-Within the developer portal access the "Applications" section and press the "+" button, the creation screen requires the following information:
-
-- **Application logo**: it can be any image, it will be used in the consent request screen to allow the user to identify the application to which he is granting access.The supported formats are: jpg or png with 1:1 aspect ratio
-
-- **Application name**: unique name assigned to the application, in addition to allowing its identification, the application name is present in the user invoice if it is used for the creation of RTP. The name is also used within the invoice following the API supply to group the costs relating to the use of the individual applications.
-
-- **Homepage URL**: must contain the URL to the homepage of your service or company. The URL is shown during the consent screen to allow the user to identify the company to which he is granting consent.
-
-- **Privacy URL**: must point to a page containing how the data obtained from FlowPay is processed and the purpose of accessing this data.
-
-## Be enabled as a third-party application
-
-Once the application has been created, it is already enabled for the sandbox environment but is not yet able to act as a third-party application for the production environment.
-
 # Sandbox environment
 
 FlowPay provides a sandbox environment to allow partners to test the APIs before going into production. The sandbox is a safe space where you can experiment with the APIs without affecting real accounts or transactions.
-
-## Available sandbox types
-
-FlowPay provides two types of sandbox environments to allow partners to test API integration:
-
-1. **Public sandbox**  
-   Available to all developers who register an application through the portal. It provides an initial experience with FlowPay APIs, useful to explore functionalities and simulate standard flows. However, it comes with several functional limitations.
-
-2. **Private sandbox**  
-   Upon request, FlowPay can activate a dedicated sandbox for a specific partner. This environment enables testing of advanced features such as onboarding flows, bulk payment, payment chain, and more realistic behaviors.
-
-## Public sandbox limitations
-
-The public sandbox environment has the following functional limitations:
-
-- **Payment status update callbacks are not triggered**, as the APIs do not receive responses from banks.
-- **AIS data (balances and transactions) is not returned** for real bank accounts.
-- Only **fake AIS data** is available on preconfigured test accounts.
-- **Bulk payment service is not available**.
-- **Payment chain service is not available**, since it requires real payments.
-- **User onboarding is not supported**.
-
-## Requesting a private sandbox
-
-If you need to test full API capabilities, you can request a private sandbox by submitting a contact form or opening a ticket via the support portal.
 
 # Mock environment
 
