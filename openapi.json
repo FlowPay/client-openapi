@@ -41,7 +41,7 @@
     ],
     "security": [
         {
-            "basicAuth": []
+            "ApiKeyAuth": []
         }
     ],
     "tags": [
@@ -72,10 +72,6 @@
         {
             "name": "Request To Pay",
             "description": "Operations related to the creation and management of payment requests."
-        },
-        {
-            "name": "Wallet",
-            "description": "Operations related to the customer's wallet and fund management."
         }
     ],
     "paths": {
@@ -220,7 +216,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -285,7 +281,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "requestBody": {
@@ -461,7 +457,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "requestBody": {
@@ -539,7 +535,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -594,7 +590,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -640,7 +636,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -681,7 +677,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -746,7 +742,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "requestBody": {
@@ -1073,7 +1069,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1135,7 +1131,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1177,7 +1173,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1225,7 +1221,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1316,7 +1312,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1370,7 +1366,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "requestBody": {
@@ -1442,7 +1438,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1485,7 +1481,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1523,9 +1519,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": [
-                            "kyc"
-                        ]
+                        "ApiKeyAuth": []
                     }
                 ],
                 "requestBody": {
@@ -1694,7 +1688,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1749,7 +1743,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1792,7 +1786,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1830,7 +1824,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -1883,7 +1877,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "requestBody": {
@@ -1950,7 +1944,7 @@
                 ],
                 "security": [
                     {
-                        "basicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "parameters": [
@@ -2115,10 +2109,11 @@
     },
     "components": {
         "securitySchemes": {
-            "basicAuth": {
-                "type": "http",
-                "scheme": "basic",
-                "description": "Use ClientID (UUID) as username and API Key as password."
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key",
+                "description": "Partner API key issued via the developer portal. Rotate and scope keys from FlowPay Backoffice."
             }
         },
         "parameters": {
