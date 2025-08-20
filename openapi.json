@@ -36,7 +36,7 @@
         },
         {
             "url": "https://api.mock-flowpay.it/v3",
-            "description": "Server di mock per test e sviluppo.<br> Le risposte sono simulate e non interagiscono con il sistema reale. I dati vengono generati utilizzando [Faker.js.](https://fakerjs.dev/) coerentemente con le specifiche descritte in openapi. <br> Le risposte vengono fornite da un server [Prism](https://github.com/stoplightio/prism) che simula le risposte dell'API in base alle specifiche OpenAPI, è possibile consultare gli header di risposta per ulteriori informazioni sulla validazione"
+            "description": "Server di mock per test e sviluppo.<br> Le risposte sono simulate e non interagiscono con il sistema reale. I dati vengono generati utilizzando [Faker.js.](https://fakerjs.dev/) coerentemente con le specifiche descritte in OpenAPI. <br> Le risposte vengono fornite da un server [Prism](https://github.com/stoplightio/prism) che simula le risposte dell'API in base alle specifiche OpenAPI; è possibile consultare gli header di risposta per ulteriori informazioni sulla validazione."
         }
     ],
     "security": [
@@ -103,7 +103,7 @@
                     {
                         "name": "recurring",
                         "in": "query",
-                        "description": "Filter banks by support at least one recurring payment type",
+                        "description": "Filter banks that support at least one recurring payment type",
                         "required": false,
                         "schema": {
                             "type": "boolean"
@@ -112,7 +112,7 @@
                     {
                         "name": "recurringFrequency",
                         "in": "query",
-                        "description": "Filter banks by support specified recurring payment frequency",
+                        "description": "Filter banks that support the specified recurring payment frequency",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -135,7 +135,7 @@
                     {
                         "name": "sctType",
                         "in": "query",
-                        "description": "Filter banks by support specified SCT type",
+                        "description": "Filter banks that support the specified SCT type",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -347,6 +347,12 @@
                                         "maxLength": 100,
                                         "description": "Informazioni di rimessa per il pagamento, visibili al pagatore e al beneficiario all'accredito sul conto."
                                     },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "minimum": 0.01,
+                                        "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                    },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
@@ -407,6 +413,11 @@
                                             "pagopaPaymentNotice": {
                                                 "type": "string",
                                                 "description": "Codice di avviso pagamento PagoPA."
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
                                             }
                                         },
                                         "required": [
@@ -835,6 +846,12 @@
                                         "default": false,
                                         "description": "Indica se il pagatore può modificare le informazioni di rimessa durante il pagamento."
                                     },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "decimal",
+                                        "minimum": 0.01,
+                                        "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                    },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
@@ -983,6 +1000,14 @@
                                                 },
                                                 "else": {
                                                     "title": "Pagamento parziale",
+                                                    "properties": {
+                                                        "amount": {
+                                                            "type": "number",
+                                                            "format": "decimal",
+                                                            "minimum": 0.01,
+                                                            "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                                        }
+                                                    },
                                                     "required": [
                                                         "amount"
                                                     ]
@@ -1000,6 +1025,11 @@
                                             "pagopaPaymentNotice": {
                                                 "type": "string",
                                                 "description": "Codice di avviso pagamento PagoPA."
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
                                             }
                                         },
                                         "required": [
@@ -2219,7 +2249,7 @@
                         "type": "string",
                         "description": "Name of the bank",
                         "example": "Intesa Sanpaolo",
-                        "x-faker": "Company.companyName"
+                        "x-faker": "company.companyName"
                     },
                     "nationalID": {
                         "type": "string",
@@ -2320,8 +2350,8 @@
                 },
                 "required": [
                     "id",
-                    "userFullName",
-                    "partnerFullName",
+                    "name",
+                    "providedName",
                     "registrationRequestId"
                 ]
             },
@@ -2741,8 +2771,8 @@
                 },
                 "required": [
                     "sessionId",
-                    "createdAt",
-                    "expiresAt",
+                    "startedAt",
+                    "endedAt",
                     "status"
                 ]
             },

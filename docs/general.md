@@ -89,9 +89,9 @@ FlowPay provides a mock environment designed to help developers quickly prototyp
 ## How it works
 
 The mock server validates all requests against the OpenAPI specification and returns mocked responses that match the expected output schema. Each field in the response is populated with context-aware fake data, such as realistic names, IBANs, dates, or UUIDs.
-he mock environment is available at: `https://api.mock-flowpay.it/v3`, all endpoints mirror those defined in the OpenAPI specification.
+The mock environment is available at: `https://api.mock-flowpay.it/v3`; all endpoints mirror those defined in the OpenAPI specification.
 
-Mock srver automatically checks:
+The mock server automatically checks:
 
 - required query parameters and headers
 - request body structure and content
@@ -109,7 +109,7 @@ You can use the mock environment to:
 Example request to list payment requests:
 
 ```
-GET https://mock.flowpay.it/platform/payment-requests
+GET https://api.mock-flowpay.it/v3/platform/payment-requests
 Authorization: Bearer test-token
 ```
 
@@ -139,7 +139,7 @@ You can deliberately send incorrect requests (e.g. missing required fields) to c
 Example invalid request (missing `Authorization` header):
 
 ```
-GET https://mock.flowpay.it/platform/payment-requests
+GET https://api.mock-flowpay.it/v3/platform/payment-requests
 ```
 
 Response:

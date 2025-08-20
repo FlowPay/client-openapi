@@ -1,7 +1,7 @@
 Determina chi compare come ordinante sul conto o sulla ricevuta.
 
 <!-- <br>
-Può assuValori:
+Può assumere i seguenti valori:
 - `debtor`
 - `payee`
 - `payer`
