@@ -33,11 +33,11 @@ We believe that the best API a payment institution can provide is one that is ta
 
 On the end user side, FlowPay ensures that **users own their data, can access it at any time and fully manage it**. They can choose which data to share with third parties in the most transparent way possible.
 
-## Contributi
+## Contributions
 
-FlowPay accoglie con favore i contributi da parte dei partner. Il file OpenAPI è disponibile pubblicamente su GitHub: [FlowPay/client-openapi](https://github.com/FlowPay/client-openapi).
+FlowPay welcomes contributions from partners. The OpenAPI file is publicly available on GitHub: [FlowPay/client-openapi](https://github.com/FlowPay/client-openapi).
 
-I partner possono proporre modifiche effettuando un _fork_ del repository e inviando una _pull request_.
+Partners can propose changes by forking the repository and submitting a pull request.
 
 # Introduction
 

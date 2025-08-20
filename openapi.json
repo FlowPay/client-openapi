@@ -12,31 +12,31 @@
         },
         "x-repository": {
             "url": "https://github.com/FlowPay/client-openapi",
-            "contributionGuidelines": "Invitiamo i partner a suggerire modifiche facendo un fork del repository e inviando una pull request."
+            "contributionGuidelines": "We invite partners to suggest changes by forking the repository and submitting a pull request."
         }
     },
     "servers": [
         {
             "url": "https://api.flowpay.it/v3",
-            "description": "Server di produzione"
+            "description": "Production server"
         },
         {
             "url": "https://api.sandbox-flowpay.it/v3",
-            "description": "Server di sandbox condiviso per test e sviluppo. I dati vengono resettati periodicamente, quindi non utilizzare per dati di produzione."
+            "description": "Shared sandbox server for testing and development. Data is reset periodically, so do not use for production data."
         },
         {
             "url": "https://api.{clientID}-flowpay.it/v3",
-            "description": "Server di sandbox personale",
+            "description": "Personal sandbox server",
             "variables": {
                 "clientID": {
                     "default": "test",
-                    "description": "ID del cliente per l'ambiente di test. Sostituisci con il tuo ID cliente."
+                    "description": "Client ID for the test environment. Replace with your own client ID."
                 }
             }
         },
         {
             "url": "https://api.mock-flowpay.it/v3",
-            "description": "Server di mock per test e sviluppo.<br> Le risposte sono simulate e non interagiscono con il sistema reale. I dati vengono generati utilizzando [Faker.js.](https://fakerjs.dev/) coerentemente con le specifiche descritte in OpenAPI. <br> Le risposte vengono fornite da un server [Prism](https://github.com/stoplightio/prism) che simula le risposte dell'API in base alle specifiche OpenAPI; è possibile consultare gli header di risposta per ulteriori informazioni sulla validazione."
+            "description": "Mock server for testing and development.<br> Responses are simulated and do not interact with the real system. Data is generated using [Faker.js](https://fakerjs.dev/) consistently with the OpenAPI specification. <br> Responses are served by a [Prism](https://github.com/stoplightio/prism) server that simulates API responses according to the OpenAPI spec; response headers provide further validation details."
         }
     ],
     "security": [
@@ -47,35 +47,35 @@
     "tags": [
         {
             "name": "Banks",
-            "description": "Operazioni relative alle banche e ai metodi di pagamento supportati."
+            "description": "Operations related to banks and supported payment methods."
         },
         {
             "name": "Charge",
-            "description": "Operazioni relative agli addebiti su metodi tokenizzati."
+            "description": "Operations related to charges on tokenised methods."
         },
         {
             "name": "Customers",
-            "description": "Operazioni relative ai clienti registrati."
+            "description": "Operations related to registered customers."
         },
         {
             "name": "Files",
-            "description": "Operazioni relative alla gestione dei file allegati ai pagamenti."
+            "description": "Operations related to managing files attached to payments."
         },
         {
             "name": "Payment Method",
-            "description": "Operazioni relative alla gestione dei metodi di pagamento tokenizzati."
+            "description": "Operations related to managing tokenised payment methods."
         },
         {
             "name": "Refunds",
-            "description": "Operazioni relative ai rimborsi dei pagamenti"
+            "description": "Operations related to payment refunds"
         },
         {
             "name": "Request To Pay",
-            "description": "Operazioni relative alla creazione e gestione di richieste di pagamento."
+            "description": "Operations related to the creation and management of payment requests."
         },
         {
             "name": "Wallet",
-            "description": "Operazioni relative al wallet del cliente e gestione dei fondi."
+            "description": "Operations related to the customer's wallet and fund management."
         }
     ],
     "paths": {
@@ -212,8 +212,8 @@
         },
         "/charges": {
             "get": {
-                "summary": "Elenca tutte le richieste di pagamento",
-                "description": "Restituisce un elenco paginato di tutte le richieste di pagamento create.",
+                "summary": "List all payment requests",
+                "description": "Returns a paginated list of all created payment requests.",
                 "operationId": "listCharges",
                 "tags": [
                     "Charge"
@@ -231,7 +231,7 @@
                             "type": "integer",
                             "default": 20
                         },
-                        "description": "Numero massimo di elementi per pagina."
+                        "description": "Maximum number of items per page."
                     },
                     {
                         "name": "offset",
@@ -240,12 +240,12 @@
                             "type": "integer",
                             "default": 0
                         },
-                        "description": "Numero di elementi da saltare."
+                        "description": "Number of items to skip."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato delle richieste di pagamento.",
+                        "description": "Paginated list of payment requests.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -277,8 +277,8 @@
                 }
             },
             "post": {
-                "summary": "Crea una nuova richiesta di pagamento",
-                "description": "Endpoint per creare una richiesta di pagamento tra due attori, specificando dati di pagatore e beneficiario.",
+                "summary": "Create a new payment request",
+                "description": "Endpoint to create a payment request between two parties, specifying payer and payee details.",
                 "operationId": "createCharge",
                 "tags": [
                     "Charge"
@@ -289,7 +289,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Oggetto contenente informazioni su debitore, creditore e dettagli di pagamento.",
+                    "description": "Object containing debtor, payee and payment details.",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -299,10 +299,10 @@
                                     "paymentMethodId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "ID del metodo di pagamento da utilizzare per il pagamento. Se non specificato, verrà utilizzato il metodo di pagamento predefinito del cliente, se presente."
+                                        "description": "ID of the payment method to use for the payment. If not specified, the customer's default payment method is used, if present."
                                     },
                                     "debtor": {
-                                        "description": "Informazioni sul debitore effettivo del pagamento. Se non valorizzato, verrà utilizzato il customer associato al metodo di pagamento fornito.",
+                                        "description": "Information about the actual debtor of the payment. If not provided, the customer associated with the provided payment method is used.",
                                         "oneOf": [
                                             {
                                                 "$ref": "#/components/schemas/ConsumerTIN"
@@ -311,10 +311,10 @@
                                                 "$ref": "#/components/schemas/BusinessTIN"
                                             },
                                             {
-                                                "title": "UUID del customer debitore.",
+                                                "title": "UUID of the debtor customer.",
                                                 "type": "string",
                                                 "format": "uuid",
-                                                "description": "UUID del customer debitore."
+                                                "description": "UUID of the debtor customer."
                                             }
                                         ]
                                     },
@@ -337,41 +337,41 @@
                                         "items": {
                                             "type": "string",
                                             "format": "uuid",
-                                            "description": "Identificativo univoco del file."
+                                            "description": "Unique file identifier."
                                         },
-                                        "description": "Elenco di UUID dei file allegati al pagamento che saranno visibili solo a FlowPay per i controlli di conformità. Questi file non saranno mostrati al pagatore durante il processo di pagamento."
+                                        "description": "List of UUIDs of files attached to the payment that are visible only to FlowPay for compliance checks. These files are not shown to the payer during the payment process."
                                     },
                                     "remittanceInformation": {
                                         "type": "string",
                                         "minLength": 5,
                                         "maxLength": 100,
-                                        "description": "Informazioni di rimessa per il pagamento, visibili al pagatore e al beneficiario all'accredito sul conto."
+                                        "description": "Remittance information for the payment, visible to the payer and to the payee upon credit to the account."
                                     },
                                     "amount": {
                                         "type": "number",
                                         "format": "decimal",
                                         "minimum": 0.01,
-                                        "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                        "description": "Payment amount as a decimal (e.g. 10.50)."
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
+                                        "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
                                     }
                                 },
                                 "required": [],
                                 "oneOf": [
                                     {
-                                        "title": "Pagamento standard",
+                                        "title": "Standard payment",
                                         "properties": {
                                             "amount": {
                                                 "type": "number",
                                                 "format": "decimal",
                                                 "minimum": 0.01,
-                                                "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                                "description": "Payment amount as a decimal (e.g. 10.50)."
                                             },
                                             "payee": {
-                                                "description": "Informazioni sul payee del pagamento. Se non specificato, di default verrà utilizzato il partner associato al client e l'IBAN configurato per il client.",
+                                                "description": "Information about the payment payee. If not specified, the partner associated with the client and the IBAN configured for the client are used by default.",
                                                 "oneOf": [
                                                     {
                                                         "$ref": "#/components/schemas/PhoneNumber"
@@ -381,10 +381,10 @@
                                                         "properties": {
                                                             "name": {
                                                                 "type": "string",
-                                                                "description": "Nome del beneficiario."
+                                                                "description": "Name of the payee."
                                                             },
                                                             "iban": {
-                                                                "description": "IBAN del conto del beneficiario.",
+                                                                "description": "IBAN of the payee's account.",
                                                                 "$ref": "#/components/schemas/IBAN"
                                                             }
                                                         },
@@ -398,7 +398,7 @@
                                             "lockedUntil": {
                                                 "type": "string",
                                                 "format": "date-time",
-                                                "description": "Se valorizzato, i fondi di questo pagamento verranno dirottati su un conto tecnico FlowPay fino alla data specificata. Entro tale data sarà possibile sbloccare i fondi verso il payee o restituirli al payer. Se i fondi saranno ancora presenti alla scadenza, verranno restituiti automaticamente al payer."
+                                                "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
                                             }
                                         },
                                         "required": []
@@ -408,16 +408,16 @@
                                         "properties": {
                                             "pagopaEcFiscalCode": {
                                                 "type": "string",
-                                                "description": "Codice fiscale della persona per PagoPA."
+                                                "description": "Tax code of the entity for PagoPA."
                                             },
                                             "pagopaPaymentNotice": {
                                                 "type": "string",
-                                                "description": "Codice di avviso pagamento PagoPA."
+                                                "description": "PagoPA payment notice code."
                                             },
                                             "email": {
                                                 "type": "string",
                                                 "format": "email",
-                                                "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
+                                                "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
                                             }
                                         },
                                         "required": [
@@ -433,7 +433,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Richiesta di pagamento creata con successo.",
+                        "description": "Payment request created successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -453,8 +453,8 @@
         },
         "/files": {
             "post": {
-                "summary": "Carica un file",
-                "description": "Carica un file e restituisce l'ID del file caricato.",
+                "summary": "Upload a file",
+                "description": "Uploads a file and returns the ID of the uploaded file.",
                 "operationId": "uploadFile",
                 "tags": [
                     "Files"
@@ -474,7 +474,7 @@
                                     "file": {
                                         "type": "string",
                                         "format": "binary",
-                                        "description": "Il file da caricare."
+                                        "description": "The file to upload."
                                     }
                                 },
                                 "required": [
@@ -488,20 +488,20 @@
                                 "properties": {
                                     "filename": {
                                         "type": "string",
-                                        "description": "Nome del file, incluso il suffisso estensione, es: 'documento.pdf'."
+                                        "description": "File name, including extension suffix, e.g. 'document.pdf'."
                                     },
                                     "description": {
                                         "type": "string",
-                                        "description": "Descrizione del file, utile per identificare il contenuto."
+                                        "description": "File description to help identify the content."
                                     },
                                     "contentType": {
                                         "type": "string",
-                                        "description": "Tipo MIME del file, es: 'application/pdf'."
+                                        "description": "MIME type of the file, e.g. 'application/pdf'."
                                     },
                                     "data": {
                                         "type": "string",
                                         "format": "byte",
-                                        "description": "Contenuto del file codificato in base64."
+                                        "description": "File content encoded in base64."
                                     }
                                 },
                                 "required": [
@@ -513,7 +513,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "File caricato con successo.",
+                        "description": "File uploaded successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -531,8 +531,8 @@
                 }
             },
             "get": {
-                "summary": "Elenca i file caricati",
-                "description": "Restituisce un elenco paginato di file caricati.",
+                "summary": "List uploaded files",
+                "description": "Returns a paginated list of uploaded files.",
                 "operationId": "listFiles",
                 "tags": [
                     "Files"
@@ -552,7 +552,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato dei file caricati.",
+                        "description": "Paginated list of uploaded files.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -586,8 +586,8 @@
         },
         "/files/{fileId}": {
             "get": {
-                "summary": "Recupera un file caricato",
-                "description": "Recupera i dettagli di un file caricato specificato dall'ID.",
+                "summary": "Retrieve an uploaded file",
+                "description": "Retrieves the details of an uploaded file specified by ID.",
                 "operationId": "getFile",
                 "tags": [
                     "Files"
@@ -606,12 +606,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "ID del file da recuperare."
+                        "description": "ID of the file to retrieve."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dettagli del file richiesto.",
+                        "description": "Details of the requested file.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -632,8 +632,8 @@
                 }
             },
             "delete": {
-                "summary": "Cancella un file caricato",
-                "description": "Cancella un file caricato specificato dall'ID. La cancellazione è definitiva solo se il file non è associato a nessuna richiesta di pagamento, altrimenti il file verrà rimosso solo dalla visione pubblica ma rimarrà disponibile per i controlli di conformità.",
+                "summary": "Delete an uploaded file",
+                "description": "Deletes an uploaded file specified by ID. Deletion is permanent only if the file is not associated with any payment request; otherwise the file is removed from public view but remains available for compliance checks.",
                 "operationId": "deleteFile",
                 "tags": [
                     "Files"
@@ -652,12 +652,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "ID del file da cancellare."
+                        "description": "ID of the file to delete."
                     }
                 ],
                 "responses": {
                     "204": {
-                        "description": "File cancellato con successo."
+                        "description": "File deleted successfully."
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
@@ -673,8 +673,8 @@
         },
         "/payment-requests": {
             "get": {
-                "summary": "Elenca tutte le richieste di pagamento create",
-                "description": "Restituisce un elenco paginato di tutte le richieste di pagamento create.",
+                "summary": "List all created payment requests",
+                "description": "Returns a paginated list of all created payment requests.",
                 "operationId": "listPaymentRequests",
                 "tags": [
                     "Request To Pay"
@@ -692,7 +692,7 @@
                             "type": "integer",
                             "default": 20
                         },
-                        "description": "Numero massimo di elementi per pagina."
+                        "description": "Maximum number of items per page."
                     },
                     {
                         "name": "offset",
@@ -701,12 +701,12 @@
                             "type": "integer",
                             "default": 0
                         },
-                        "description": "Numero di elementi da saltare."
+                        "description": "Number of items to skip."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato delle richieste di pagamento.",
+                        "description": "Paginated list of payment requests.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -738,8 +738,8 @@
                 }
             },
             "post": {
-                "summary": "Crea una nuova richiesta di pagamento",
-                "description": "Endpoint per creare una richiesta di pagamento tra due attori, specificando dati di pagatore e beneficiario.",
+                "summary": "Create a new payment request",
+                "description": "Endpoint to create a payment request between two parties, specifying payer and payee details.",
                 "operationId": "createPaymentRequest",
                 "tags": [
                     "Request To Pay"
@@ -750,7 +750,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Oggetto contenente informazioni su debitore, creditore e dettagli di pagamento.",
+                    "description": "Object containing debtor, payee and payment details.",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -758,7 +758,7 @@
                                 "type": "object",
                                 "properties": {
                                     "payer": {
-                                        "description": "Informazioni sul payer del pagamento. Può essere un numero di telefono o un oggetto Consumer.",
+                                        "description": "Information about the payer of the payment. It can be a phone number or a Consumer object.",
                                         "oneOf": [
                                             {
                                                 "$ref": "#/components/schemas/PhoneNumber"
@@ -767,15 +767,15 @@
                                                 "$ref": "#/components/schemas/Consumer"
                                             },
                                             {
-                                                "title": "UUID del customer pagatore.",
+                                                "title": "UUID of the paying customer.",
                                                 "type": "string",
                                                 "format": "uuid",
-                                                "description": "UUID del customer che effettua il pagamento."
+                                                "description": "UUID of the customer making the payment."
                                             }
                                         ]
                                     },
                                     "debtor": {
-                                        "description": "Informazioni sul debitore effettivo del pagamento. Se non valorizzato, verrà utilizzato il valore di `payer`.",
+                                        "description": "Information about the actual debtor of the payment. If not provided, the value of `payer` is used.",
                                         "oneOf": [
                                             {
                                                 "$ref": "#/components/schemas/ConsumerTIN"
@@ -784,10 +784,10 @@
                                                 "$ref": "#/components/schemas/BusinessTIN"
                                             },
                                             {
-                                                "title": "UUID del customer debitore.",
+                                                "title": "UUID of the debtor customer.",
                                                 "type": "string",
                                                 "format": "uuid",
-                                                "description": "UUID del customer debitore."
+                                                "description": "UUID of the debtor customer."
                                             }
                                         ]
                                     },
@@ -810,77 +810,77 @@
                                         "items": {
                                             "type": "string",
                                             "format": "uuid",
-                                            "description": "Identificativo univoco del file allegato al pagamento."
+                                            "description": "Unique identifier of the file attached to the payment."
                                         },
-                                        "description": "Elenco di UUID dei file allegati al pagamento che verranno mostrati nel checkout. Questi file devono essere stati precedentemente caricati utilizzando l'endpoint `/files`."
+                                        "description": "List of UUIDs of files attached to the payment that will be shown at checkout. These files must have been previously uploaded using the `/files` endpoint."
                                     },
                                     "privateAttachments": {
                                         "type": "array",
                                         "items": {
                                             "type": "string",
                                             "format": "uuid",
-                                            "description": "Identificativo univoco del file."
+                                            "description": "Unique file identifier."
                                         },
-                                        "description": "Elenco di UUID dei file allegati al pagamento che saranno visibili solo a FlowPay per i controlli di conformità. Questi file non saranno mostrati al pagatore durante il processo di pagamento."
+                                        "description": "List of UUIDs of files attached to the payment that are visible only to FlowPay for compliance checks. These files are not shown to the payer during the payment process."
                                     },
                                     "title": {
                                         "type": "string",
                                         "minLength": 3,
                                         "maxLength": 50,
-                                        "description": "Titolo esemplicativo del pagamento. Verrà mostrato al pagatore durante il processo di pagamento."
+                                        "description": "Short title for the payment. Displayed to the payer during the payment process."
                                     },
                                     "description": {
                                         "type": "string",
                                         "minLength": 5,
                                         "maxLength": 255,
-                                        "description": "Descrizione del pagamento, visibile al pagatore."
+                                        "description": "Payment description, visible to the payer."
                                     },
                                     "remittanceInformation": {
                                         "type": "string",
                                         "minLength": 5,
                                         "maxLength": 100,
-                                        "description": "Informazioni di rimessa per il pagamento, visibili al pagatore e al beneficiario all'accredito sul conto."
+                                        "description": "Remittance information for the payment, visible to the payer and to the payee upon credit to the account."
                                     },
                                     "allowRemittanceChange": {
                                         "type": "boolean",
                                         "default": false,
-                                        "description": "Indica se il pagatore può modificare le informazioni di rimessa durante il pagamento."
+                                        "description": "Indicates whether the payer can change remittance information during the payment."
                                     },
                                     "amount": {
                                         "type": "number",
                                         "format": "decimal",
                                         "minimum": 0.01,
-                                        "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                        "description": "Payment amount as a decimal (e.g. 10.50)."
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
+                                        "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
                                     },
                                     "redirectUrl": {
                                         "type": "string",
                                         "format": "uri",
-                                        "description": "URL di redirect a cui l'utente verrà reindirizzato con query parameter status che può valere `success`, `error` o `cancel`."
+                                        "description": "Redirect URL to which the user is redirected with query parameter `status` which can be `success`, `error` or `cancel`."
                                     },
                                     "callbackUrl": {
                                         "type": "string",
                                         "format": "uri",
-                                        "description": "URL di callback singolo per il pagamento."
+                                        "description": "Single callback URL for the payment."
                                     }
                                 },
                                 "required": [],
                                 "oneOf": [
                                     {
-                                        "title": "Pagamento standard",
+                                        "title": "Standard payment",
                                         "properties": {
                                             "amount": {
                                                 "type": "number",
                                                 "format": "decimal",
                                                 "minimum": 0.01,
-                                                "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                                "description": "Payment amount as a decimal (e.g. 10.50)."
                                             },
                                             "payee": {
-                                                "description": "Informazioni sul payee del pagamento. Se non specificato, di default verrà utilizzato il partner associato al client e l'IBAN configurato per il client.",
+                                                "description": "Information about the payment payee. If not specified, the partner associated with the client and the IBAN configured for the client are used by default.",
                                                 "oneOf": [
                                                     {
                                                         "$ref": "#/components/schemas/PhoneNumber"
@@ -890,10 +890,10 @@
                                                         "properties": {
                                                             "name": {
                                                                 "type": "string",
-                                                                "description": "Nome del beneficiario."
+                                                                "description": "Name of the payee."
                                                             },
                                                             "iban": {
-                                                                "description": "IBAN del conto del beneficiario.",
+                                                                "description": "IBAN of the payee's account.",
                                                                 "$ref": "#/components/schemas/IBAN"
                                                             }
                                                         },
@@ -906,14 +906,14 @@
                                             },
                                             "allowPartialPayments": {
                                                 "type": "boolean",
-                                                "description": "Indica se accettare pagamenti parziali. Se true, `amount` deve essere valorizzato e `additionalPayees` non deve essere valorizzato."
+                                                "description": "Indicates whether to accept partial payments. If true, `amount` must be set and `additionalPayees` must not be set."
                                             }
                                         },
                                         "required": [],
                                         "allOf": [
                                             {
                                                 "if": {
-                                                    "title": "Pagamento intero",
+                                                    "title": "Full payment",
                                                     "properties": {
                                                         "allowPartialPayments": {
                                                             "const": false
@@ -924,19 +924,19 @@
                                                     "properties": {
                                                         "additionalPayees": {
                                                             "type": "array",
-                                                            "description": "Elenco di beneficiari aggiuntivi a cui destinare parte dell'importo del pagamento. La somma degli importi specificati in `additionalPayees` non può essere maggiore di `amount`; la differenza tra `amount` e la somma degli `additionalPayees` verrà inviata al `payee`.",
+                                                            "description": "List of additional payees to allocate part of the payment amount. The sum of the amounts specified in `additionalPayees` cannot be greater than `amount`; the difference between `amount` and the sum of `additionalPayees` is sent to the `payee`.",
                                                             "items": {
                                                                 "oneOf": [
                                                                     {
                                                                         "type": "object",
-                                                                        "title": "Pagamento verso cellulare",
-                                                                        "description": "Pagamento a un numero di telefono.",
+                                                                        "title": "Payment to mobile number",
+                                                                        "description": "Payment to a phone number.",
                                                                         "properties": {
                                                                             "amount": {
                                                                                 "type": "number",
                                                                                 "format": "decimal",
                                                                                 "minimum": 0.01,
-                                                                                "description": "Importo del pagamento in formato decimal"
+                                                                                "description": "Payment amount as a decimal"
                                                                             },
                                                                             "phoneNumber": {
                                                                                 "$ref": "#/components/schemas/PhoneNumber"
@@ -949,21 +949,21 @@
                                                                     },
                                                                     {
                                                                         "type": "object",
-                                                                        "title": "Pagamento verso IBAN",
-                                                                        "description": "Pagamento a un beneficiario con IBAN.",
+                                                                        "title": "Payment to IBAN",
+                                                                        "description": "Payment to a payee with an IBAN.",
                                                                         "properties": {
                                                                             "amount": {
                                                                                 "type": "number",
                                                                                 "format": "decimal",
                                                                                 "minimum": 0.01,
-                                                                                "description": "Importo del pagamento in formato decimal"
+                                                                                "description": "Payment amount as a decimal"
                                                                             },
                                                                             "name": {
                                                                                 "type": "string",
-                                                                                "description": "Nome del beneficiario."
+                                                                                "description": "Name of the payee."
                                                                             },
                                                                             "iban": {
-                                                                                "description": "IBAN del conto del beneficiario.",
+                                                                                "description": "IBAN of the payee's account.",
                                                                                 "$ref": "#/components/schemas/IBAN"
                                                                             }
                                                                         },
@@ -973,10 +973,10 @@
                                                                         ]
                                                                     },
                                                                     {
-                                                                        "title": "Pagamento verso customer",
+                                                                        "title": "Payment to customer",
                                                                         "type": "string",
                                                                         "format": "uuid",
-                                                                        "description": "UUID del customer da utilizzare come payee addizionale."
+                                                                        "description": "UUID of the customer to use as an additional payee."
                                                                     }
                                                                 ]
                                                             }
@@ -984,28 +984,28 @@
                                                         "lockedUntil": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                            "description": "Se valorizzato, i fondi di questo pagamento verranno dirottati su un conto tecnico FlowPay fino alla data specificata. Entro tale data sarà possibile sbloccare i fondi verso il payee o restituirli al payer. Se i fondi saranno ancora presenti alla scadenza, verranno restituiti automaticamente al payer."
+                                                        "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
                                                         },
                                                         "savePaymentMethod": {
                                                             "type": "boolean",
                                                             "default": false,
-                                                            "description": "Indica se salvare il metodo di pagamento per futuri utilizzi."
+                                                        "description": "Indicates whether to save the payment method for future use."
                                                         },
                                                         "executionDate": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                            "description": "Data e ora di esecuzione del pagamento in formato ISO 8601. Se non valorizzato, il pagamento verrà eseguito immediatamente."
+                                                        "description": "Payment execution date and time in ISO 8601 format. If not provided, the payment is executed immediately."
                                                         }
                                                     }
                                                 },
                                                 "else": {
-                                                    "title": "Pagamento parziale",
+                                                    "title": "Partial payment",
                                                     "properties": {
                                                         "amount": {
                                                             "type": "number",
                                                             "format": "decimal",
                                                             "minimum": 0.01,
-                                                            "description": "Importo del pagamento in formato decimale (es. 10.50)."
+                                                            "description": "Payment amount as a decimal (e.g. 10.50)."
                                                         }
                                                     },
                                                     "required": [
@@ -1020,16 +1020,16 @@
                                         "properties": {
                                             "pagopaEcFiscalCode": {
                                                 "type": "string",
-                                                "description": "Codice fiscale della persona per PagoPA."
+                                                "description": "Tax code of the entity for PagoPA."
                                             },
                                             "pagopaPaymentNotice": {
                                                 "type": "string",
-                                                "description": "Codice di avviso pagamento PagoPA."
+                                                "description": "PagoPA payment notice code."
                                             },
                                             "email": {
                                                 "type": "string",
                                                 "format": "email",
-                                                "description": "Indirizzo email a cui verrà inviata la ricevuta del pagamento. Obbligatorio nel caso di PagoPA."
+                                                "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
                                             }
                                         },
                                         "required": [
@@ -1045,7 +1045,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Richiesta di pagamento creata con successo.",
+                        "description": "Payment request created successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1065,8 +1065,8 @@
         },
         "/payment-requests/{requestId}": {
             "get": {
-                "summary": "Recupera lo stato di una richiesta di pagamento",
-                "description": "Restituisce dettagli e stato della richiesta di pagamento specificata.<br>Il documento PDF che include i dettagli della richiesta di pagamento e un QR code per apertura mobile. Se la richiesta è stata pagata, contiene anche le informazioni di pagamento e funge da ricevuta.",
+                "summary": "Retrieve the status of a payment request",
+                "description": "Returns details and status of the specified payment request.<br>The PDF document includes the payment request details and a QR code for mobile opening. If the request has been paid, it also contains the payment information and serves as a receipt.",
                 "operationId": "getPaymentRequest",
                 "tags": [
                     "Request To Pay"
@@ -1084,7 +1084,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "Identificativo della richiesta di pagamento di cui recuperare lo stato."
+                        "description": "Identifier of the payment request for which to retrieve the status."
                     },
                     {
                         "name": "Accept",
@@ -1098,12 +1098,12 @@
                             ],
                             "default": "application/json"
                         },
-                        "description": "Specifica il formato di risposta desiderato; usare application/pdf per ottenere un documento PDF."
+                        "description": "Specifies the desired response format; use application/pdf to obtain a PDF document."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dettagli della richiesta di pagamento in JSON o documento PDF se richiesto con Accept: application/pdf.<br>",
+                        "description": "Payment request details in JSON, or a PDF document if requested with Accept: application/pdf.<br>",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1127,8 +1127,8 @@
                 }
             },
             "delete": {
-                "summary": "Cancella una richiesta di pagamento",
-                "description": "Cancella la richiesta di pagamento specificata. Può essere fatta solo se non è stato avviato alcun pagamento.",
+                "summary": "Delete a payment request",
+                "description": "Deletes the specified payment request. It can be done only if no payment has been initiated.",
                 "operationId": "deletePaymentRequest",
                 "tags": [
                     "Request To Pay"
@@ -1147,12 +1147,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID della richiesta di pagamento da cancellare."
+                        "description": "UUID of the payment request to delete."
                     }
                 ],
                 "responses": {
                     "204": {
-                        "description": "Richiesta di pagamento cancellata con successo."
+                        "description": "Payment request deleted successfully."
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
@@ -1169,8 +1169,8 @@
         "/payment-requests/{requestId}/sessions": {
             "get": {
                 "x-convenience": true,
-                "summary": "Elenca le sessioni di pagamento associate a una richiesta",
-                "description": "Convenience endpoint: restituisce l'elenco delle sessioni di pagamento (tentativi) per la richiesta specificata. Ideale per navigazione gerarchica.",
+                "summary": "List payment sessions associated with a request",
+                "description": "Convenience endpoint: returns the list of payment sessions (attempts) for the specified request. Ideal for hierarchical navigation.",
                 "operationId": "listPaymentRequestSessions",
                 "tags": [
                     "Request To Pay"
@@ -1189,12 +1189,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID della richiesta di pagamento."
+                        "description": "UUID of the payment request."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco delle sessioni di pagamento per la richiesta.",
+                        "description": "List of payment sessions for the request.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1217,8 +1217,8 @@
         },
         "/payment-sessions": {
             "get": {
-                "summary": "Elenca le sessioni di pagamento con filtri",
-                "description": "Risorsa principale per query globale sulle sessioni di pagamento. Supporta filtri, incluso requestId per selezionare le sessioni di una specifica richiesta.",
+                "summary": "List payment sessions with filters",
+                "description": "Primary resource for global queries on payment sessions. Supports filters, including requestId to select sessions for a specific request.",
                 "operationId": "listPaymentSessions",
                 "tags": [
                     "Request To Pay"
@@ -1236,7 +1236,7 @@
                             "type": "integer",
                             "default": 20
                         },
-                        "description": "Numero massimo di elementi per pagina."
+                        "description": "Maximum number of items per page."
                     },
                     {
                         "name": "offset",
@@ -1245,7 +1245,7 @@
                             "type": "integer",
                             "default": 0
                         },
-                        "description": "Numero di elementi da saltare."
+                        "description": "Number of items to skip."
                     },
                     {
                         "name": "requestId",
@@ -1254,7 +1254,7 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "ID della richiesta di pagamento per filtrare le sessioni associate."
+                        "description": "ID of the payment request to filter associated sessions."
                     },
                     {
                         "name": "status",
@@ -1269,12 +1269,12 @@
                                 "cancelled"
                             ]
                         },
-                        "description": "Stato della sessione di pagamento da filtrare."
+                        "description": "Payment session status to filter by."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato delle sessioni di pagamento.",
+                        "description": "Paginated list of payment sessions.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1308,8 +1308,8 @@
         },
         "/payment-methods": {
             "get": {
-                "summary": "Elenca tutti i metodi di pagamento",
-                "description": "Restituisce un elenco paginato dei metodi di pagamento tokenizzati.",
+                "summary": "List all payment methods",
+                "description": "Returns a paginated list of tokenised payment methods.",
                 "operationId": "listPaymentMethods",
                 "tags": [
                     "Payment Method"
@@ -1329,7 +1329,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato dei metodi di pagamento.",
+                        "description": "Paginated list of payment methods.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1361,8 +1361,8 @@
                 }
             },
             "post": {
-                "summary": "Tokenizza un nuovo metodo di pagamento",
-                "description": "<span class='beta-badge'></span><br>Crea un nuovo metodo di pagamento tokenizzato per futuri utilizzi.",
+                "summary": "Tokenise a new payment method",
+                "description": "<span class='beta-badge'></span><br>Creates a new tokenised payment method for future use.",
                 "operationId": "createPaymentMethod",
                 "x-beta": true,
                 "tags": [
@@ -1390,12 +1390,12 @@
                                     "callbackUrl": {
                                         "type": "string",
                                         "format": "uri",
-                                        "description": "URL di callback per notifiche sullo stato del metodo di pagamento."
+                                        "description": "Callback URL for notifications about the payment method status."
                                     },
                                     "customerId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "ID del cliente associato al metodo di pagamento. Se non specificato, il metodo sarà associato al cliente corrente."
+                                        "description": "ID of the customer associated with the payment method. If not specified, the method is associated with the current customer."
                                     }
                                 },
                                 "required": [
@@ -1407,7 +1407,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Metodo di pagamento creato con successo.",
+                        "description": "Payment method created successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1416,7 +1416,7 @@
                                         "link": {
                                             "type": "string",
                                             "format": "uri",
-                                            "description": "Link alla pagina di tokenizzazione del metodo di pagamento."
+                                            "description": "Link to the payment method tokenisation page."
                                         }
                                     }
                                 }
@@ -1434,8 +1434,8 @@
         },
         "/payment-methods/{paymentMethodId}": {
             "get": {
-                "summary": "Recupera un metodo di pagamento",
-                "description": "Restituisce i dettagli di un metodo di pagamento tokenizzato.",
+                "summary": "Retrieve a payment method",
+                "description": "Returns the details of a tokenised payment method.",
                 "operationId": "getPaymentMethodById",
                 "tags": [
                     "Payment Method"
@@ -1454,12 +1454,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID del metodo di pagamento."
+                        "description": "UUID of the payment method."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dettagli del metodo di pagamento.",
+                        "description": "Payment method details.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1477,8 +1477,8 @@
                 }
             },
             "delete": {
-                "summary": "Elimina un metodo di pagamento",
-                "description": "Rimuove un metodo di pagamento tokenizzato.",
+                "summary": "Delete a payment method",
+                "description": "Removes a tokenised payment method.",
                 "operationId": "deletePaymentMethod",
                 "tags": [
                     "Payment Method"
@@ -1497,12 +1497,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID del metodo di pagamento da eliminare."
+                        "description": "UUID of the payment method to delete."
                     }
                 ],
                 "responses": {
                     "204": {
-                        "description": "Metodo di pagamento eliminato con successo."
+                        "description": "Payment method deleted successfully."
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
@@ -1686,8 +1686,8 @@
                 }
             },
             "get": {
-                "summary": "Elenca tutti i clienti registrati",
-                "description": "Restituisce l'elenco paginato dei clienti, popolati automaticamente alla creazione di una richiesta di pagamento per payer consumer o business.",
+                "summary": "List all registered customers",
+                "description": "Returns the paginated list of customers, automatically populated when creating a payment request for a consumer or business payer.",
                 "operationId": "listCustomers",
                 "tags": [
                     "Customers"
@@ -1707,7 +1707,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato dei clienti.",
+                        "description": "Paginated list of customers.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1741,8 +1741,8 @@
         },
         "/customers/{customerId}": {
             "get": {
-                "summary": "Recupera il dettaglio di un cliente",
-                "description": "Restituisce i dettagli di un cliente specifico per UUID.",
+                "summary": "Retrieve customer details",
+                "description": "Returns the details of a specific customer by UUID.",
                 "operationId": "getCustomerById",
                 "tags": [
                     "Customers"
@@ -1761,12 +1761,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID del cliente da recuperare."
+                        "description": "UUID of the customer to retrieve."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dettagli del cliente.",
+                        "description": "Customer details.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1784,8 +1784,8 @@
                 }
             },
             "delete": {
-                "summary": "Elimina un cliente",
-                "description": "Elimina il cliente specificato e i metodi di pagamento associati.",
+                "summary": "Delete a customer",
+                "description": "Deletes the specified customer and the associated payment methods.",
                 "operationId": "deleteCustomer",
                 "tags": [
                     "Customers"
@@ -1804,12 +1804,12 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID del cliente da eliminare."
+                        "description": "UUID of the customer to delete."
                     }
                 ],
                 "responses": {
                     "204": {
-                        "description": "Cliente e metodo di pagamento associato eliminati con successo."
+                        "description": "Customer and associated payment methods deleted successfully."
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
@@ -1822,8 +1822,8 @@
         },
         "/refunds": {
             "get": {
-                "summary": "Elenca tutti i rimborsi creati",
-                "description": "Restituisce un elenco paginato dei rimborsi creati (uno per sessione di pagamento).",
+                "summary": "List all created refunds",
+                "description": "Returns a paginated list of refunds created (one per payment session).",
                 "operationId": "listRefunds",
                 "tags": [
                     "Refunds"
@@ -1843,7 +1843,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Elenco paginato dei rimborsi.",
+                        "description": "Paginated list of refunds.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1875,8 +1875,8 @@
                 }
             },
             "post": {
-                "summary": "Crea un rimborso",
-                "description": "Effettua un rimborso per una sessione di pagamento specificata. Il rimborso può essere parziale o totale, a seconda dell'importo specificato. In ogni caso, l'importo del rimborso non può superare l'importo della sessione di pagamento.<br>Il rimborso viene accredito sul metodo di pagamento utilizzato nella sessione di pagamento originale.",
+                "summary": "Create a refund",
+                "description": "Performs a refund for a specified payment session. The refund can be partial or total depending on the specified amount. In any case, the refund amount cannot exceed the amount of the payment session.<br>The refund is credited to the payment method used in the original payment session.",
                 "operationId": "createRefund",
                 "tags": [
                     "Refunds"
@@ -1896,13 +1896,13 @@
                                     "sessionId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "ID della sessione di pagamento per cui creare il rimborso."
+                                        "description": "ID of the payment session for which to create the refund."
                                     },
                                     "amount": {
                                         "type": "number",
                                         "format": "decimal",
                                         "minimum": 0.01,
-                                        "description": "Importo del rimborso in formato decimale (es. 10.50). Deve essere minore o uguale all'importo della sessione di pagamento."
+                                        "description": "Refund amount as a decimal (e.g. 10.50). Must be less than or equal to the amount of the payment session."
                                     },
                                     "reason": {
                                         "$ref": "#/components/schemas/RefundReason"
@@ -1919,7 +1919,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Rimborso creato.",
+                        "description": "Refund created.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1942,8 +1942,8 @@
         },
         "/refunds/{refundId}": {
             "get": {
-                "summary": "Recupera un rimborso",
-                "description": "Restituisce i dettagli di un rimborso. È possibile richiedere la risposta in formato PDF, in questo caso verrà prodotto un documento che include i dettagli del rimborso che può essere utilizzato come attestazione del rimborso.",
+                "summary": "Retrieve a refund",
+                "description": "Returns the details of a refund. You can request the response in PDF format; in this case, a document including the refund details is produced and can be used as proof of refund.",
                 "operationId": "getRefundById",
                 "tags": [
                     "Refunds"
@@ -1962,7 +1962,7 @@
                             "type": "string",
                             "format": "uuid"
                         },
-                        "description": "UUID del rimborso."
+                        "description": "UUID of the refund."
                     },
                     {
                         "name": "Accept",
@@ -1976,12 +1976,12 @@
                             ],
                             "default": "application/json"
                         },
-                        "description": "Specifica il formato di risposta; usare application/pdf per ottenere un documento PDF con QR code e dettagli del rimborso."
+                        "description": "Specifies the response format; use application/pdf to obtain a PDF document with a QR code and refund details."
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dettagli del rimborso in JSON o documento PDF se richiesto con Accept: application/pdf.",
+                        "description": "Refund details in JSON, or a PDF document if requested with Accept: application/pdf.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2009,14 +2009,14 @@
     "webhooks": {
         "paymentWebhook": {
             "post": {
-                "summary": "Aggiornamento stato pagamento",
+                "summary": "Payment status update",
                 "operationId": "paymentWebhook",
-                "description": "Riceve notifiche relative allo stato del pagamento (es. succeeded, failed).",
+                "description": "Receives notifications about the payment status (e.g. succeeded, failed).",
                 "tags": [
                     "Request To Pay"
                 ],
                 "requestBody": {
-                    "description": "Payload inviato dal provider di pagamento contenente dettagli dell'evento.",
+                    "description": "Payload sent by the payment provider containing event details.",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -2025,15 +2025,15 @@
                                 "properties": {
                                     "paymentId": {
                                         "type": "string",
-                                        "description": "Identificativo del pagamento associato all'evento."
+                                        "description": "Identifier of the payment associated with the event."
                                     },
                                     "event": {
                                         "type": "string",
-                                        "description": "Tipo di evento scatenato (es. `payment_succeeded`)."
+                                        "description": "Type of event triggered (e.g. `payment_succeeded`)."
                                     },
                                     "data": {
                                         "type": "object",
-                                        "description": "Oggetto contenente dati aggiuntivi relativi all'evento."
+                                        "description": "Object containing additional data related to the event."
                                     }
                                 }
                             }
@@ -2042,10 +2042,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Notifica webhook ricevuta correttamente."
+                        "description": "Webhook notification received successfully."
                     },
                     "default": {
-                        "description": "Errore nell'elaborazione del webhook.",
+                        "description": "Error processing the webhook.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2053,11 +2053,11 @@
                                     "properties": {
                                         "code": {
                                             "type": "integer",
-                                            "description": "Codice di errore."
+                                            "description": "Error code."
                                         },
                                         "message": {
                                             "type": "string",
-                                            "description": "Descrizione dell'errore."
+                                            "description": "Error description."
                                         }
                                     }
                                 }
@@ -2069,8 +2069,8 @@
         },
         "customerDataDeletionWebhook": {
             "post": {
-                "summary": "Notifica cancellazione dati cliente",
-                "description": "Webhook inviato al partner quando un cliente richiede la cancellazione dei propri dati da FlowPay in virtù del GDPR o altra normativa.",
+                "summary": "Customer data deletion notification",
+                "description": "Webhook sent to the partner when a customer requests the deletion of their data from FlowPay under GDPR or other regulations.",
                 "operationId": "customerDataDeletion",
                 "tags": [
                     "Customers"
@@ -2081,17 +2081,17 @@
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "description": "Payload inviato al partner quando un cliente richiede la cancellazione dei propri dati.",
+                                "description": "Payload sent to the partner when a customer requests the deletion of their data.",
                                 "properties": {
                                     "customerId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "UUID del cliente che ha richiesto la cancellazione dei propri dati."
+                                        "description": "UUID of the customer who requested deletion of their data."
                                     },
                                     "requestedAt": {
                                         "type": "string",
                                         "format": "date-time",
-                                        "description": "Timestamp ISO 8601 in cui il cliente ha richiesto la cancellazione."
+                                        "description": "ISO 8601 timestamp when the customer requested deletion."
                                     }
                                 },
                                 "required": [
@@ -2104,7 +2104,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Partner ha ricevuto correttamente la notifica di cancellazione."
+                        "description": "Partner successfully received the deletion notification."
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -2118,7 +2118,7 @@
             "basicAuth": {
                 "type": "http",
                 "scheme": "basic",
-                "description": "Utilizzare ClientID (UUID) come username e API Key come password."
+                "description": "Use ClientID (UUID) as username and API Key as password."
             }
         },
         "parameters": {
@@ -2129,7 +2129,7 @@
                 "schema": {
                     "type": "integer",
                     "default": 20,
-                    "description": "Numero massimo di elementi per pagina."
+                    "description": "Maximum number of items per page."
                 }
             },
             "OffsetParam": {
@@ -2139,13 +2139,13 @@
                 "schema": {
                     "type": "integer",
                     "default": 0,
-                    "description": "Numero di elementi da saltare."
+                    "description": "Number of items to skip."
                 }
             }
         },
         "responses": {
             "BadRequest": {
-                "description": "Richiesta non valida.",
+                "description": "Invalid request.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -2153,11 +2153,11 @@
                             "properties": {
                                 "code": {
                                     "type": "integer",
-                                    "description": "Codice di errore."
+                                    "description": "Error code."
                                 },
                                 "message": {
                                     "type": "string",
-                                    "description": "Descrizione dell'errore."
+                                    "description": "Error description."
                                 }
                             },
                             "required": [
@@ -2169,7 +2169,7 @@
                 }
             },
             "NotFound": {
-                "description": "Risorsa non trovata.",
+                "description": "Resource not found.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -2177,11 +2177,11 @@
                             "properties": {
                                 "code": {
                                     "type": "integer",
-                                    "description": "Codice di errore."
+                                    "description": "Error code."
                                 },
                                 "message": {
                                     "type": "string",
-                                    "description": "Descrizione dell'errore."
+                                    "description": "Error description."
                                 }
                             },
                             "required": [
@@ -2193,7 +2193,7 @@
                 }
             },
             "Conflict": {
-                "description": "Conflitto nello stato della risorsa.",
+                "description": "Conflict in the resource state.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -2201,11 +2201,11 @@
                             "properties": {
                                 "code": {
                                     "type": "integer",
-                                    "description": "Codice di errore."
+                                    "description": "Error code."
                                 },
                                 "message": {
                                     "type": "string",
-                                    "description": "Descrizione dell'errore."
+                                    "description": "Error description."
                                 }
                             },
                             "required": [
@@ -2217,7 +2217,7 @@
                 }
             },
             "DefaultError": {
-                "description": "Errore inatteso.",
+                "description": "Unexpected error.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -2225,11 +2225,11 @@
                             "properties": {
                                 "code": {
                                     "type": "integer",
-                                    "description": "Codice di errore."
+                                    "description": "Error code."
                                 },
                                 "message": {
                                     "type": "string",
-                                    "description": "Descrizione dell'errore."
+                                    "description": "Error description."
                                 }
                             },
                             "required": [
@@ -2323,29 +2323,29 @@
             },
             "Customer": {
                 "type": "object",
-                "description": "Informazioni sul cliente registrato da una richiesta di pagamento.",
+                "description": "Information about the customer registered from a payment request.",
                 "properties": {
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco del cliente."
+                        "description": "Unique identifier of the customer."
                     },
                     "name": {
                         "type": "string",
-                        "description": "Nome completo così come fornito dall'utente."
+                        "description": "Full name as provided by the user."
                     },
                     "providedName": {
                         "type": "string",
-                        "description": "Nome completo così come fornito nella richiesta di pagamento."
+                        "description": "Full name as provided in the payment request."
                     },
                     "phoneNumber": {
                         "$ref": "#/components/schemas/PhoneNumber",
-                        "description": "Numero di telefono cellulare del cliente registrato. Questo campo è presente solo se il numero di telefono è stato fornito nella richiesta di pagamento."
+                        "description": "Mobile phone number of the registered customer. This field is present only if the phone number was provided in the payment request."
                     },
                     "registrationRequestId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID della richiesta di pagamento con cui il cliente è stato registrato."
+                        "description": "UUID of the payment request with which the customer was registered."
                     }
                 },
                 "required": [
@@ -2360,28 +2360,28 @@
                 "properties": {
                     "phoneNumber": {
                         "type": "string",
-                        "description": "Numero di telefono cellulare della persona."
+                        "description": "Person's mobile phone number."
                     },
                     "name": {
                         "type": "string",
-                        "description": "Nome della persona."
+                        "description": "Person's first name."
                     },
                     "surname": {
                         "type": "string",
-                        "description": "Cognome della persona."
+                        "description": "Person's surname."
                     },
                     "tin": {
                         "type": "string",
-                        "description": "Tax Identification Number della persona."
+                        "description": "Person's Tax Identification Number."
                     },
                     "residenceAddress": {
                         "type": "string",
-                        "description": "Indirizzo di residenza della persona."
+                        "description": "Person's residence address."
                     },
                     "email": {
                         "type": "string",
                         "format": "email",
-                        "description": "Email della persona."
+                        "description": "Person's email address."
                     }
                 },
                 "required": [
@@ -2390,22 +2390,22 @@
             },
             "PhoneNumber": {
                 "type": "string",
-                "description": "Numero di telefono cellulare in formato E.164 (es. +391234567890).",
+                "description": "Mobile phone number in E.164 format (e.g. +391234567890).",
                 "pattern": "^\\+?[1-9]\\d{1,14}$"
             },
             "ConsumerTIN": {
                 "type": "string",
-                "description": "Codice fiscale italiano (16 caratteri alfanumerici).",
+                "description": "Italian fiscal code (16 alphanumeric characters).",
                 "pattern": "^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$"
             },
             "BusinessTIN": {
                 "type": "string",
-                "description": "Partita IVA europea (formato: codice paese ISO 2 lettere seguito da 8-12 caratteri alfanumerici).",
+                "description": "European VAT number (format: ISO 2-letter country code followed by 8–12 alphanumeric characters).",
                 "pattern": "^[A-Z]{2}[0-9A-Z]{8,12}$"
             },
             "IBAN": {
                 "type": "string",
-                "description": "IBAN europeo (formato: codice paese ISO 2 lettere, seguito da 2 cifre di controllo e fino a 30 caratteri alfanumerici).",
+                "description": "European IBAN (format: ISO 2-letter country code, followed by 2 check digits and up to 30 alphanumeric characters).",
                 "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$"
             },
             "PaymentCallbackEnum": {
@@ -2415,16 +2415,16 @@
                     "error",
                     "cancel"
                 ],
-                "description": "Tipi di callback disponibili per il pagamento."
+                "description": "Available callback types for the payment."
             },
             "PaymentMethod": {
                 "type": "object",
-                "description": "Metodo di pagamento tokenizzato.",
+                "description": "Tokenised payment method.",
                 "properties": {
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco del metodo di pagamento."
+                        "description": "Unique identifier of the payment method."
                     },
                     "type": {
                         "type": "string",
@@ -2432,38 +2432,38 @@
                             "card",
                             "bankAccount"
                         ],
-                        "description": "Tipo di metodo di pagamento. Può essere 'card' per carte di credito/debito o 'bankAccount' per conti bancari."
+                        "description": "Type of payment method. Can be 'card' for credit/debit cards or 'bankAccount' for bank accounts."
                     },
                     "tokenizationDate": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Data e ora di tokenizzazione del metodo."
+                        "description": "Method tokenisation date and time."
                     },
                     "enabled": {
                         "type": "boolean",
-                        "description": "Indica se il metodo di pagamento è abilitato."
+                        "description": "Indicates whether the payment method is enabled."
                     },
                     "paymentSessionId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID della sessione di pagamento associata a questo metodo."
+                        "description": "UUID of the payment session associated with this method."
                     },
                     "paymentRequestId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID della richiesta di pagamento a cui è collegato."
+                        "description": "UUID of the payment request to which it is linked."
                     },
                     "methodIdentifier": {
                         "type": "string"
                     },
                     "issuer": {
                         "type": "string",
-                        "description": "Nome dell'issuer o emittente del metodo di pagamento (es. banca o circuito carta)."
+                        "description": "Name of the issuer of the payment method (e.g. bank or card network)."
                     },
                     "issuerLogo": {
                         "type": "string",
                         "format": "uri",
-                        "description": "URL del logo dell'issuer o emittente del metodo di pagamento."
+                        "description": "URL of the issuer's logo for the payment method."
                     }
                 },
                 "oneOf": [
@@ -2505,62 +2505,62 @@
                     "chargeId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco dell'addebito."
+                        "description": "Unique identifier of the charge."
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Timestamp ISO 8601 di creazione dell'addebito."
+                        "description": "ISO 8601 timestamp when the charge was created."
                     },
                     "amount": {
                         "type": "number",
                         "format": "decimal",
                         "minimum": 0.01,
-                        "description": "Importo totale del pagamento (es. 10.50)."
+                        "description": "Total payment amount (e.g. 10.50)."
                     },
                     "currency": {
                         "type": "string",
-                        "description": "Valuta utilizzata (es. 'EUR')."
+                        "description": "Currency used (e.g. 'EUR')."
                     },
                     "payerId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID univoco dell’entità che ha avviato la richiesta di pagamento (può coincidere con debtorId se non diversamente specificato)."
+                        "description": "Unique ID of the entity that initiated the payment request (may match debtorId if not otherwise specified)."
                     },
                     "debtorId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID del debitore effettivo. Se non valorizzato, verrà usato lo stesso `payerId`."
+                        "description": "ID of the actual debtor. If not provided, the same `payerId` is used."
                     },
                     "privateAttachments": {
                         "type": "array",
                         "items": {
                             "type": "string",
                             "format": "uuid",
-                            "description": "UUID di file allegati privati (visibili solo a FlowPay per controlli interni)."
+                            "description": "UUID of private attached files (visible only to FlowPay for internal checks)."
                         },
-                        "description": "Elenco di UUID dei file riservati per controlli di conformità (non mostrati al pagatore)."
+                        "description": "List of UUIDs of files reserved for compliance checks (not shown to the payer)."
                     },
                     "remittanceInformation": {
                         "type": "string",
                         "minLength": 5,
                         "maxLength": 100,
-                        "description": "Informazioni di rimessa (ad es. causale), visibili sia al pagatore che al beneficiario."
+                        "description": "Remittance information (e.g. reference), visible to both payer and payee."
                     },
                     "paymentMethodId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID del metodo di pagamento utilizzato per questo addebito."
+                        "description": "ID of the payment method used for this charge."
                     },
                     "customerId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID del cliente associato a questa richiesta di pagamento."
+                        "description": "UUID of the customer associated with this payment request."
                     },
                     "refundId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID del rimborso associato a questa richiesta, se presente."
+                        "description": "UUID of the refund associated with this request, if present."
                     }
                 },
                 "required": []
@@ -2571,34 +2571,34 @@
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco del file."
+                        "description": "Unique file identifier."
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Timestamp ISO 8601 di creazione del file."
+                        "description": "ISO 8601 timestamp when the file was created."
                     },
                     "fileName": {
                         "type": "string",
-                        "description": "Nome del file."
+                        "description": "File name."
                     },
                     "fileSize": {
                         "type": "integer",
-                        "description": "Dimensione del file in byte."
+                        "description": "File size in bytes."
                     },
                     "fileType": {
                         "type": "string",
-                        "description": "Tipo MIME del file (es. 'application/pdf')."
+                        "description": "File MIME type (e.g. 'application/pdf')."
                     },
                     "url": {
                         "type": "string",
                         "format": "uri",
-                        "description": "URL per scaricare il file."
+                        "description": "URL to download the file."
                     },
                     "urlExpiresAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Timestamp ISO 8601 in cui l'URL per scaricare il file scade."
+                        "description": "ISO 8601 timestamp when the download URL expires."
                     }
                 },
                 "required": [
@@ -2613,112 +2613,112 @@
                     "requestId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco della richiesta di pagamento."
+                        "description": "Unique identifier of the payment request."
                     },
                     "link": {
                         "type": "string",
                         "format": "uri",
-                        "description": "Link al checkout per il pagamento"
+                        "description": "Link to the payment checkout"
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Timestamp ISO 8601 di creazione della richiesta di pagamento."
+                        "description": "ISO 8601 timestamp when the payment request was created."
                     },
                     "amount": {
                         "type": "number",
                         "format": "decimal",
                         "minimum": 0.01,
-                        "description": "Importo totale del pagamento (es. 10.50)."
+                        "description": "Total payment amount (e.g. 10.50)."
                     },
                     "currency": {
                         "type": "string",
-                        "description": "Valuta utilizzata (es. 'EUR')."
+                        "description": "Currency used (e.g. 'EUR')."
                     },
                     "payerId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID univoco dell’entità che ha avviato la richiesta di pagamento (può coincidere con debtorId se non diversamente specificato)."
+                        "description": "Unique ID of the entity that initiated the payment request (may match debtorId if not otherwise specified)."
                     },
                     "debtorId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID del debitore effettivo. Se non valorizzato, verrà usato lo stesso `payerId`."
+                        "description": "ID of the actual debtor. If not provided, the same `payerId` is used."
                     },
                     "attachments": {
                         "type": "array",
                         "items": {
                             "type": "string",
                             "format": "uuid",
-                            "description": "UUID di file allegati visibili al pagatore nel checkout."
+                            "description": "UUID of files attached and visible to the payer at checkout."
                         },
-                        "description": "Elenco di UUID dei file allegati visibili al pagatore."
+                        "description": "List of UUIDs of files attached and visible to the payer."
                     },
                     "privateAttachments": {
                         "type": "array",
                         "items": {
                             "type": "string",
                             "format": "uuid",
-                            "description": "UUID di file allegati privati (visibili solo a FlowPay per controlli interni)."
+                            "description": "UUID of private attached files (visible only to FlowPay for internal checks)."
                         },
-                        "description": "Elenco di UUID dei file riservati per controlli di conformità (non mostrati al pagatore)."
+                        "description": "List of UUIDs of files reserved for compliance checks (not shown to the payer)."
                     },
                     "title": {
                         "type": "string",
                         "minLength": 3,
                         "maxLength": 50,
-                        "description": "Titolo sintetico del pagamento, mostrato al pagatore."
+                        "description": "Short title for the payment, shown to the payer."
                     },
                     "description": {
                         "type": "string",
                         "minLength": 5,
                         "maxLength": 255,
-                        "description": "Descrizione estesa del pagamento, visibile al pagatore."
+                        "description": "Extended payment description, visible to the payer."
                     },
                     "remittanceInformation": {
                         "type": "string",
                         "minLength": 5,
                         "maxLength": 100,
-                        "description": "Informazioni di rimessa (ad es. causale), visibili sia al pagatore che al beneficiario."
+                        "description": "Remittance information (e.g. reference), visible to both payer and payee."
                     },
                     "allowRemittanceChange": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Se `true`, il pagatore può modificare le informazioni di rimessa in fase di pagamento."
+                        "description": "If `true`, the payer can change the remittance information during payment."
                     },
                     "savePaymentMethod": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Se `true`, il metodo di pagamento scelto viene salvato e tokenizzato per futuri utilizzi."
+                        "description": "If `true`, the chosen payment method is saved and tokenised for future use."
                     },
                     "paymentMethod": {
-                        "description": "Oggetto `PaymentMethod` associato a questo pagamento (se `savePaymentMethod` è `true`, qui troverai i dati del metodo tokenizzato).",
+                        "description": "`PaymentMethod` object associated with this payment (if `savePaymentMethod` is `true`, this contains the tokenised method data).",
                         "$ref": "#/components/schemas/PaymentMethod"
                     },
                     "redirectUrl": {
                         "type": "string",
                         "format": "uri",
-                        "description": "URL verso cui l’utente viene reindirizzato al termine del pagamento, con query param `status` in {\"success\",\"error\",\"cancel\"}."
+                        "description": "URL to which the user is redirected at the end of the payment, with query param `status` in {\"success\",\"error\",\"cancel\"}."
                     },
                     "callbackUrl": {
                         "type": "string",
                         "format": "uri",
-                        "description": "URL per le notifiche server-to-server sullo stato del pagamento."
+                        "description": "URL for server-to-server notifications about the payment status."
                     },
                     "customerId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID del cliente associato a questa richiesta di pagamento."
+                        "description": "UUID of the customer associated with this payment request."
                     },
                     "refundId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID del rimborso associato a questa richiesta, se presente."
+                        "description": "UUID of the refund associated with this request, if present."
                     },
                     "newCustomer": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Indica se il cliente è stato registrato per la prima volta tramite questa richiesta di pagamento."
+                        "description": "Indicates whether the customer was registered for the first time through this payment request."
                     }
                 },
                 "required": [
@@ -2736,26 +2736,26 @@
                     "succeeded",
                     "onHold"
                 ],
-                "description": "Stato della richiesta di pagamento."
+                "description": "Status of the payment request."
             },
             "PaymentSessions": {
                 "type": "object",
-                "description": "Contiene la liste dei tentativi di pagamento e i relativi esisti",
+                "description": "Contains the list of payment attempts and their outcomes",
                 "properties": {
                     "sessionId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco della sessione di pagamento."
+                        "description": "Unique identifier of the payment session."
                     },
                     "startedAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Data e ora di creazione della sessione in formato ISO 8601."
+                        "description": "Date and time when the session was created, in ISO 8601 format."
                     },
                     "endedAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Data e ora di scadenza della sessione in formato ISO 8601."
+                        "description": "Date and time when the session expired, in ISO 8601 format."
                     },
                     "status": {
                         "type": "string",
@@ -2766,7 +2766,7 @@
                             "failed",
                             "cancelled"
                         ],
-                        "description": "Stato della sessione di pagamento."
+                        "description": "Status of the payment session."
                     }
                 },
                 "required": [
@@ -2778,40 +2778,40 @@
             },
             "MaskedPan": {
                 "type": "string",
-                "description": "PAN mascherato, formato tipico '**** **** **** 1234'.",
+                "description": "Masked PAN, typical format '**** **** **** 1234'.",
                 "pattern": "^\\*{4}\\s?\\*{4}\\s?\\*{4}\\s?\\d{4}$"
             },
             "MaskedIBAN": {
                 "type": "string",
-                "description": "IBAN mascherato: conserva le prime 4 lettere e le ultime 4 cifre, con asterischi nel mezzo (es. 'IT60 **** **** 1234').",
+                "description": "Masked IBAN: keeps the first 4 letters and the last 4 digits, with asterisks in the middle (e.g. 'IT60 **** **** 1234').",
                 "pattern": "^[A-Z]{2}\\d{2}(?:\\s?\\*{4})+\\s?\\d{4}$"
             },
             "PaginatedResult": {
                 "type": "object",
-                "description": "Struttura di risposta comune per API che supportano la paginazione.",
+                "description": "Common response structure for APIs that support pagination.",
                 "properties": {
                     "total": {
                         "type": "integer",
-                        "description": "Numero totale di elementi disponibili."
+                        "description": "Total number of available items."
                     },
                     "limit": {
                         "type": "integer",
-                        "description": "Numero massimo di elementi restituiti nella singola pagina."
+                        "description": "Maximum number of items returned in this page."
                     },
                     "offset": {
                         "type": "integer",
-                        "description": "Numero di elementi saltati prima di questa pagina."
+                        "description": "Number of items skipped before this page."
                     },
                     "count": {
                         "type": "integer",
-                        "description": "Numero di elementi effettivamente restituiti in questa pagina."
+                        "description": "Number of items actually returned in this page."
                     },
                     "items": {
                         "type": "array",
-                        "description": "Array di elementi della pagina corrente.",
+                        "description": "Array of items for the current page.",
                         "items": {
                             "type": "object",
-                            "description": "Oggetto generico rappresentante un singolo elemento in una risposta paginata. Verrà esteso o referenziato da schemi specifici.",
+                            "description": "Generic object representing a single item in a paginated response. It will be extended or referenced by specific schemas.",
                             "additionalProperties": true
                         }
                     }
@@ -2831,23 +2831,23 @@
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Identificativo univoco del rimborso."
+                        "description": "Unique identifier of the refund."
                     },
                     "sessionId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "UUID della sessione di pagamento da rimborsare."
+                        "description": "UUID of the payment session to refund."
                     },
                     "amount": {
                         "type": "number",
                         "format": "decimal",
                         "minimum": 0.01,
-                        "description": "Importo da rimborsare (intero o parziale)."
+                        "description": "Amount to refund (full or partial)."
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "Data e ora di creazione del rimborso in formato ISO 8601."
+                        "description": "Date and time when the refund was created, in ISO 8601 format."
                     },
                     "status": {
                         "type": "string",
@@ -2856,25 +2856,25 @@
                             "succeeded",
                             "failed"
                         ],
-                        "description": "Stato del rimborso."
+                        "description": "Status of the refund."
                     },
                     "reason": {
                         "$ref": "#/components/schemas/RefundReason",
-                        "description": "Motivo del rimborso."
+                        "description": "Reason for the refund."
                     },
                     "additionalInfo": {
                         "type": "string",
-                        "description": "Informazioni aggiuntive sul rimborso visibili solo al partner"
+                        "description": "Additional refund information, visible only to the partner"
                     },
                     "paymentMethodId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID del metodo di pagamento utilizzato per il rimborso, se applicabile."
+                        "description": "ID of the payment method used for the refund, if applicable."
                     },
                     "customerId": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "ID del cliente associato al rimborso."
+                        "description": "ID of the customer associated with the refund."
                     },
                     "emailStatus": {
                         "type": "string",
@@ -2883,7 +2883,7 @@
                             "sent",
                             "failed"
                         ],
-                        "description": "Stato dell'invio dell'email di notifica al cliente. La notifica è inviata automaticamente al cliente al momento del rimborso <b>solo se è stato fornito un indirizzo email valido durante la creazione della richiesta di pagamento</b>."
+                        "description": "Status of sending the notification email to the customer. The notification is sent automatically to the customer at the time of the refund <b>only if a valid email address was provided when creating the payment request</b>."
                     }
                 },
                 "required": [
@@ -2903,7 +2903,7 @@
                     "technicalError",
                     "other"
                 ],
-                "description": "Motivo del rimborso."
+                "description": "Reason for the refund."
             }
         }
     }

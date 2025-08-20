@@ -1,16 +1,16 @@
-Determina chi compare come ordinante sul conto o sulla ricevuta.
+Determines who appears as the originator on the account statement or on the receipt.
 
 <!-- <br>
-Può assumere i seguenti valori:
+It can take the following values:
 - `debtor`
 - `payee`
 - `payer`
 - `tenant`
 - `anonymous` -->
 
-Nel caso di pagamento PagoPA, questo valore viene utilizzato per generare la ricevuta.
+In the case of a PagoPA payment, this value is used to generate the receipt.
 
 <div class="critical">
-    <div class="title"> <span>&#9888;&#65039;</span>Attenzione</div>
-    <div> Se diverso da <code>debtor</code>, il pagamento viene dirottato su un conto tecnico e riemesso dopo la ricezione dei fondi. </div>
+    <div class="title"> <span>&#9888;&#65039;</span>Warning</div>
+    <div>If different from <code>debtor</code>, the payment is routed to a technical account and re-issued after the funds are received.</div>
 </div>
