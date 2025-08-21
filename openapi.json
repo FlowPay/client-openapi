@@ -72,6 +72,10 @@
         {
             "name": "Request To Pay",
             "description": "Operations related to the creation and management of payment requests."
+        },
+        {
+            "name": "AIS",
+            "description": "Account Information Service: consent, accounts, balances, transactions."
         }
     ],
     "paths": {
@@ -980,17 +984,17 @@
                                                         "lockedUntil": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                        "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
+                                                            "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
                                                         },
                                                         "savePaymentMethod": {
                                                             "type": "boolean",
                                                             "default": false,
-                                                        "description": "Indicates whether to save the payment method for future use."
+                                                            "description": "Indicates whether to save the payment method for future use."
                                                         },
                                                         "executionDate": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                        "description": "Payment execution date and time in ISO 8601 format. If not provided, the payment is executed immediately."
+                                                            "description": "Payment execution date and time in ISO 8601 format. If not provided, the payment is executed immediately."
                                                         }
                                                     }
                                                 },
@@ -1998,6 +2002,307 @@
                     }
                 }
             }
+        },
+        "/ais/consents": {
+            "post": {
+                "summary": "Initiate AIS consent acquisition",
+                "description": "Creates a consent acquisition session for AIS access. Returns a hosted link where an authorised representative can complete SCA with the selected bank(s).",
+                "operationId": "createAisConsent",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bankId": {
+                                        "type": "string",
+                                        "description": "Optional FlowPay bank identifier to suggest a specific bank for consent. Use `/banks` to retrieve identifiers."
+                                    },
+                                    "redirectUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "Optional redirect URL after consent completion. If omitted, a default completion page is shown."
+                                    },
+                                    "callbackUrl": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "Optional server-to-server callback URL to notify consent status changes."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Consent session created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisConsent"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/consents/{consentId}": {
+            "get": {
+                "summary": "Get AIS consent status",
+                "description": "Returns the current status of a previously created AIS consent.",
+                "operationId": "getAisConsent",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "consentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "UUID of the consent session."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Consent details.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisConsent"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/accounts": {
+            "get": {
+                "summary": "List AIS accounts",
+                "description": "Returns a paginated list of bank accounts available under active consents for the tenant.",
+                "operationId": "listAisAccounts",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OffsetParam"
+                    },
+                    {
+                        "name": "bankId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Optional filter by bank identifier (as returned by `/banks`)."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of accounts.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/AisAccount"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No active consent available. Create a consent via `/ais/consents`."
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/accounts/{accountId}/balances": {
+            "get": {
+                "summary": "Get account balances",
+                "description": "Returns current and available balances for the specified account.",
+                "operationId": "getAisAccountBalances",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "UUID of the AIS account."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account balances.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisBalances"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No active consent available. Create a consent via `/ais/consents`."
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/accounts/{accountId}/transactions": {
+            "get": {
+                "summary": "List account transactions",
+                "description": "Returns a paginated list of transactions for the specified account and period.",
+                "operationId": "listAisAccountTransactions",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "UUID of the AIS account."
+                    },
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OffsetParam"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "description": "Start date (inclusive), ISO 8601 date."
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "description": "End date (inclusive), ISO 8601 date."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of transactions.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/AisTransaction"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No active consent available. Create a consent via `/ais/consents`."
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
         }
     },
     "webhooks": {
@@ -2899,6 +3204,153 @@
                     "other"
                 ],
                 "description": "Reason for the refund."
+            },
+            "AisConsent": {
+                "type": "object",
+                "properties": {
+                    "consentId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "active",
+                            "expired",
+                            "revoked",
+                            "failed"
+                        ],
+                        "description": "Current status of the consent."
+                    },
+                    "link": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Hosted link to complete consent."
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "consentId",
+                    "status"
+                ]
+            },
+            "AisAccount": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "iban": {
+                        "$ref": "#/components/schemas/IBAN"
+                    },
+                    "maskedIban": {
+                        "$ref": "#/components/schemas/MaskedIBAN"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "EUR"
+                    },
+                    "bankId": {
+                        "type": "string",
+                        "description": "FlowPay bank identifier."
+                    },
+                    "bankName": {
+                        "type": "string"
+                    },
+                    "holderName": {
+                        "type": "string"
+                    },
+                    "product": {
+                        "type": "string",
+                        "description": "Account product/type as reported by the bank."
+                    }
+                },
+                "required": [
+                    "id",
+                    "maskedIban",
+                    "currency",
+                    "bankId"
+                ]
+            },
+            "AisBalances": {
+                "type": "object",
+                "properties": {
+                    "asOf": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "current": {
+                        "type": "number",
+                        "format": "decimal"
+                    },
+                    "available": {
+                        "type": "number",
+                        "format": "decimal"
+                    },
+                    "currency": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "current",
+                    "currency"
+                ]
+            },
+            "AisTransaction": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "bookingDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "valueDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "decimal"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "credit",
+                            "debit"
+                        ]
+                    },
+                    "counterpartyName": {
+                        "type": "string"
+                    },
+                    "counterpartyIban": {
+                        "$ref": "#/components/schemas/IBAN"
+                    },
+                    "remittanceInformation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "bookingDate",
+                    "amount",
+                    "currency",
+                    "direction"
+                ]
             }
         }
     }
