@@ -1,0 +1,353 @@
+# Functional Overview
+
+This chapter explains how each Request To Pay (RTP) product works functionally: actors, lifecycle, routing, and constraints. Use it to understand behavior before jumping into payloads.
+
+## Simple RTP
+
+Simple RTP is the shortest path from a payment request to a successful bank transfer. Your backend creates a request that describes what the user is paying (title, description, remittance), who receives the funds (payee), and optional URLs for redirect and server‑to‑server callbacks. You receive a hosted checkout link where the user completes Strong Customer Authentication (SCA) with their bank. From the user’s perspective it’s a clean, guided flow; from your side you track status via callbacks and finalise your order by reading the request status from the API.
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja2VuZFxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUElcbiAgcGFydGljaXBhbnQgVXNlciBhcyBQYXllclxuICBwYXJ0aWNpcGFudCBCYW5rIGFzIEJhbmsgKFNDQSlcbiAgQXBwLT4-QVBJOiBQT1NUIC9wYXltZW50LXJlcXVlc3RzXG4gIEFQSS0tPj5BcHA6IDIwMSB7IHJlcXVlc3RJZCwgbGluayB9XG4gIEFwcC0tPj5Vc2VyOiBSZWRpcmVjdCB0byBsaW5rIChIb3N0ZWQgQ2hlY2tvdXQpXG4gIFVzZXItPj5CYW5rOiBTQ0EgYW5kIGNvbnNlbnRcbiAgQmFuay0tPj5BUEk6IEF1dGhvcmlzYXRpb24gb3V0Y29tZVxuICBBUEktLT4-VXNlcjogU3VjY2Vzcy9FcnJvciBzY3JlZW5cbiAgQVBJLS0-PkFwcDogUE9TVCBjYWxsYmFja1VybCAoc3RhdHVzKVxuICBBcHAtPj5BUEk6IEdFVCAvcGF5bWVudC1yZXF1ZXN0cy97aWR9IChjb25maXJtKVxuIn0=)
+
+What it enables: one‑off payments, invoice settlement, donations, deposits, and any flow where a user authorises a bank transfer to a known beneficiary.
+
+How to enable specific flavors (copy‑paste ready):
+
+### Fixed amount (default)
+
+Set `amount` to the exact value you want to charge.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
+  "payer": { "phone": "+39 333 1234567" },
+  "title": "Invoice #1001",
+  "description": "Settlement for invoice 1001",
+  "remittanceInformation": "INV-1001",
+  "amount": 49.90,
+  "currency": "EUR",
+  "redirectUrl": "https://merchant.example.com/return",
+  "callbackUrl": "https://merchant.example.com/api/payment/callback"
+}'
+```
+
+### Open amount (donations or pay‑what‑you‑want)
+
+Omit `amount` entirely to let the payer enter the amount at checkout. Keep `allowPartialPayments` at its default (`false`). Enforce your business rules (min/max) when processing callbacks or before fulfilling the order.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
+  "payer": { "phone": "+39 333 1234567" },
+  "title": "Donate to ACME Foundation",
+  "description": "Thank you for your support",
+  "remittanceInformation": "DON-2024-09",
+  "currency": "EUR",
+  "redirectUrl": "https://merchant.example.com/thank-you",
+  "callbackUrl": "https://merchant.example.com/api/payment/callback"
+}'
+```
+
+Optional: allow the payer to edit the remittance at checkout by setting `allowRemittanceChange: true`.
+
+### Partial settlement (multiple payments until total is reached)
+
+Set `allowPartialPayments: true` and provide the target `amount` to be fully settled across one or more sessions.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
+  "payer": { "phone": "+39 333 1234567" },
+  "title": "Installments for Order #A2001",
+  "description": "Pay in multiple steps",
+  "remittanceInformation": "A2001",
+  "amount": 300.00,
+  "currency": "EUR",
+  "allowPartialPayments": true,
+  "redirectUrl": "https://merchant.example.com/return",
+  "callbackUrl": "https://merchant.example.com/api/payment/callback"
+}'
+```
+
+To compute the outstanding: list sessions with `/payment-requests/{requestId}/sessions`, sum `succeeded` amounts, and subtract from the target `amount`.
+
+### Scheduled execution (future date)
+
+Set `executionDate` (ISO 8601). The user authenticates now; execution occurs at/after the scheduled time (bank support dependent).
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+EXEC_AT="2025-01-10T10:00:00Z" # choose your date/time (UTC)
+curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
+  "payer": { "phone": "+39 333 1234567" },
+  "title": "Scheduled payment",
+  "description": "Executes later",
+  "remittanceInformation": "SCH-10JAN",
+  "amount": 120.00,
+  "currency": "EUR",
+  "executionDate": "'"$EXEC_AT"'",
+  "redirectUrl": "https://merchant.example.com/return",
+  "callbackUrl": "https://merchant.example.com/api/payment/callback"
+}'
+```
+
+## Bulk payments (massive payment)
+
+Bulk turns many payouts into a single user authorisation. You compute a total amount and provide the allocation list with additional payees. The user performs SCA once; FlowPay collects the total and then splits it to the designated beneficiaries.
+
+![](https://mermaid.ink/img/eyJjb2RlIjoiZmxvd2NoYXJ0IExSXG4gIFVbVXNlciBhdXRob3Jpc2VzIHRvdGFsIGFtb3VudF0gLS0-IFRBW0Zsb3dQYXkgVGVjaG5pY2FsIEFjY291bnRdXG4gIFRBIC0tPnxHcm91cCBieSBJQkFOK25hbWV8IEFbQmVuZWZpY2lhcnkgQV1cbiAgVEEgLS0-IEJbQmVuZWZpY2lhcnkgQl1cbiAgVEEgLS0-IENbQmVuZWZpY2lhcnkgQ11cbiAgbm90ZSByaWdodCBvZiBUQTogUmVtaXR0YW5jZSBrZWVwcyBvcmlnaW5hbCBwYXllciBmb3IgZWFzeSByZWNvbmNpbGlhdGlvblxuIn0=)
+
+What it enables: mass invoice runs, bill aggregation, marketplace or platform settlements with a single frictionless checkout. Repeated beneficiaries in your allocation are grouped automatically. Keep `allowPartialPayments` disabled; if the sum of additional payees is less than the total, the remainder goes to the primary payee.
+
+## Conditional payment (locked/escrow)
+
+When outcomes depend on a later verification (delivery, inspection, return window), use Locked payments. You specify a `lockedUntil` date; after a successful checkout the funds are held in FlowPay’s technical account. Before the date, you can decide to release to the payee or refund the user. If you take no action by expiry, the platform automatically refunds the payer.
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgVXNlclxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUElcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja29mZmljZVxuICBVc2VyLT4-QVBJOiBQYXlzIGF0IGNoZWNrb3V0IChzdWNjZWVkZWQpXG4gIEFQSS0tPj5BcHA6IENhbGxiYWNrIChzdWNjZWVkZWQsIGxvY2tlZClcbiAgTm90ZSBvdmVyIEFQSTogRnVuZHMgaGVsZCB1bnRpbCBsb2NrZWRVbnRpbFxuICBBcHAtPj5BUEk6IFJlbGVhc2UgdG8gcGF5ZWUgT1IgY3JlYXRlIHJlZnVuZFxuICBBUEktLT4-VXNlcjogQXV0b-KAkXJlZnVuZCBpZiBubyBkZWNpc2lvbiBieSBsb2NrZWRVbnRpbFxuIn0=)
+
+What it enables: escrow‑like experiences, milestone‑based projects, dispute/return windows with automatic safety fallback.
+
+## Split payment
+
+Split payment directs portions of a single checkout to different parties — for example, retaining a platform fee while paying a vendor. You define a primary payee and one or more additional payees with explicit amounts. The platform collects once and allocates the proceeds accordingly, preserving the original payer identity for beneficiaries.
+
+![](https://mermaid.ink/img/eyJjb2RlIjoiZmxvd2NoYXJ0IExSXG4gIFBbVG90YWwgQW1vdW50XSAtLT58UmVtYWluZGVyfCBNYWluW1ByaW1hcnkgUGF5ZWVdXG4gIFAgLS0-fEV4cGxpY2l0IGFtb3VudHN8IEYxW0ZlZS9QYXllZSAxXVxuICBQIC0tPnxFeHBsaWNpdCBhbW91bnRzfCBGMltQYXllZSAyXVxuICBub3RlIHJpZ2h0IG9mIFA6IFN1bShhZGRpdGlvbmFsUGF5ZWVzKSDiiaQgdG90YWw7IHJlbWFpbmRlciAtPiBwcmltYXJ5XG4ifQ==)
+
+What it enables: marketplaces, app stores, franchise models, partner revenue sharing with full transparency in remittances.
+
+## PagoPA payment
+
+For public‑service payments in the Italian PagoPA ecosystem, RTP integrates a dedicated branch. You provide the entity tax code and payment notice number, and an email to receive the receipt. The hosted checkout guides the user through the PagoPA‑specific steps, while your integration pattern (redirects, callbacks, receipt download) remains the same.
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja2VuZFxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUEkgKFBhZ29QQSlcbiAgcGFydGljaXBhbnQgVXNlciBhcyBQYXllclxuICBBcHAtPj5BUEk6IFBPU1QgL3BheW1lbnQtcmVxdWVzdHMgKFBhZ29QQSBmaWVsZHMpXG4gIEFQSS0tPj5BcHA6IDIwMSB7IHJlcXVlc3RJZCwgbGluayB9XG4gIEFwcC0tPj5Vc2VyOiBSZWRpcmVjdCB0byBsaW5rXG4gIFVzZXItPj5BUEk6IFBhZ29QQSBmbG93IGF0IGNoZWNrb3V0XG4gIEFQSS0tPj5Vc2VyOiBSZWNlaXB0IHNjcmVlbiArIGVtYWlsXG4gIEFQSS0tPj5BcHA6IENhbGxiYWNrICsgUERGIGF2YWlsYWJsZSB2aWEgR0VUXG4ifQ==)
+
+What it enables: PagoPA notice payments with consistent checkout and server‑side integration semantics. Bulk isn’t natively supported with PagoPA; contact FlowPay for options.
+
+### How to enable PagoPA payment
+
+Provide the PagoPA‑specific fields (`pagopaEcFiscalCode`, `pagopaPaymentNotice`, `email`) alongside your standard request data.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
+  "payer": { "phone": "+39 333 1234567" },
+  "title": "PagoPA payment",
+  "description": "PagoPA notice 1234567890",
+  "remittanceInformation": "PPA-123",
+  "amount": 49.90,
+  "currency": "EUR",
+  "redirectUrl": "https://merchant.example.com/return",
+  "callbackUrl": "https://merchant.example.com/api/payment/callback",
+  "pagopaEcFiscalCode": "01234567890",
+  "pagopaPaymentNotice": "123456789012345678",
+  "email": "payer@example.com"
+}'
+```
+
+# Examples
+
+This chapter collects hands‑on Request To Pay (RTP) examples and the technical explanation of how each use case works end‑to‑end. It covers actors, data fields, settlement paths, and status lifecycles so you can reason about behavior beyond the JSON payloads.
+
+## Simple RTP — How it works
+
+- Actors: payer (user initiating payment), payee (final beneficiary), optional debtor (if different from payer).
+- Flow: your backend creates a payment request and receives a hosted `link`. The user completes SCA with their bank at checkout. FlowPay sends `callbackUrl` events and redirects the user to `redirectUrl` with `?status`.
+- Security: authenticate API calls with `X-API-Key`.
+- Settlement: funds are transferred from the payer’s bank to the configured payee IBAN. If no payee is provided, the partner’s default configuration is used.
+- Status: request remains `pending` until a session `succeeded` or the request is deleted/expired. Inspect attempts with `/payment-requests/{requestId}/sessions`.
+
+Inline example (Sandbox):
+
+1. Create a payment request and get `requestId` + `link`.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"
+API_KEY="sk_test_xxx" # replace with yours
+
+curl -sS -X POST "$BASE_URL/payment-requests" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "payer": { "phone": "+39 333 1234567" },
+    "title": "Order #A1001",
+    "description": "Payment for order A1001",
+    "remittanceInformation": "A1001",
+    "amount": 49.90,
+    "currency": "EUR",
+    "redirectUrl": "https://merchant.example.com/checkout/return",
+    "callbackUrl": "https://merchant.example.com/api/payment/callback"
+  }'
+```
+
+2. Redirect the customer to the returned `link` to complete payment.
+
+Verify and download receipt:
+
+```bash
+REQUEST_ID="..."
+
+curl -sS -X GET "$BASE_URL/payment-requests/$REQUEST_ID" -H "X-API-Key: $API_KEY"
+
+curl -sS -X GET \
+  -H "X-API-Key: $API_KEY" \
+  -H "Accept: application/pdf" \
+  "$BASE_URL/payment-requests/$REQUEST_ID" \
+  -o receipt.pdf
+```
+
+3. Treat the `callbackUrl` as the primary source of truth; use the APIs for on‑demand confirmation.
+
+## Split payment (Simplified Flow) — How it works
+
+- Goal: distribute a single user payment across multiple beneficiaries (e.g., platform fee + vendor payout).
+- Data model: set total `amount`, primary `payee`, and an array of `additionalPayees` with their individual `amount`s. The remainder flows to the primary payee.
+- Settlement: the payer authorises once; funds are collected and then allocated. When multiple beneficiaries are involved, settlement routes via FlowPay’s Technical Account and fans out to beneficiaries (grouped by IBAN+name), preserving the original payer in remittance.
+- Constraints: Sum(additionalPayees.amount) ≤ `amount`. Do not combine `additionalPayees` with `allowPartialPayments=true`.
+
+### How to enable Split payment
+
+Set the total `amount`, define a primary `payee`, and list `additionalPayees` with their explicit `amount`s. Keep `allowPartialPayments` set to `false`. Ensure the sum of all `additionalPayees.amount` is less than or equal to the total; the remainder goes to the primary `payee`.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"
+API_KEY="sk_test_xxx"
+
+curl -sS -X POST "$BASE_URL/payment-requests" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "payer": { "phone": "+39 333 1234567" },
+    "title": "Order #SP-1001",
+    "description": "Split payment",
+    "remittanceInformation": "SP-1001",
+    "amount": 100.00,
+    "currency": "EUR",
+    "redirectUrl": "https://merchant.example.com/return",
+    "callbackUrl": "https://merchant.example.com/api/payment/callback",
+    "payee": { "name": "ACME Vendor", "iban": "IT60X0542811101000000123456" },
+    "additionalPayees": [
+      { "amount": 5.00, "name": "Platform Fee", "iban": "IT60X0542811101000000654321" }
+    ],
+    "allowPartialPayments": false
+  }'
+```
+
+Notes:
+
+- Use `remittanceInformation` to correlate the whole order across all beneficiaries.
+- Refunds operate per successful session; maintain your allocation map for proportional refunds if needed.
+
+## Locked payment — How it works
+
+- Goal: escrow‑like behavior. Funds are held in FlowPay’s Technical Account until `lockedUntil`.
+- Data model: add `lockedUntil` (ISO 8601) at creation time.
+- Lifecycle: on `succeeded`, funds are held. Before expiry you may release to the payee (per enabled business rules) or refund the payer (`POST /refunds`). At expiry, automatic refund occurs if no action was taken.
+
+### How to enable Locked payment
+
+Add `lockedUntil` (ISO 8601). After a `succeeded` session, funds are held until that date. Before expiry, either instruct a release (per partner configuration) or create a refund via the API.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"
+API_KEY="sk_test_xxx"
+LOCK_UNTIL=$(date -u -v+3d +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d "+3 days" +"%Y-%m-%dT%H:%M:%SZ")
+
+curl -sS -X POST "$BASE_URL/payment-requests" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d "{\n    \"payer\": { \"phone\": \"+39 333 1234567\" },\n    \"title\": \"Escrow order #L-2001\",\n    \"description\": \"Locked until verification\",\n    \"remittanceInformation\": \"L-2001\",\n    \"amount\": 59.00,\n    \"currency\": \"EUR\",\n    \"redirectUrl\": \"https://merchant.example.com/return\",\n    \"callbackUrl\": \"https://merchant.example.com/api/payment/callback\",\n    \"payee\": { \"name\": \"ACME Vendor\", \"iban\": \"IT60X0542811101000000123456\" },\n    \"lockedUntil\": \"$LOCK_UNTIL\"\n  }"
+```
+
+Refund example (per session):
+
+```bash
+SESSION_ID="..." # from sessions or callback
+curl -sS -X POST "$BASE_URL/refunds" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "sessionId": "'"$SESSION_ID"'",
+    "amount": 59.00,
+    "reason": "other"
+  }'
+```
+
+## Bulk payments — How it works
+
+- Goal: let a user pay many targets with a single SCA (single checkout), reducing friction.
+- Data model: same allocation primitives as split (`additionalPayees`) but used for larger lists; total `amount` equals the sum of all components intended for beneficiaries.
+- Settlement: FlowPay’s Technical Account receives the total, then issues outgoing wires by allocation, grouping repeated entries (same IBAN+name). The original payer is preserved in remittance data to ease reconciliation.
+
+### How to enable Bulk payments
+
+Compute the total `amount` as the sum of all components, set the primary `payee`, and provide the allocation list in `additionalPayees`. Keep `allowPartialPayments` set to `false`. Repeated beneficiaries are allowed; FlowPay groups them by IBAN+name during settlement.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"
+API_KEY="sk_test_xxx"
+
+curl -sS -X POST "$BASE_URL/payment-requests" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "payer": { "phone": "+39 333 1234567" },
+    "title": "Bulk order #B-9001",
+    "description": "Bulk payout to A,B,C",
+    "remittanceInformation": "B-9001",
+    "amount": 250.00,
+    "currency": "EUR",
+    "redirectUrl": "https://merchant.example.com/return",
+    "callbackUrl": "https://merchant.example.com/api/payment/callback",
+    "payee": { "name": "Beneficiary A", "iban": "IT79Q0300203280941591243326" },
+    "additionalPayees": [
+      { "amount": 50, "name": "Beneficiary B", "iban": "IT79Q0300203280941591243327" },
+      { "amount": 25, "name": "Beneficiary C", "iban": "IT79Q0300203280941591243328" },
+      { "amount": 75, "name": "Beneficiary A", "iban": "IT79Q0300203280941591243326" }
+    ],
+    "allowPartialPayments": false
+  }'
+```
+
+Notes:
+
+- Combine with attachments for richer payer context (e.g., PDF invoice).
+- Rely on `callbackUrl` + `GET /payment-requests/{id}` for authoritative status.
+
+## Attachments and PDF receipt — How it works
+
+- Two kinds of attachments: `attachments` (visible to payer at checkout) and `privateAttachments` (compliance‑only, not shown to payer).
+- Upload options: multipart/form‑data (preferred) or JSON with base64 data.
+- Receipt: `GET /payment-requests/{requestId}` with `Accept: application/pdf` returns a PDF with details and a QR for device handoff; if paid, it acts as a receipt.
+
+```bash
+BASE_URL="https://api.sandbox-flowpay.it/v3"
+API_KEY="sk_test_xxx"
+
+# Upload (multipart)
+FILE_ID=$(curl -sS -X POST "$BASE_URL/files" -H "X-API-Key: $API_KEY" -F "file=@./invoice.pdf;type=application/pdf" | jq -r .id)
+
+# Create RTP with attachments
+curl -sS -X POST "$BASE_URL/payment-requests" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "payer": { "phone": "+39 333 1234567" },
+    "title": "Order #A1002",
+    "description": "Payment with attachment",
+    "remittanceInformation": "A1002",
+    "amount": 129.00,
+    "currency": "EUR",
+    "redirectUrl": "https://merchant.example.com/checkout/return",
+    "callbackUrl": "https://merchant.example.com/api/payment/callback",
+    "attachments": ["'"$FILE_ID"'"]
+  }'
+
+# Download receipt (PDF)
+REQUEST_ID="..."
+curl -sS -X GET -H "X-API-Key: $API_KEY" -H "Accept: application/pdf" "$BASE_URL/payment-requests/$REQUEST_ID" -o receipt.pdf
+```
+
+Conceptual background:
+
+- Bulk patterns: docs/bulk.md
+- PagoPA lifecycle: docs/pagopa_lifecycle.md
+- Chained/locked flows (background): docs/chain_lifecycle.md
