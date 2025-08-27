@@ -35,7 +35,7 @@ The additionalPayees parameter will be populated like this (you can also specify
 }
 ```
 
-The payment request created will have an amount of 250€, payer can now pay it with a single payments.
+The payment request created will have an amount of 250€; the payer can now pay it with a single payment.
 The wire transfer allowed with the PIS on a bulk payment is addressed to the FlowPay technical account (TA).
 When the TA receives the payment, it splits the amount among the beneficiaries, groups them by their IBANs and names, and sends the payments to them with wire transfers.
 
@@ -43,6 +43,6 @@ In case of a bulk payment to the same beneficiary, the payment initiation effect
 Wire transfers to beneficiaries are sent with the same original payer, so beneficiaries can easily identify the payer.
 
 <div class="info">
- <div class="title">In case of pagoPA payments</div>
-    The bulk service is not natively supported with pagoPA payment, please contact us for more information and workarounds.
+ <div class="title">In case of PagoPA payments</div>
+    The bulk service is not natively supported with PagoPA payments; please contact us for more information and workarounds.
 </div>
