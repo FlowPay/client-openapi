@@ -926,7 +926,7 @@
                                                     "properties": {
                                                         "additionalPayees": {
                                                             "type": "array",
-                                                            "description": "List of additional payees to allocate part of the payment amount. The sum of the amounts specified in `additionalPayees` cannot be greater than `amount`; the difference between `amount` and the sum of `additionalPayees` is sent to the `payee`.",
+                                                            "description": "List of additional beneficiaries to whom part of the payment amount can be allocated. The sum of the amounts specified in additionalPayees cannot exceed amount; the difference between amount and the sum of additionalPayees will be sent to the payee. Each item may optionally include remittanceInformation to specify a dedicated reason for the individual payment; if absent, the remittanceInformation from the main request will be used.",
                                                             "items": {
                                                                 "oneOf": [
                                                                     {
@@ -942,6 +942,12 @@
                                                                             },
                                                                             "phoneNumber": {
                                                                                 "$ref": "#/components/schemas/PhoneNumber"
+                                                                            },
+                                                                            "remittanceInformation": {
+                                                                                "type": "string",
+                                                                                "minLength": 5,
+                                                                                "maxLength": 100,
+                                                                                "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -967,6 +973,12 @@
                                                                             "iban": {
                                                                                 "description": "IBAN of the payee's account.",
                                                                                 "$ref": "#/components/schemas/IBAN"
+                                                                            },
+                                                                            "remittanceInformation": {
+                                                                                "type": "string",
+                                                                                "minLength": 5,
+                                                                                "maxLength": 100,
+                                                                                "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -976,9 +988,39 @@
                                                                     },
                                                                     {
                                                                         "title": "Payment to customer",
-                                                                        "type": "string",
-                                                                        "format": "uuid",
-                                                                        "description": "UUID of the customer to use as an additional payee."
+                                                                        "oneOf": [
+                                                                            {
+                                                                                "type": "string",
+                                                                                "format": "uuid",
+                                                                                "description": "UUID of the customer to use as an additional payee."
+                                                                            },
+                                                                            {
+                                                                                "type": "object",
+                                                                                "description": "Payment to registered customer",
+                                                                                "properties": {
+                                                                                    "amount": {
+                                                                                        "type": "number",
+                                                                                        "format": "decimal",
+                                                                                        "minimum": 0.01,
+                                                                                        "description": "Payment amount as a decimal"
+                                                                                    },
+                                                                                    "customerId": {
+                                                                                        "type": "string",
+                                                                                        "format": "uuid",
+                                                                                        "description": "UUID of the additonal payee customer."
+                                                                                    },
+                                                                                    "remittanceInformation": {
+                                                                                        "type": "string",
+                                                                                        "minLength": 5,
+                                                                                        "maxLength": 100,
+                                                                                        "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "customerId"
+                                                                                ]
+                                                                            }
+                                                                        ]
                                                                     }
                                                                 ]
                                                             }
