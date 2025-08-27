@@ -39,7 +39,7 @@ You can allow users to pay multiple payees in a single operation using the addit
 
 The above diagram shows how bulk works.
 We assume the case in which a user wants to pay Beneficiary A for 100€, Beneficiary B for 50€ and Beneficiary C for 25€ and again Beneficiary A for 75€.
-The additionalPayees parameter will be populated like this:
+The additionalPayees parameter will be populated like this (you can also specify a per-payee `remittanceInformation`; if omitted, the main request `remittanceInformation` is used):
 
 ```json
 {
@@ -47,7 +47,8 @@ The additionalPayees parameter will be populated like this:
     {
       "iban": "IT79Q0300203280941591243326",
       "name": "Beneficiary A",
-      "amount": 100
+      "amount": 100,
+      "remittanceInformation": "Order #A-100"
     },
     {
       "iban": "IT79Q0300203280941591243327",
@@ -57,7 +58,8 @@ The additionalPayees parameter will be populated like this:
     {
       "iban": "IT79Q0300203280941591243328",
       "name": "Beneficiary C",
-      "amount": 25
+      "amount": 25,
+      "remittanceInformation": "Service fee C"
     },
     {
       "iban": "IT79Q0300203280941591243326",
@@ -92,6 +94,7 @@ In case we want to pay beneficiary A 100€ and beneficiary B takes a 5€ commi
 {
   "amount": 105,
   "currency": "EUR",
+  "remittanceInformation": "Order #12345", 
   "payee": {
     "iban": "IT79Q0300203280941591243326",
     "name": "Beneficiary A"
@@ -100,7 +103,8 @@ In case we want to pay beneficiary A 100€ and beneficiary B takes a 5€ commi
     {
       "iban": "IT79Q0300203280941591243327",
       "name": "Beneficiary B",
-      "amount": 5
+      "amount": 5,
+      "remittanceInformation": "Fee for #12345" 
     }
   ]
 }
@@ -111,3 +115,27 @@ The wire transfer allowed with the PIS on a split payment is addressed to the Fl
 When the TA receives the payment, it splits the amount among the beneficiaries, groups them by their IBANs and names, and sends the payments to them with wire transfers.
 
 The Wire transfer to the payee is sent with the original payer, the additional Payees receive the commission as a wire transfer with the payee as the payer.
+
+### Split with customer payee
+
+You can also direct a part of the payment to a registered customer, using either a plain UUID or the object form if you need a custom remittance.
+
+```json
+{
+  "amount": 130,
+  "currency": "EUR",
+  "remittanceInformation": "Invoice #7890",
+  "payee": {
+    "iban": "IT79Q0300203280941591243326",
+    "name": "Beneficiary A"
+  },
+  "additionalPayees": [
+    "b0b71d70-2a5c-48a1-9a92-1b17b2a5e5a1",
+    {
+      "customerId": "f1a56c5b-6e2a-4af9-8f77-4c9b1f0c2a22",
+      "amount": 25,
+      "remittanceInformation": "Commission for #7890"
+    }
+  ]
+}
+```

@@ -909,7 +909,7 @@
                                                     "properties": {
                                                         "additionalPayees": {
                                                             "type": "array",
-                                                            "description": "Elenco di beneficiari aggiuntivi a cui destinare parte dell'importo del pagamento. La somma degli importi specificati in `additionalPayees` non può essere maggiore di `amount`; la differenza tra `amount` e la somma degli `additionalPayees` verrà inviata al `payee`.",
+                                                            "description": "Elenco di beneficiari aggiuntivi a cui destinare parte dell'importo del pagamento. La somma degli importi specificati in `additionalPayees` non può essere maggiore di `amount`; la differenza tra `amount` e la somma degli `additionalPayees` verrà inviata al `payee`. Ogni elemento può opzionalmente includere `remittanceInformation` per specificare una causale dedicata al singolo pagamento; se assente, verrà utilizzata la `remittanceInformation` della richiesta principale.",
                                                             "items": {
                                                                 "oneOf": [
                                                                     {
@@ -925,6 +925,12 @@
                                                                             },
                                                                             "phoneNumber": {
                                                                                 "$ref": "#/components/schemas/PhoneNumber"
+                                                                            },
+                                                                            "remittanceInformation": {
+                                                                                "type": "string",
+                                                                                "minLength": 5,
+                                                                                "maxLength": 100,
+                                                                                "description": "Informazioni di rimessa specifiche per questo payee. Se non valorizzato, verrà utilizzata la `remittanceInformation` della richiesta principale."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -950,6 +956,12 @@
                                                                             "iban": {
                                                                                 "description": "IBAN del conto del beneficiario.",
                                                                                 "$ref": "#/components/schemas/IBAN"
+                                                                            },
+                                                                            "remittanceInformation": {
+                                                                                "type": "string",
+                                                                                "minLength": 5,
+                                                                                "maxLength": 100,
+                                                                                "description": "Informazioni di rimessa specifiche per questo payee. Se non valorizzato, verrà utilizzata la `remittanceInformation` della richiesta principale."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -959,9 +971,39 @@
                                                                     },
                                                                     {
                                                                         "title": "Pagamento verso customer",
-                                                                        "type": "string",
-                                                                        "format": "uuid",
-                                                                        "description": "UUID del customer da utilizzare come payee addizionale."
+                                                                        "oneOf": [
+                                                                            {
+                                                                                "type": "string",
+                                                                                "format": "uuid",
+                                                                                "description": "UUID del customer da utilizzare come payee addizionale."
+                                                                            },
+                                                                            {
+                                                                                "type": "object",
+                                                                                "description": "Pagamento a un customer registrato.",
+                                                                                "properties": {
+                                                                                    "amount": {
+                                                                                        "type": "number",
+                                                                                        "format": "decimal",
+                                                                                        "minimum": 0.01,
+                                                                                        "description": "Importo del pagamento in formato decimal"
+                                                                                    },
+                                                                                    "customerId": {
+                                                                                        "type": "string",
+                                                                                        "format": "uuid",
+                                                                                        "description": "UUID del customer da utilizzare come payee addizionale."
+                                                                                    },
+                                                                                    "remittanceInformation": {
+                                                                                        "type": "string",
+                                                                                        "minLength": 5,
+                                                                                        "maxLength": 100,
+                                                                                        "description": "Informazioni di rimessa specifiche per questo payee. Se non valorizzato, verrà utilizzata la `remittanceInformation` della richiesta principale."
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "customerId"
+                                                                                ]
+                                                                            }
+                                                                        ]
                                                                     }
                                                                 ]
                                                             }
