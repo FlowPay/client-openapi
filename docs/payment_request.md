@@ -118,7 +118,7 @@ The Wire transfer to the payee is sent with the original payer, the additional P
 
 ### Split with customer payee
 
-You can also direct a part of the payment to a registered customer, using either a plain UUID or the object form if you need a custom remittance.
+You can also direct a part of the payment to a registered customer by providing an object with the `customerId` and optional `remittanceInformation`.
 
 ```json
 {
@@ -130,7 +130,6 @@ You can also direct a part of the payment to a registered customer, using either
     "name": "Beneficiary A"
   },
   "additionalPayees": [
-    "b0b71d70-2a5c-48a1-9a92-1b17b2a5e5a1",
     {
       "customerId": "f1a56c5b-6e2a-4af9-8f77-4c9b1f0c2a22",
       "amount": 25,

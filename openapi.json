@@ -988,38 +988,29 @@
                                                                     },
                                                                     {
                                                                         "title": "Payment to customer",
-                                                                        "oneOf": [
-                                                                            {
+                                                                        "type": "object",
+                                                                        "description": "Payment to a registered customer as an additional payee.",
+                                                                        "properties": {
+                                                                            "amount": {
+                                                                                "type": "number",
+                                                                                "format": "decimal",
+                                                                                "minimum": 0.01,
+                                                                                "description": "Payment amount as a decimal"
+                                                                            },
+                                                                            "customerId": {
                                                                                 "type": "string",
                                                                                 "format": "uuid",
-                                                                                "description": "UUID of the customer to use as an additional payee."
+                                                                                "description": "UUID of the additional payee customer."
                                                                             },
-                                                                            {
-                                                                                "type": "object",
-                                                                                "description": "Payment to registered customer",
-                                                                                "properties": {
-                                                                                    "amount": {
-                                                                                        "type": "number",
-                                                                                        "format": "decimal",
-                                                                                        "minimum": 0.01,
-                                                                                        "description": "Payment amount as a decimal"
-                                                                                    },
-                                                                                    "customerId": {
-                                                                                        "type": "string",
-                                                                                        "format": "uuid",
-                                                                                        "description": "UUID of the additonal payee customer."
-                                                                                    },
-                                                                                    "remittanceInformation": {
-                                                                                        "type": "string",
-                                                                                        "minLength": 5,
-                                                                                        "maxLength": 100,
-                                                                                        "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
-                                                                                    }
-                                                                                },
-                                                                                "required": [
-                                                                                    "customerId"
-                                                                                ]
+                                                                            "remittanceInformation": {
+                                                                                "type": "string",
+                                                                                "minLength": 5,
+                                                                                "maxLength": 100,
+                                                                                "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
                                                                             }
+                                                                        },
+                                                                        "required": [
+                                                                            "customerId"
                                                                         ]
                                                                     }
                                                                 ]
