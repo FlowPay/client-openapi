@@ -1072,7 +1072,9 @@
                                             "pagopaPaymentNotice",
                                             "email"
                                         ],
-                                        "description": { "$ref": "./docs/pagopa_lifecycle.md" }
+                                        "description": {
+                                            "$ref": "./docs/pagopa_lifecycle.md"
+                                        }
                                     }
                                 ]
                             }
@@ -2346,38 +2348,138 @@
             "post": {
                 "summary": "Payment status update",
                 "operationId": "paymentWebhook",
-                "description": "Receives notifications about the payment status (e.g. succeeded, failed).",
+                "description": {
+                    "$ref": "./docs/payment_webhook.md"
+                },
                 "tags": [
                     "Request To Pay"
                 ],
+                "parameters": [
+                    {
+                        "name": "X-FlowPay-Event-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Unique identifier of this webhook delivery. Use for idempotency/deduplication."
+                    },
+                    {
+                        "name": "X-FlowPay-Event-Type",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "payment.status_change"
+                            ]
+                        },
+                        "description": "Event type. Always `payment.status_change`."
+                    },
+                    {
+                        "name": "X-FlowPay-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "UNIX epoch seconds used to compute the signature."
+                    },
+                    {
+                        "name": "X-FlowPay-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Detached signature over `${timestamp}.${rawBody}` computed by FlowPay using its platform private key (Ed25519, Base64URL). Verify with the public key identified by `X-FlowPay-Key-Id` from the well-known JWKS at `/.well-known/jwks.json`"
+                    },
+                    {
+                        "name": "X-FlowPay-Key-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Key identifier of the signing key. Fetch the public key from the well-known JWKS at `/.well-known/jwks.json`"
+                    },
+                    {
+                        "name": "X-FlowPay-Retry-Count",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "description": "0 for first delivery, incremented on each retry."
+                    }
+                ],
                 "requestBody": {
-                    "description": "Payload sent by the payment provider containing event details.",
+                    "description": "Payment event payload.",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "paymentId": {
+                                    "id": {
                                         "type": "string",
-                                        "description": "Identifier of the payment associated with the event."
+                                        "format": "uuid",
+                                        "description": "Unique identifier of this event (matches X-FlowPay-Event-Id)."
                                     },
-                                    "event": {
+                                    "createdAt": {
                                         "type": "string",
-                                        "description": "Type of event triggered (e.g. `payment_succeeded`)."
+                                        "format": "date-time",
+                                        "description": "Event creation time (ISO 8601)."
                                     },
-                                    "data": {
+                                    "requestId": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Payment request identifier."
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "payment.status_change"
+                                        ],
+                                        "description": "Event type."
+                                    },
+                                    "payload": {
                                         "type": "object",
-                                        "description": "Object containing additional data related to the event."
+                                        "properties": {
+                                            "sessionId": {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "description": "Payment session identifier (present for session events)."
+                                            },
+                                            "status": {
+                                                "$ref": "#/components/schemas/PaymentRequestStatus",
+                                                "description": "Payment request status at the time of the event."
+                                            },
+                                            "previousStatus": {
+                                                "$ref": "#/components/schemas/PaymentRequestStatus",
+                                                "description": "Previous status, when available."
+                                            }
+                                        },
+                                        "required": [
+                                            "sessionId",
+                                            "status"
+                                        ]
                                     }
-                                }
+                                },
+                                "required": [
+                                    "id",
+                                    "type",
+                                    "createdAt"
+                                ]
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Webhook notification received successfully."
+                        "description": "Webhook notification received successfully. Return 2xx to acknowledge."
                     },
                     "default": {
                         "description": "Error processing the webhook.",
@@ -2387,12 +2489,10 @@
                                     "type": "object",
                                     "properties": {
                                         "code": {
-                                            "type": "integer",
-                                            "description": "Error code."
+                                            "type": "integer"
                                         },
                                         "message": {
-                                            "type": "string",
-                                            "description": "Error description."
+                                            "type": "string"
                                         }
                                     }
                                 }
@@ -3067,12 +3167,17 @@
             "PaymentRequestStatus": {
                 "type": "string",
                 "enum": [
-                    "pending",
+                    "created",
+                    "inProgress",
+                    "authorized",
                     "rejected",
-                    "succeeded",
-                    "onHold"
+                    "onHold",
+                    "locked",
+                    "forwarded",
+                    "refunded",
+                    "deleted"
                 ],
-                "description": "Status of the payment request."
+                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner’s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
             },
             "PaymentSessions": {
                 "type": "object",
