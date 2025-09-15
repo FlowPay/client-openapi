@@ -90,7 +90,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json
 }'
 ```
 
-## Bulk payments (massive payment)
+## Bulk payments
 
 Bulk turns many payouts into a single user authorisation. You compute a total amount and provide the allocation list with additional payees. The user performs SCA once; FlowPay collects the total and then splits it to the designated beneficiaries.
 
@@ -98,7 +98,7 @@ Bulk turns many payouts into a single user authorisation. You compute a total am
 
 What it enables: mass invoice runs, bill aggregation, marketplace or platform settlements with a single frictionless checkout. Repeated beneficiaries in your allocation are grouped automatically. Keep `allowPartialPayments` disabled; if the sum of additional payees is less than the total, the remainder goes to the primary payee.
 
-## Conditional payment (locked/escrow)
+## Conditional payment
 
 When outcomes depend on a later verification (delivery, inspection, return window), use Locked payments. You specify a `lockedUntil` date; after a successful checkout the funds are held in FlowPay’s technical account. Before the date, you can decide to release to the payee or refund the user. If you take no action by expiry, the platform automatically refunds the payer.
 
@@ -143,17 +143,35 @@ curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json
 }'
 ```
 
+## Payment State Machine
+
+This section explains the lifecycle of a payment request as defined in the Simplified Flow document. The payment goes through well-defined states from creation to completion or termination.
+
+- created: request created and visible to the user.
+- inProgress: user starts a session and authenticates with the provider.
+- authorized: provider confirms a positive outcome for the operation.
+- rejected: provider rejects/cancels the operation.
+- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.
+- locked: waiting for partner’s explicit unlock to dispatch funds.
+- forwarded: funds dispatched to the beneficiaries.
+- refunded: full refund executed for the entire transaction.
+- deleted: request removed by the partner (only if not in progress and not paid).
+
+Final states are: deleted, forwarded, rejected, refunded.
+
+![](https://mermaid.ink/svg/pako:eNp1VNuO0zAQ_RXLT4DaqkmTtpsHpNVeBBIItCteoDy49iQdiO3Kdgrbav9n_4MfY-I07XYpeYqP58w5c-xkx6VVwAvugwhwjaJyQg836cIwer69-c6Gw7fsygHtqg7cL-LGe_PZ2cqB9wX7EsAEYGKzQcE8QWgNdJRjWWRdNmFlHW5BFYw2NqjAMWlNCU4LthaV0NTKnuXewQ-Q4YTpsMQmnBA76lEnUj-Zd7Ym4q01CplvWslgWQBpUO7VuppY_sHKn63OZQjgaaJlbaW0TLVCjgZVUMc3A67jdoTIvbXul3AKjmoa24SRCWRLMFCiROGwd_qP-LMG97Bnx9mYaILV1EkexjzU7gMqGxOJd6iX1nlLc-p1DX2gL1I5BkpCSCP1sQpjmroWEeuTZb3m80twDdS8bXBTo0Yjtu3Bn82JvfLAjDUMDZkia6_PWjodvq3_80SnLFcInjyshfeiqtD-5wz3fmIrusEd2I_5Eu3COkVPAyWYD3jlUPEiuAYGXLf3tF3yXUtY8LACDQte0KuCUjR1WPCFeSTaWpiv1uqe6WxTrXhRitrTqlmr40d3QB2QI3dlGxN4Mc3z2IQXO_6bF2mWjLJkkubZbDxL0nwy4A-8SNLZKJtPkvGM8It0nmSPA76NsuPRPE3G83x6kWR5Ok6n2YC3N-j-wcjeVGfjRmGw7uAC4vJj93OI_4jHv6hVXpY)
+
 # Examples
 
 This chapter collects hands‑on Request To Pay (RTP) examples and the technical explanation of how each use case works end‑to‑end. It covers actors, data fields, settlement paths, and status lifecycles so you can reason about behavior beyond the JSON payloads.
 
-## Simple RTP — How it works
+## Simple RTP — example
 
 - Actors: payer (user initiating payment), payee (final beneficiary), optional debtor (if different from payer).
 - Flow: your backend creates a payment request and receives a hosted `link`. The user completes SCA with their bank at checkout. FlowPay sends `callbackUrl` events and redirects the user to `redirectUrl` with `?status`.
 - Security: authenticate API calls with `X-API-Key`.
 - Settlement: funds are transferred from the payer’s bank to the configured payee IBAN. If no payee is provided, the partner’s default configuration is used.
-- Status: request remains `pending` until a session `succeeded` or the request is deleted/expired. Inspect attempts with `/payment-requests/{requestId}/sessions`.
+- Status: the request follows the Payment State Machine (`created` → `inProgress` → `authorized` → `onHold`/`locked` → `forwarded` or terminal `rejected`/`refunded`/`deleted`). Inspect attempts with `/payment-requests/{requestId}/sessions` (session statuses: `succeeded`, `pending`, `expired`, `failed`, `cancelled`).
 
 Inline example (Sandbox):
 
@@ -196,7 +214,7 @@ curl -sS -X GET \
 
 3. Treat the `callbackUrl` as the primary source of truth; use the APIs for on‑demand confirmation.
 
-## Split payment (Simplified Flow) — How it works
+## Split payment (Simplified Flow) — example
 
 - Goal: distribute a single user payment across multiple beneficiaries (e.g., platform fee + vendor payout).
 - Data model: set total `amount`, primary `payee`, and an array of `additionalPayees` with their individual `amount`s. The remainder flows to the primary payee.
@@ -236,7 +254,7 @@ Notes:
 - Use `remittanceInformation` to correlate the whole order across all beneficiaries.
 - Refunds operate per successful session; maintain your allocation map for proportional refunds if needed.
 
-## Locked payment — How it works
+## Locked payment — example
 
 - Goal: escrow‑like behavior. Funds are held in FlowPay’s Technical Account until `lockedUntil`.
 - Data model: add `lockedUntil` (ISO 8601) at creation time.
@@ -271,7 +289,7 @@ curl -sS -X POST "$BASE_URL/refunds" \
   }'
 ```
 
-## Bulk payments — How it works
+## Bulk payments — example
 
 - Goal: let a user pay many targets with a single SCA (single checkout), reducing friction.
 - Data model: same allocation primitives as split (`additionalPayees`) but used for larger lists; total `amount` equals the sum of all components intended for beneficiaries.
@@ -312,7 +330,7 @@ Notes:
 - Combine with attachments for richer payer context (e.g., PDF invoice).
 - Rely on `callbackUrl` + `GET /payment-requests/{id}` for authoritative status.
 
-## Attachments and PDF receipt — How it works
+## Attachments and PDF receipt — example
 
 - Two kinds of attachments: `attachments` (visible to payer at checkout) and `privateAttachments` (compliance‑only, not shown to payer).
 - Upload options: multipart/form‑data (preferred) or JSON with base64 data.

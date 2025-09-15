@@ -4,32 +4,28 @@ The client can also specify a different creditor if they are not the intended re
 
 The methods currently supported are PIS, Card, Wallet
 
-
 PIS (Payment Initiation Service) is a financial service that allows third-party providers to initiate a payment transaction from a user's bank account. PIS works by using APIs provided to securely connect to the user's bank account and initiate the payment.
 
 FlowPay is an authorized PIS Provider (PISP), meaning it can mediate between the user and their bank to initiate the payment upon the user's authorization.
 
 PIS APIs allow users to initiate various traditional payment types:
 
-*   **Simple account-to-account payment**: The user can initiate a SEPA Credit Transfer (SCT) payment from one of their bank accounts.
-*   **Future-dated payment**: The payer can schedule a payment for a future date.
-*   **Recurring payment**: The payer can schedule a recurring payment with a fixed frequency.
+- **Simple account-to-account payment**: The user can initiate a SEPA Credit Transfer (SCT) payment from one of their bank accounts.
+- **Future-dated payment**: The payer can schedule a payment for a future date.
+- **Recurring payment**: The payer can schedule a recurring payment with a fixed frequency.
 
 In addition, FlowPay extends traditional payment methods by providing value-added services, such as:
 
-*   **Bulk payment**: The payer can initiate a single payment with a single Strong Customer Authentication (SCA) to pay multiple payment requests or documents at once.
-*   **Locked payment**: The user can authorize a payment to be executed only if a previous, related payment has been successfully received. The verification of the previous payment's status is performed by the client application that initiated the payment request.
+- **Bulk payment**: The payer can initiate a single payment with a single Strong Customer Authentication (SCA) to pay multiple payment requests or documents at once.
+- **Locked payment**: The user can authorize a payment to be executed only if a previous, related payment has been successfully received. The verification of the previous payment's status is performed by the client application that initiated the payment request.
 
 Each of these services uses the FlowPay technical account, but the payment retains the original payer and payee information.
 
-
 ## Locked Payment
 
-If the lockedUntil field is used, the sum will be kept until the date is reached. Until then the client is able to issue a refund of this payment by using  the "Refunds" endpoint, or unlock the payment earlier using the "Charge" endpoint.
+If the lockedUntil field is used, the sum will be kept until the date is reached. Until then the client is able to issue a refund of this payment by using the "Refunds" endpoint, or unlock the payment earlier using the "Charge" endpoint.
 
 When a request to pay is locked a paymentMethod is returned that can be used on the "Charge" endpoint, to unlock the payment. When unlocking the payment no other field is necessary but a validation will be carried on in order to mantain data integrity.
-
-
 
 ## Bulk Payment
 
@@ -80,13 +76,12 @@ Wire transfers to beneficiaries are sent with the same original payer, so benefi
     The bulk service is not natively supported with pagoPA payment, please contact us for more information and workarounds.
 </div>
 
-
 ## Split Payment
+
 [![](https://mermaid.ink/img/pako:eNqFk82OmzAQx18FTQ97YSM7QAIcKoV-nNpqlY1aqeLi4CFrFezUmFXYKJc-T5-qT1Jjwi50D-Vg2TO_-c8ff5yhUBwhhcYwg-8FO2hW59KzHxcaCyOU9D5th0iGEktRCKa7jXd7-9a7Yx1i6lFC_vz6_YrJHLPhXPQqrHJ0k3rRM_xvzhVsd3dD1sXmITtxgd2m7_oitBv8fLOWrYHN3NI8mY0GwIeDFhxSo1v0oUZds34J574sB_OANeaQ2umeNXbmT-JfmRZsX2HTA-ehTw6lkuYjq0XVDXU3W7VXRt343iNqziTzvb6uumqNJffi6dqIro6nSfKoRW038p2qlB6AN5xjUBavmUxpjnpKhqugKMsJyexpPrJ-v7MfhylZLst4pjkh_y97NbDDk5lylAQkxAnX4M8WZYFf2no_lxz_qScvubzYkzky-V2pejwcrdrDA6Qlqxq7ao_85bI-RzVKZ7WVBlJKAycC6RlOkK6TRZgkNIlCQqPlivrQWSYOF5QkwZoQe11WQRhcfHhyXckijgIax2s7LmMS0dgHtHdV6c_Dc3GvxgfWGnXfyWL0OTj74Mirsctf7aUOvw?type=png)](https://mermaid.live/edit#pako:eNqFk82OmzAQx18FTQ97YSM7QAIcKoV-nNpqlY1aqeLi4CFrFezUmFXYKJc-T5-qT1Jjwi50D-Vg2TO_-c8ff5yhUBwhhcYwg-8FO2hW59KzHxcaCyOU9D5th0iGEktRCKa7jXd7-9a7Yx1i6lFC_vz6_YrJHLPhXPQqrHJ0k3rRM_xvzhVsd3dD1sXmITtxgd2m7_oitBv8fLOWrYHN3NI8mY0GwIeDFhxSo1v0oUZds34J574sB_OANeaQ2umeNXbmT-JfmRZsX2HTA-ehTw6lkuYjq0XVDXU3W7VXRt343iNqziTzvb6uumqNJffi6dqIro6nSfKoRW038p2qlB6AN5xjUBavmUxpjnpKhqugKMsJyexpPrJ-v7MfhylZLst4pjkh_y97NbDDk5lylAQkxAnX4M8WZYFf2no_lxz_qScvubzYkzky-V2pejwcrdrDA6Qlqxq7ao_85bI-RzVKZ7WVBlJKAycC6RlOkK6TRZgkNIlCQqPlivrQWSYOF5QkwZoQe11WQRhcfHhyXckijgIax2s7LmMS0dgHtHdV6c_Dc3GvxgfWGnXfyWL0OTj74Mirsctf7aUOvw)
 
 The above diagram shows how split works.
 In case we want to pay beneficiary A 100€ and beneficiary B takes a 5€ commission on that payment, all that is needed is to add the beneficiary B to the additional Payees array.
-
 
 ```json
 {

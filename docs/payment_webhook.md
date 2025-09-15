@@ -4,7 +4,7 @@ FlowPay delivers real-time, server-to-server notifications whenever a payment re
 
 ## Event Semantics
 
-There is a single, stable event for Request-to-Pay: `payment.status_change`. The current state is provided in the `status` field and reuses the API enum `PaymentRequestStatus` (`pending`, `succeeded`, `rejected`, `onHold`). If the change originates from a specific checkout attempt, the event includes a `sessionId`. Multiple attempts may occur during a request’s lifecycle, and events may be delivered more than once; your handler must therefore be idempotent and tolerant of out-of-order delivery within the same `requestId`.
+There is a single, stable event for Request-to-Pay: `payment.status_change`. The current state is provided in the `status` field and reuses the API enum `PaymentRequestStatus` (`created`, `inProgress`, `authorized`, `rejected`, `onHold`, `locked`, `forwarded`, `refunded`, `deleted`). If the change originates from a specific checkout attempt, the event includes a `sessionId`. Multiple attempts may occur during a request’s lifecycle, and events may be delivered more than once; your handler must therefore be idempotent and tolerant of out-of-order delivery within the same `requestId`.
 
 ## Request Details
 

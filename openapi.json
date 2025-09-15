@@ -3134,12 +3134,17 @@
             "PaymentRequestStatus": {
                 "type": "string",
                 "enum": [
-                    "pending",
+                    "created",
+                    "inProgress",
+                    "authorized",
                     "rejected",
-                    "succeeded",
-                    "onHold"
+                    "onHold",
+                    "locked",
+                    "forwarded",
+                    "refunded",
+                    "deleted"
                 ],
-                "description": "Status of the payment request."
+                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner’s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
             },
             "PaymentSessions": {
                 "type": "object",
