@@ -2360,7 +2360,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "Detached signature over `${timestamp}.${rawBody}` computed by FlowPay using its platform private key. Verify with the public key identified by `X-FlowPay-Key-Id` from the JWKS endpoint."
+                        "description": "Detached signature over `${timestamp}.${rawBody}` computed by FlowPay using its platform private key (Ed25519, Base64URL). Verify with the public key identified by `X-FlowPay-Key-Id` from the well-known JWKS at `/.well-known/jwks.json`"
                     },
                     {
                         "name": "X-FlowPay-Key-Id",
@@ -2369,7 +2369,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "Key identifier of the signing key. Fetch corresponding public key from the JWKS endpoint."
+                        "description": "Key identifier of the signing key. Fetch the public key from the well-known JWKS at `/.well-known/jwks.json`"
                     },
                     {
                         "name": "X-FlowPay-Retry-Count",
