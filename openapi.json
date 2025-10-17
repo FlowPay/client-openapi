@@ -2041,11 +2041,11 @@
                 }
             }
         },
-        "/ais/consents": {
+        "/ais/consent-sessions": {
             "post": {
-                "summary": "Initiate AIS consent acquisition",
-                "description": "Creates a consent acquisition session for AIS access. Returns a hosted link where an authorised representative can complete SCA with the selected bank(s).",
-                "operationId": "createAisConsent",
+                "summary": "Create a consent session",
+                "description": "Creates a new AIS consent session and returns the identifiers required to drive the SCA journey. Use `idempotencyKey` to safely retry while the session stays pending.",
+                "operationId": "createAisConsentSession",
                 "tags": [
                     "AIS"
                 ],
@@ -2055,27 +2055,11 @@
                     }
                 ],
                 "requestBody": {
-                    "required": false,
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "bankId": {
-                                        "type": "string",
-                                        "description": "Optional FlowPay bank identifier to suggest a specific bank for consent. Use `/banks` to retrieve identifiers."
-                                    },
-                                    "redirectUrl": {
-                                        "type": "string",
-                                        "format": "uri",
-                                        "description": "Optional redirect URL after consent completion. If omitted, a default completion page is shown."
-                                    },
-                                    "callbackUrl": {
-                                        "type": "string",
-                                        "format": "uri",
-                                        "description": "Optional server-to-server callback URL to notify consent status changes."
-                                    }
-                                }
+                                "$ref": "#/components/schemas/AisConsentSessionCreateRequest"
                             }
                         }
                     }
@@ -2086,67 +2070,36 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AisConsent"
+                                    "$ref": "#/components/schemas/AisConsentSessionCreated"
                                 }
                             }
                         }
                     },
-                    "default": {
-                        "$ref": "#/components/responses/DefaultError"
-                    }
-                }
-            }
-        },
-        "/ais/consents/{consentId}": {
-            "get": {
-                "summary": "Get AIS consent status",
-                "description": "Returns the current status of a previously created AIS consent.",
-                "operationId": "getAisConsent",
-                "tags": [
-                    "AIS"
-                ],
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "consentId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "UUID of the consent session."
-                    }
-                ],
-                "responses": {
                     "200": {
-                        "description": "Consent details.",
+                        "description": "Existing pending session updated idempotently.",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AisConsent"
+                                    "$ref": "#/components/schemas/AisConsentSessionCreated"
                                 }
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/NotFound"
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
                     }
                 }
-            }
-        },
-        "/ais/accounts": {
+            },
             "get": {
-                "summary": "List AIS accounts",
-                "description": "Returns a paginated list of bank accounts available under active consents for the tenant.",
-                "operationId": "listAisAccounts",
+                "summary": "List consent sessions",
+                "description": "Returns consent sessions owned by the authenticated application. Filters can be combined and results are paginated.",
+                "operationId": "listAisConsentSessions",
                 "tags": [
                     "AIS"
                 ],
@@ -2157,48 +2110,74 @@
                 ],
                 "parameters": [
                     {
-                        "$ref": "#/components/parameters/LimitParam"
-                    },
-                    {
-                        "$ref": "#/components/parameters/OffsetParam"
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "description": "Filter by consent status.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/AisConsentStatus"
+                            }
+                        },
+                        "style": "form",
+                        "explode": true
                     },
                     {
                         "name": "bankId",
                         "in": "query",
                         "required": false,
+                        "description": "Filter by FlowPay bank identifier.",
                         "schema": {
                             "type": "string"
-                        },
-                        "description": "Optional filter by bank identifier (as returned by `/banks`)."
+                        }
+                    },
+                    {
+                        "name": "consentKind",
+                        "in": "query",
+                        "required": false,
+                        "description": "Filter by consent kind.",
+                        "schema": {
+                            "$ref": "#/components/schemas/AisConsentKind"
+                        }
+                    },
+                    {
+                        "name": "createdFrom",
+                        "in": "query",
+                        "required": false,
+                        "description": "Lower bound (inclusive) for `createdAt` in ISO 8601.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "createdTo",
+                        "in": "query",
+                        "required": false,
+                        "description": "Upper bound (inclusive) for `createdAt` in ISO 8601.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/AisPageParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AisPerParam"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated list of accounts.",
+                        "description": "Page of consent sessions.",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/PaginatedResult"
-                                        },
-                                        {
-                                            "properties": {
-                                                "items": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/AisAccount"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/AisConsentSessionPage"
                                 }
                             }
                         }
-                    },
-                    "403": {
-                        "description": "No active consent available. Create a consent via `/ais/consents`."
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -2206,11 +2185,15 @@
                 }
             }
         },
-        "/ais/accounts/{accountId}/balances": {
+        "/ais/consent-sessions/{consentSessionId}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AisConsentSessionId"
+                }
+            ],
             "get": {
-                "summary": "Get account balances",
-                "description": "Returns current and available balances for the specified account.",
-                "operationId": "getAisAccountBalances",
+                "summary": "Get consent session details",
+                "operationId": "getAisConsentSession",
                 "tags": [
                     "AIS"
                 ],
@@ -2219,31 +2202,132 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "parameters": [
-                    {
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "UUID of the AIS account."
-                    }
-                ],
                 "responses": {
                     "200": {
-                        "description": "Account balances.",
+                        "description": "Consent session details.",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AisBalances"
+                                    "$ref": "#/components/schemas/AisConsentSession"
                                 }
                             }
                         }
                     },
-                    "403": {
-                        "description": "No active consent available. Create a consent via `/ais/consents`."
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Update a pending consent session",
+                "description": "Allows updating mutable fields while the session is still pending. Once the session is opened the update is rejected.",
+                "operationId": "updateAisConsentSession",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AisConsentSessionUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated consent session.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisConsentSession"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Cancel or revoke a consent session",
+                "description": "Cancels pending or initiated sessions and revokes authorized ones when supported by the ASPSP.",
+                "operationId": "cancelAisConsentSession",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated consent session after cancellation/revocation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisConsentSession"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/consent-sessions/{consentSessionId}/sca-link": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AisConsentSessionId"
+                }
+            ],
+            "get": {
+                "summary": "Get the current SCA authorization URL",
+                "description": "Retrieves the bank authorization URL to redirect the end-user. The first call transitions the session to `initiated`.",
+                "operationId": "getAisScaLink",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authorization URL.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisAuthorizationLink"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
@@ -2254,11 +2338,107 @@
                 }
             }
         },
-        "/ais/accounts/{accountId}/transactions": {
+        "/ais/consent-sessions/{consentSessionId}/accounts": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AisConsentSessionId"
+                }
+            ],
             "get": {
-                "summary": "List account transactions",
-                "description": "Returns a paginated list of transactions for the specified account and period.",
-                "operationId": "listAisAccountTransactions",
+                "summary": "List accounts linked to a consent",
+                "operationId": "listAisConsentAccounts",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AisPageParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AisPerParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Accounts available for the consent.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisAccountPage"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/consent-sessions/{consentSessionId}/balances": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AisConsentSessionId"
+                }
+            ],
+            "get": {
+                "summary": "List account balances",
+                "description": "Returns the latest balances for the accounts granted by the consent. For one-off consents balances are reported as of authorization time; for recurring consents they reflect the retrieval time.",
+                "operationId": "listAisConsentBalances",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AisPageParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AisPerParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Balances for the consent.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisBalancePage"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/ais/consent-sessions/{consentSessionId}/transactions": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AisConsentSessionId"
+                }
+            ],
+            "get": {
+                "summary": "List transactions",
+                "description": "Returns transactions constrained to the AIS domain window (authorizedAt \u00b1180 days). Requested dates are clamped automatically and the applied window is returned in the payload.",
+                "operationId": "listAisConsentTransactions",
                 "tags": [
                     "AIS"
                 ],
@@ -2270,68 +2450,50 @@
                 "parameters": [
                     {
                         "name": "accountId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "UUID of the AIS account."
-                    },
-                    {
-                        "$ref": "#/components/parameters/LimitParam"
-                    },
-                    {
-                        "$ref": "#/components/parameters/OffsetParam"
-                    },
-                    {
-                        "name": "from",
                         "in": "query",
                         "required": false,
+                        "description": "Filter by account identifier when the consent covers multiple accounts.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fromDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "Start date (inclusive) in ISO 8601 format.",
                         "schema": {
                             "type": "string",
                             "format": "date"
-                        },
-                        "description": "Start date (inclusive), ISO 8601 date."
+                        }
                     },
                     {
-                        "name": "to",
+                        "name": "toDate",
                         "in": "query",
                         "required": false,
+                        "description": "End date (inclusive) in ISO 8601 format.",
                         "schema": {
                             "type": "string",
                             "format": "date"
-                        },
-                        "description": "End date (inclusive), ISO 8601 date."
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/AisPageParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AisPerParam"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated list of transactions.",
+                        "description": "Transactions for the consent.",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/PaginatedResult"
-                                        },
-                                        {
-                                            "properties": {
-                                                "items": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/AisTransaction"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/AisTransactionsPage"
                                 }
                             }
                         }
-                    },
-                    "403": {
-                        "description": "No active consent available. Create a consent via `/ais/consents`."
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
@@ -2576,6 +2738,39 @@
                     "type": "integer",
                     "default": 0,
                     "description": "Number of items to skip."
+                }
+            },
+            "AisConsentSessionId": {
+                "name": "consentSessionId",
+                "in": "path",
+                "required": true,
+                "description": "UUID of the AIS consent session.",
+                "schema": {
+                    "type": "string",
+                    "format": "uuid"
+                }
+            },
+            "AisPageParam": {
+                "name": "page",
+                "in": "query",
+                "required": false,
+                "description": "Page number (1-based).",
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1
+                }
+            },
+            "AisPerParam": {
+                "name": "per",
+                "in": "query",
+                "required": false,
+                "description": "Page size.",
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 50
                 }
             }
         },
@@ -2836,7 +3031,7 @@
             },
             "BusinessTIN": {
                 "type": "string",
-                "description": "European VAT number (format: ISO 2-letter country code followed by 8–12 alphanumeric characters).",
+                "description": "European VAT number (format: ISO 2-letter country code followed by 8\u201312 alphanumeric characters).",
                 "pattern": "^[A-Z]{2}[0-9A-Z]{8,12}$"
             },
             "IBAN": {
@@ -3177,7 +3372,7 @@
                     "refunded",
                     "deleted"
                 ],
-                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner’s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
+                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner\u2019s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
             },
             "PaymentSessions": {
                 "type": "object",
@@ -3346,112 +3541,397 @@
                 ],
                 "description": "Reason for the refund."
             },
-            "AisConsent": {
+            "AisConsentStatus": {
+                "type": "string",
+                "description": "State of the AIS consent session.",
+                "enum": [
+                    "pending",
+                    "initiated",
+                    "authorized",
+                    "denied",
+                    "canceled",
+                    "expired",
+                    "revoked"
+                ]
+            },
+            "AisConsentKind": {
+                "type": "string",
+                "description": "Defines whether the consent is one-off or recurring.",
+                "enum": [
+                    "one_off",
+                    "recurring"
+                ]
+            },
+            "AisService": {
+                "type": "string",
+                "description": "AIS scopes requested from the bank.",
+                "enum": [
+                    "accounts",
+                    "balances",
+                    "transactions"
+                ]
+            },
+            "AisConsentSession": {
                 "type": "object",
                 "properties": {
-                    "consentId": {
+                    "id": {
                         "type": "string",
-                        "format": "uuid"
+                        "format": "uuid",
+                        "description": "Consent session identifier."
                     },
                     "status": {
-                        "type": "string",
-                        "enum": [
-                            "pending",
-                            "active",
-                            "expired",
-                            "revoked",
-                            "failed"
-                        ],
-                        "description": "Current status of the consent."
+                        "$ref": "#/components/schemas/AisConsentStatus"
                     },
-                    "link": {
+                    "consentKind": {
+                        "$ref": "#/components/schemas/AisConsentKind"
+                    },
+                    "services": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisService"
+                        },
+                        "description": "Services covered by the consent."
+                    },
+                    "bankId": {
+                        "type": "string",
+                        "description": "FlowPay bank identifier to steer the authorization experience."
+                    },
+                    "fullName": {
+                        "type": "string",
+                        "description": "End-user name provided for UX or audit purposes."
+                    },
+                    "callbackUrl": {
                         "type": "string",
                         "format": "uri",
-                        "description": "Hosted link to complete consent."
+                        "description": "Webhook URL notified on significant state changes."
+                    },
+                    "redirectUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "URL the user is redirected to after completing the SCA flow."
+                    },
+                    "idempotencyKey": {
+                        "type": "string",
+                        "description": "Last idempotency key applied to this session."
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time"
                     },
-                    "updatedAt": {
+                    "firstOpenedAt": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date-time",
+                        "description": "Timestamp of the first SCA link retrieval."
+                    },
+                    "authorizedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp when the consent moved to authorized, if applicable."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Expiration provided by the ASPSP, if any."
+                    },
+                    "lastError": {
+                        "type": "string",
+                        "description": "Connector error code or description for the latest failure, if present."
                     }
                 },
                 "required": [
-                    "consentId",
-                    "status"
+                    "id",
+                    "status",
+                    "consentKind",
+                    "services",
+                    "createdAt"
+                ]
+            },
+            "AisConsentSessionCreateRequest": {
+                "type": "object",
+                "properties": {
+                    "idempotencyKey": {
+                        "type": "string",
+                        "description": "Optional key to make creation idempotent while the session is pending."
+                    },
+                    "fullName": {
+                        "type": "string",
+                        "description": "End-user full name to display in the consent journey.",
+                        "maxLength": 200
+                    },
+                    "bankId": {
+                        "type": "string",
+                        "description": "FlowPay bank identifier to preselect the ASPSP."
+                    },
+                    "consentKind": {
+                        "$ref": "#/components/schemas/AisConsentKind"
+                    },
+                    "services": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisService"
+                        },
+                        "description": "Subset of AIS services requested. Defaults to all when omitted."
+                    },
+                    "callbackUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "URL that will receive webhook notifications."
+                    },
+                    "redirectUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "URL where the user should be redirected after completing SCA."
+                    }
+                }
+            },
+            "AisConsentSessionUpdateRequest": {
+                "type": "object",
+                "description": "Fields that can be updated while the consent session is still pending.",
+                "properties": {
+                    "idempotencyKey": {
+                        "type": "string",
+                        "description": "Overrides the idempotency key if it is not used elsewhere."
+                    },
+                    "fullName": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "bankId": {
+                        "type": "string"
+                    },
+                    "consentKind": {
+                        "$ref": "#/components/schemas/AisConsentKind"
+                    },
+                    "services": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisService"
+                        }
+                    },
+                    "callbackUrl": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "redirectUrl": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                }
+            },
+            "AisConsentSessionCreated": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the newly created consent session."
+                    },
+                    "scaLink": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Gateway endpoint to retrieve the dynamic SCA authorization URL.",
+                        "example": "https://api.flowpay.it/v3/ais/consent-sessions/00000000-0000-0000-0000-000000000000/sca-link"
+                    },
+                    "idempotent": {
+                        "type": "boolean",
+                        "description": "True when an existing pending session has been reused."
+                    }
+                },
+                "required": [
+                    "id",
+                    "scaLink"
+                ]
+            },
+            "AisAuthorizationLink": {
+                "type": "object",
+                "properties": {
+                    "authorizationUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Bank authorization URL where the customer must be redirected."
+                    }
+                },
+                "required": [
+                    "authorizationUrl"
+                ]
+            },
+            "AisConsentSessionPage": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisConsentSession"
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "description": "Current page number (1-based)."
+                    },
+                    "per": {
+                        "type": "integer",
+                        "description": "Page size."
+                    },
+                    "hasNext": {
+                        "type": "boolean",
+                        "description": "Indicates whether another page is available."
+                    }
+                },
+                "required": [
+                    "items",
+                    "page",
+                    "per",
+                    "hasNext"
                 ]
             },
             "AisAccount": {
                 "type": "object",
                 "properties": {
-                    "id": {
+                    "accountId": {
                         "type": "string",
-                        "format": "uuid"
+                        "description": "Identifier of the account as provided by the ASPSP."
                     },
                     "iban": {
-                        "$ref": "#/components/schemas/IBAN"
+                        "type": "string",
+                        "description": "IBAN when available."
                     },
-                    "maskedIban": {
-                        "$ref": "#/components/schemas/MaskedIBAN"
+                    "name": {
+                        "type": "string",
+                        "description": "Account name or description."
                     },
                     "currency": {
                         "type": "string",
+                        "description": "ISO 4217 currency code.",
                         "example": "EUR"
-                    },
-                    "bankId": {
-                        "type": "string",
-                        "description": "FlowPay bank identifier."
-                    },
-                    "bankName": {
-                        "type": "string"
-                    },
-                    "holderName": {
-                        "type": "string"
-                    },
-                    "product": {
-                        "type": "string",
-                        "description": "Account product/type as reported by the bank."
                     }
                 },
                 "required": [
-                    "id",
-                    "maskedIban",
-                    "currency",
-                    "bankId"
+                    "accountId",
+                    "currency"
                 ]
             },
-            "AisBalances": {
+            "AisAccountPage": {
                 "type": "object",
                 "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisAccount"
+                        }
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "per": {
+                        "type": "integer"
+                    },
+                    "hasNext": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "items",
+                    "page",
+                    "per",
+                    "hasNext"
+                ]
+            },
+            "AisBalance": {
+                "type": "object",
+                "properties": {
+                    "accountId": {
+                        "type": "string"
+                    },
                     "asOf": {
                         "type": "string",
                         "format": "date-time"
                     },
                     "current": {
                         "type": "number",
-                        "format": "decimal"
+                        "format": "double"
                     },
                     "available": {
                         "type": "number",
-                        "format": "decimal"
+                        "format": "double"
+                    },
+                    "creditLimit": {
+                        "type": "number",
+                        "format": "double"
                     },
                     "currency": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "ISO 4217 currency code.",
+                        "example": "EUR"
                     }
                 },
                 "required": [
-                    "current",
+                    "accountId",
+                    "asOf",
                     "currency"
+                ]
+            },
+            "AisBalancePage": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisBalance"
+                        }
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "per": {
+                        "type": "integer"
+                    },
+                    "hasNext": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "items",
+                    "page",
+                    "per",
+                    "hasNext"
+                ]
+            },
+            "AisAppliedDateWindow": {
+                "type": "object",
+                "description": "Window enforced by FlowPay when retrieving transactions.",
+                "properties": {
+                    "from": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "one_off",
+                            "recurring"
+                        ],
+                        "description": "Consent kind that determined the window."
+                    }
+                },
+                "required": [
+                    "from",
+                    "to",
+                    "mode"
                 ]
             },
             "AisTransaction": {
                 "type": "object",
                 "properties": {
-                    "id": {
+                    "transactionId": {
                         "type": "string",
-                        "format": "uuid"
+                        "description": "Stable identifier of the transaction."
+                    },
+                    "accountId": {
+                        "type": "string"
                     },
                     "bookingDate": {
                         "type": "string",
@@ -3463,34 +3943,58 @@
                     },
                     "amount": {
                         "type": "number",
-                        "format": "decimal"
+                        "format": "double"
                     },
                     "currency": {
-                        "type": "string"
-                    },
-                    "direction": {
                         "type": "string",
-                        "enum": [
-                            "credit",
-                            "debit"
-                        ]
+                        "example": "EUR"
                     },
-                    "counterpartyName": {
+                    "description": {
                         "type": "string"
                     },
-                    "counterpartyIban": {
-                        "$ref": "#/components/schemas/IBAN"
+                    "counterparty": {
+                        "type": "string"
                     },
-                    "remittanceInformation": {
+                    "category": {
                         "type": "string"
                     }
                 },
                 "required": [
-                    "id",
+                    "transactionId",
+                    "accountId",
                     "bookingDate",
                     "amount",
-                    "currency",
-                    "direction"
+                    "currency"
+                ]
+            },
+            "AisTransactionsPage": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AisTransaction"
+                        }
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "per": {
+                        "type": "integer"
+                    },
+                    "hasNext": {
+                        "type": "boolean"
+                    },
+                    "appliedDateWindow": {
+                        "$ref": "#/components/schemas/AisAppliedDateWindow"
+                    }
+                },
+                "required": [
+                    "items",
+                    "page",
+                    "per",
+                    "hasNext",
+                    "appliedDateWindow"
                 ]
             }
         }
