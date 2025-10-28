@@ -17,7 +17,7 @@ How to enable specific flavors (copy‑paste ready):
 Set `amount` to the exact value you want to charge.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
   "payer": { "phone": "+39 333 1234567" },
   "title": "Invoice #1001",
@@ -35,7 +35,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json
 Omit `amount` entirely to let the payer enter the amount at checkout. Keep `allowPartialPayments` at its default (`false`). Enforce your business rules (min/max) when processing callbacks or before fulfilling the order.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
   "payer": { "phone": "+39 333 1234567" },
   "title": "Donate to ACME Foundation",
@@ -54,7 +54,7 @@ Optional: allow the payer to edit the remittance at checkout by setting `allowRe
 Set `allowPartialPayments: true` and provide the target `amount` to be fully settled across one or more sessions.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
   "payer": { "phone": "+39 333 1234567" },
   "title": "Installments for Order #A2001",
@@ -75,7 +75,7 @@ To compute the outstanding: list sessions with `/payment-requests/{requestId}/se
 Set `executionDate` (ISO 8601). The user authenticates now; execution occurs at/after the scheduled time (bank support dependent).
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 EXEC_AT="2025-01-10T10:00:00Z" # choose your date/time (UTC)
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
   "payer": { "phone": "+39 333 1234567" },
@@ -94,7 +94,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json
 
 Bulk turns many payouts into a single user authorisation. You compute a total amount and provide the allocation list with additional payees. The user performs SCA once; FlowPay collects the total and then splits it to the designated beneficiaries.
 
-![](https://mermaid.ink/img/eyJjb2RlIjoiZmxvd2NoYXJ0IExSXG4gIFVbVXNlciBhdXRob3Jpc2VzIHRvdGFsIGFtb3VudF0gLS0-IFRBW0Zsb3dQYXkgVGVjaG5pY2FsIEFjY291bnRdXG4gIFRBIC0tPnxHcm91cCBieSBJQkFOK25hbWV8IEFbQmVuZWZpY2lhcnkgQV1cbiAgVEEgLS0-IEJbQmVuZWZpY2lhcnkgQl1cbiAgVEEgLS0-IENbQmVuZWZpY2lhcnkgQ11cbiAgbm90ZSByaWdodCBvZiBUQTogUmVtaXR0YW5jZSBrZWVwcyBvcmlnaW5hbCBwYXllciBmb3IgZWFzeSByZWNvbmNpbGlhdGlvblxuIn0=)
+![](https://mermaid.ink/img/pako:eNpVUlFr2zAQ_iuHQtnDnBDHcWJrMHBSNgZrGCV9WbyHm3xORGXJSDKrm-a_T3ZoadGLTt_dd9-nuzMTpiLGWa3MP3FC6-HnfakBHg4Pjixg50_GSkcOvPGoABvTaf8HptOvsC8O30LZL-xhT-KkpQgJhRBjxkCyL4a8l-_WdC387eHHpth91tjQCxSHDWmqpZBoeyjepcPmA7R5D20_QNsADeDNDdyRbVBW8GbDQWX0Jw-ua1sTXEmtpCbQxpOLwBlwsukUegLpB47d4Z4a6T1qQfBI1DoIvo9SB0st9uEramOB0PVgSRgtpJLopdGjvB3nfKB-lToLWndXcUKhc7dUj62hlkrxSZ0PJ3LemkfiE0SMhFHG8kmSJFFttJ86-Uw8XrRPX1jEjlZWjHvbUcSaq9MwsvNAXzJ_ooZKxsO1oho75UtW6ksoa1H_NqZ5rQxTOJ4Yr1G5EHVtFdzfSjxabN5eLemK7HaYIONxPnIwfmZPIYrz2TzLsyzOksUyXqWLiPWMr1ezfJWu8zyfp3G-yJeXiD2PXeezNEuTdLWOF8kyTubZKmJUSW_s3XXnxtW7_AeTHNGA)
 
 What it enables: mass invoice runs, bill aggregation, marketplace or platform settlements with a single frictionless checkout. Repeated beneficiaries in your allocation are grouped automatically. Keep `allowPartialPayments` disabled; if the sum of additional payees is less than the total, the remainder goes to the primary payee.
 
@@ -110,7 +110,7 @@ What it enables: escrow‑like experiences, milestone‑based projects, dispute/
 
 Split payment directs portions of a single checkout to different parties — for example, retaining a platform fee while paying a vendor. You define a primary payee and one or more additional payees with explicit amounts. The platform collects once and allocates the proceeds accordingly, preserving the original payer identity for beneficiaries.
 
-![](https://mermaid.ink/img/eyJjb2RlIjoiZmxvd2NoYXJ0IExSXG4gIFBbVG90YWwgQW1vdW50XSAtLT58UmVtYWluZGVyfCBNYWluW1ByaW1hcnkgUGF5ZWVdXG4gIFAgLS0-fEV4cGxpY2l0IGFtb3VudHN8IEYxW0ZlZS9QYXllZSAxXVxuICBQIC0tPnxFeHBsaWNpdCBhbW91bnRzfCBGMltQYXllZSAyXVxuICBub3RlIHJpZ2h0IG9mIFA6IFN1bShhZGRpdGlvbmFsUGF5ZWVzKSDiiaQgdG90YWw7IHJlbWFpbmRlciAtPiBwcmltYXJ5XG4ifQ==)
+![](https://mermaid.ink/img/pako:eNp9UtFq2zAU_ZXLhcIGbha7sRMrMCjr-tQMk_WpcR4U6zoWkS1PlmmyJK-Dve4b9mX9ksl2Wygbe9LV1Tk6uufoiJkWhAxzpR-zghsLd8u0AkhW99pyBdelbiu7hsvLj6cllVxWgswJFq5YJUaW3Bwg4Qeidc_qcZ_3tZKZtMB78glu_dUtEXwYkOD_FxusBlTgUB3u4gIWZJyyAEPfWmmoAVsQVNoSWA0bgoZqbrglAbnRpTsRBIJyWUkrddX0aoyxjnFdZYU2XeeL2y3ltrCrZP18eE97O4hmijfNDeXw0oZcKuVAFXmNNXpHQ51ppQ3bKJ7t5n_xBq1_M-evw93xDSmwncajtMUwV1Pwmt68sncrxa9t-Y4L0Q_GVe9U8x6efv52Vri85s6j55Dg6ccvqIeIUjxBgh5ujRTIrGnJw3Iw1WV_7IRSdKaWlCJzpeBml2JanR2n5tWD1uULzeh2WyDLuWrcrq2F8_1G8q3h5WvXUPeAT12gyIIo7C9BdsQ9Mt-PR-NZPJv5s6tg4kdh4OEB2TQaxVE4jeN4HPpxEE_OHn7vZcejcBZehdHU94NJ5Naph-QM0GYxfN3-B5__ANaT8N0?theme=default)
 
 What it enables: marketplaces, app stores, franchise models, partner revenue sharing with full transparency in remittances.
 
@@ -127,7 +127,7 @@ What it enables: PagoPA notice payments with consistent checkout and server‑si
 Provide the PagoPA‑specific fields (`pagopaEcFiscalCode`, `pagopaPaymentNotice`, `email`) alongside your standard request data.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"; API_KEY="sk_test_xxx"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
   "payer": { "phone": "+39 333 1234567" },
   "title": "PagoPA payment",
@@ -178,7 +178,7 @@ Inline example (Sandbox):
 1. Create a payment request and get `requestId` + `link`.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"
 API_KEY="sk_test_xxx" # replace with yours
 
 curl -sS -X POST "$BASE_URL/payment-requests" \
@@ -226,7 +226,7 @@ curl -sS -X GET \
 Set the total `amount`, define a primary `payee`, and list `additionalPayees` with their explicit `amount`s. Keep `allowPartialPayments` set to `false`. Ensure the sum of all `additionalPayees.amount` is less than or equal to the total; the remainder goes to the primary `payee`.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"
 API_KEY="sk_test_xxx"
 
 curl -sS -X POST "$BASE_URL/payment-requests" \
@@ -265,7 +265,7 @@ Notes:
 Add `lockedUntil` (ISO 8601). After a `succeeded` session, funds are held until that date. Before expiry, either instruct a release (per partner configuration) or create a refund via the API.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"
 API_KEY="sk_test_xxx"
 LOCK_UNTIL=$(date -u -v+3d +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d "+3 days" +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -300,7 +300,7 @@ curl -sS -X POST "$BASE_URL/refunds" \
 Compute the total `amount` as the sum of all components, set the primary `payee`, and provide the allocation list in `additionalPayees`. Keep `allowPartialPayments` set to `false`. Repeated beneficiaries are allowed; FlowPay groups them by IBAN+name during settlement.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"
 API_KEY="sk_test_xxx"
 
 curl -sS -X POST "$BASE_URL/payment-requests" \
@@ -337,7 +337,7 @@ Notes:
 - Receipt: `GET /payment-requests/{requestId}` with `Accept: application/pdf` returns a PDF with details and a QR for device handoff; if paid, it acts as a receipt.
 
 ```bash
-BASE_URL="https://api.sandbox-flowpay.it/v3"
+BASE_URL="https://api.sandbox.flowpay.it/v2/"
 API_KEY="sk_test_xxx"
 
 # Upload (multipart)

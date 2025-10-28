@@ -17,26 +17,12 @@
     },
     "servers": [
         {
-            "url": "https://api.flowpay.it/v3",
+            "url": "https://api.flowpay.it/v2",
             "description": "Production server"
         },
         {
-            "url": "https://api.sandbox-flowpay.it/v3",
+            "url": "https://api.sandbox.flowpay.it/v2/",
             "description": "Shared sandbox server for testing and development. Data is reset periodically, so do not use for production data."
-        },
-        {
-            "url": "https://api.{clientID}-flowpay.it/v3",
-            "description": "Personal sandbox server",
-            "variables": {
-                "clientID": {
-                    "default": "test",
-                    "description": "Client ID for the test environment. Replace with your own client ID."
-                }
-            }
-        },
-        {
-            "url": "https://api.mock-flowpay.it/v3",
-            "description": "Mock server for testing and development.<br> Responses are simulated and do not interact with the real system. Data is generated using [Faker.js](https://fakerjs.dev/) consistently with the OpenAPI specification. <br> Responses are served by a [Prism](https://github.com/stoplightio/prism) server that simulates API responses according to the OpenAPI spec; response headers provide further validation details."
         }
     ],
     "security": [
@@ -3730,7 +3716,7 @@
                         "type": "string",
                         "format": "uri",
                         "description": "Gateway endpoint to retrieve the dynamic SCA authorization URL.",
-                        "example": "https://api.flowpay.it/v3/ais/consent-sessions/00000000-0000-0000-0000-000000000000/sca-link"
+                        "example": "https://api.flowpay.it/v2/ais/consent-sessions/00000000-0000-0000-0000-000000000000/sca-link"
                     },
                     "idempotent": {
                         "type": "boolean",
