@@ -21,7 +21,7 @@
             "description": "Production server"
         },
         {
-            "url": "https://api.sandbox.flowpay.it/v2/",
+            "url": "https://api.sandbox.flowpay.it/v2",
             "description": "Shared sandbox server for testing and development. Data is reset periodically, so do not use for production data."
         }
     ],
