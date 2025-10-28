@@ -3,25 +3,26 @@
 <link rel="stylesheet" href="./theme/darkmode.css">
 <link rel="stylesheet" href="./theme/beta.css">
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.postman.com/run-collection/postman_collection.json)
+<!-- [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.postman.com/run-collection/postman_collection.json) -->
 
 # API Support
 
 If you have any questions or need help with the APIs, you can open a ticket on our support portal. Click on the button below to open a ticket.
 
+<!-- redoc breaks the script embed, we need to make it work differently -->
 <script src=https://youtrack.flowpay.it/static/simplified/form/form-entry.js?auto=true></script>
 <div id=form-button style="">
     <button> Do you need help? Open a ticket! </button>
 </div>
-<script>  
+<script>
     YTFeedbackForm.renderFeedbackButton(
         document.currentScript.previousElementSibling,
-        { 
-            backendURL: 'https://youtrack.flowpay.it', 
-            formUUID: '5365c66c-6295-4631-9a5e-7afc2d5b7abf', 
-            theme: 'auto', 
+        {
+            backendURL: 'https://youtrack.flowpay.it',
+            formUUID: '5365c66c-6295-4631-9a5e-7afc2d5b7abf',
+            theme: 'auto',
             language: 'en'
-        }  
+        }
     );
 </script>
 
@@ -80,13 +81,13 @@ See checkout behavior, redirects, callbacks, and branding in `docs/checkout.md`.
 
 # Onboarding
 
-Partners register their application in the developer portal (https://developer.flowpay.it) and obtain one or more API keys with configurable scopes. Keys can be rotated or revoked at any time. Access to the portal requires a company account enabled for FlowPay services.
+Partners register their application in the developer portal (<https://developer.flowpay.it>) and obtain one or more API keys with configurable scopes. Keys can be rotated or revoked at any time. Access to the portal requires a company account enabled for FlowPay services.
 
 # Sandbox environment
 
 FlowPay provides a sandbox environment to allow partners to test the APIs before going into production. The sandbox is a safe space where you can experiment with the APIs without affecting real accounts or transactions.
 
-# Mock environment
+<!-- # Mock environment
 
 FlowPay provides a mock environment designed to help developers quickly prototype and validate their integration without connecting to real systems. This environment is built using [Prism](https://github.com/stoplightio/prism), which serves the OpenAPI specification as live endpoints, and uses [faker.js](https://fakerjs.dev/) to generate random but realistic data.
 
@@ -155,7 +156,7 @@ Response:
   "status": 400,
   "detail": "Missing required header: Authorization"
 }
-```
+``` -->
 
 # Pagination
 
@@ -182,7 +183,8 @@ Each paginated response follows the `PaginatedResult` format:
 
 ### Request
 
-```
+```markdown
+### Request
 GET /payment-requests?limit=20&offset=0
 X-API-Key: {api_key}
 ```
