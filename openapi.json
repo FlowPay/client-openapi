@@ -854,6 +854,65 @@
                                         "minimum": 0.01,
                                         "description": "Payment amount as a decimal (e.g. 10.50)."
                                     },
+                                    "allowedMethods": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/Technologies"
+                                        },
+                                        "description": "List of allowed payment technologies for this payment request. If not specified, all available technologies are allowed."
+                                    },
+                                    "paymentMethod": {
+                                        "type": "object",
+                                        "description": "Payment method selection for the request.`methodId` and `payload` are mutually exclusive, if neither is provided the payer will choose the payment method at checkout.",
+                                        "properties": {
+                                            "strict": {
+                                                "type": "boolean",
+                                                "default": false,
+                                                "description": "If true, the payer must use this payment method and cannot change it."
+                                            },
+                                            "technology": {
+                                                "$ref": "#/components/schemas/Technologies"
+                                            }
+                                        },
+                                        "required": [
+                                            "technology"
+                                        ],
+                                        "oneOf": [
+                                            {
+                                                "title": "Use saved payment method",
+                                                "properties": {
+                                                    "methodId": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "Identifier of the payment method to reuse (e.g. a saved wallet or AIS account)."
+                                                    }
+                                                },
+                                                "description": "Reference a saved payment method by ID."
+                                            },
+                                            {
+                                                "title": "Provide bank account payload",
+                                                "properties": {
+                                                    "technology": {
+                                                        "const": "BankAccount"
+                                                    },
+                                                    "payload": {
+                                                        "$ref": "#/components/schemas/BankAccountPaymentMethodPayload"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "title": "Provide BPay payload",
+                                                "properties": {
+                                                    "technology": {
+                                                        "const": "BPay"
+                                                    },
+                                                    "payload": {
+                                                        "$ref": "#/components/schemas/BPayPaymentMethodPayload"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
@@ -2819,6 +2878,65 @@
                     "cancel"
                 ],
                 "description": "Available callback types for the payment."
+            },
+            "Technologies": {
+                "type": "string",
+                "enum": [
+                    "BankAccount",
+                    "Card",
+                    "BPay",
+                    "SDD"
+                ],
+                "description": "Supported payment technologies."
+            },
+            "BankAccountPaymentMethodPayload": {
+                "type": "object",
+                "title": "Bank account payload",
+                "properties": {
+                    "iban": {
+                        "type": "string",
+                        "description": "IBAN of the account used for the payment."
+                    },
+                    "instant": {
+                        "type": "boolean",
+                        "description": "If true, requests an instant transfer when available."
+                    },
+                    "bankIdentifier": {
+                        "type": "string",
+                        "description": "Bank identifier (e.g. BIC or internal bank code)."
+                    }
+                },
+                "required": [
+                    "iban"
+                ],
+                "additionalProperties": false
+            },
+            "CardPaymentMethodPayload": {
+                "type": "object",
+                "title": "Card payload",
+                "description": "Card payments do not require additional payload fields.",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "BPayPaymentMethodPayload": {
+                "type": "object",
+                "title": "BPay payload",
+                "description": "BPay payments do not require additional payload fields.",
+                "properties": {
+                    "buyerPhoneNumber": {
+                        "type": "string",
+                        "description": "Buyer's phone number in E.164 format (e.g. +391234567890).",
+                        "pattern": "^\\+?[1-9]\\d{1,14}$"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "SDDPaymentMethodPayload": {
+                "type": "object",
+                "title": "SDD payload",
+                "description": "SEPA Direct Debit payments do not require additional payload fields.",
+                "properties": {},
+                "additionalProperties": false
             },
             "PaymentMethod": {
                 "type": "object",
