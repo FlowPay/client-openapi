@@ -4,7 +4,7 @@ You can allow users to pay multiple payees in a single operation using the addit
 
 The above diagram shows how bulk works.
 We assume the case in which a user wants to pay Beneficiary A for 100€, Beneficiary B for 50€ and Beneficiary C for 25€ and again Beneficiary A for 75€.
-The additionalPayees parameter will be populated like this:
+The additionalPayees parameter will be populated like this (you can also specify a per-payee `remittanceInformation`; if omitted, the main request `remittanceInformation` is used):
 
 ```json
 {
@@ -12,7 +12,8 @@ The additionalPayees parameter will be populated like this:
     {
       "iban": "IT79Q0300203280941591243326",
       "name": "Beneficiary A",
-      "amount": 100
+      "amount": 100,
+      "remittanceInformation": "Order A-100"
     },
     {
       "iban": "IT79Q0300203280941591243327",
@@ -22,7 +23,8 @@ The additionalPayees parameter will be populated like this:
     {
       "iban": "IT79Q0300203280941591243328",
       "name": "Beneficiary C",
-      "amount": 25
+      "amount": 25,
+      "remittanceInformation": "Service fee C"
     },
     {
       "iban": "IT79Q0300203280941591243326",
