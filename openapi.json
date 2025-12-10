@@ -823,15 +823,6 @@
                                         "maxLength": 255,
                                         "description": "Payment description, visible to the payer."
                                     },
-                                    "allowedMethods": {
-                                        "type": "array",
-                                        "items": {
-                                            "$ref": "#/components/schemas/PaymentMethodTechnology"
-                                        },
-                                        "minItems": 1,
-                                        "uniqueItems": true,
-                                        "description": "Optional list of payment method technologies allowed for this request. When omitted, the gateway forwards every supported method"
-                                    },
                                     "remittanceInformation": {
                                         "type": "string",
                                         "minLength": 5,
