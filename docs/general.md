@@ -3,8 +3,6 @@
 <link rel="stylesheet" href="./theme/darkmode.css">
 <link rel="stylesheet" href="./theme/beta.css">
 
-<!-- [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.postman.com/run-collection/postman_collection.json) -->
-
 # API Support
 
 If you have any questions or need help with the APIs, you can open a ticket on our support portal. Click on the button below to open a ticket.

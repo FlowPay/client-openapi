@@ -8,6 +8,8 @@ Simple RTP is the shortest path from a payment request to a successful bank tran
 
 ![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja2VuZFxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUElcbiAgcGFydGljaXBhbnQgVXNlciBhcyBQYXllclxuICBwYXJ0aWNpcGFudCBCYW5rIGFzIEJhbmsgKFNDQSlcbiAgQXBwLT4-QVBJOiBQT1NUIC9wYXltZW50LXJlcXVlc3RzXG4gIEFQSS0tPj5BcHA6IDIwMSB7IHJlcXVlc3RJZCwgbGluayB9XG4gIEFwcC0tPj5Vc2VyOiBSZWRpcmVjdCB0byBsaW5rIChIb3N0ZWQgQ2hlY2tvdXQpXG4gIFVzZXItPj5CYW5rOiBTQ0EgYW5kIGNvbnNlbnRcbiAgQmFuay0tPj5BUEk6IEF1dGhvcmlzYXRpb24gb3V0Y29tZVxuICBBUEktLT4-VXNlcjogU3VjY2Vzcy9FcnJvciBzY3JlZW5cbiAgQVBJLS0-PkFwcDogUE9TVCBjYWxsYmFja1VybCAoc3RhdHVzKVxuICBBcHAtPj5BUEk6IEdFVCAvcGF5bWVudC1yZXF1ZXN0cy97aWR9IChjb25maXJtKVxuIn0=)
 
+State evolution: a Simple RTP typically flows created → inProgress when the user starts checkout, then authorized on a successful SCA with the provider. Settlement goes straight to the payee (fast transition to forwarded); it passes through the Technical Account (onHold) only when the ultimateDebtor differs from the debtor (payer). User cancellations, OTP expirations, or bank denials keep the request non-terminal until a successful attempt occurs or the request expires. Refunds, when issued, move the request to refunded for the affected amount.
+
 What it enables: one‑off payments, invoice settlement, donations, deposits, and any flow where a user authorises a bank transfer to a known beneficiary.
 
 How to enable specific flavors (copy‑paste ready):
@@ -15,6 +17,8 @@ How to enable specific flavors (copy‑paste ready):
 ### Fixed amount (default)
 
 Set `amount` to the exact value you want to charge.
+
+State evolution: most flows are linear. From created the first user attempt moves to inProgress; on a positive outcome the session is authorized and the request proceeds to forwarded. Settlement goes straight to the payee; the Technical Account (onHold) path applies only when ultimateDebtor ≠ debtor. Errors or cancellations do not change the aggregate state to terminal; a later successful attempt completes the flow. Post-settlement reversals are reflected as refunded.
 
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
@@ -34,6 +38,8 @@ curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json
 
 Omit `amount` entirely to let the payer enter the amount at checkout. Keep `allowPartialPayments` at its default (`false`). Enforce your business rules (min/max) when processing callbacks or before fulfilling the order.
 
+State evolution: identical to fixed-amount, with the value chosen during checkout. Expect multiple inProgress attempts as the payer can re-enter and adjust the amount; only attempts that reach authorized affect the financial outcome. Settlement behaves like Simple RTP (direct to payee; Technical Account hop only if ultimateDebtor ≠ debtor); any reversal is reflected as refunded.
+
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
@@ -52,6 +58,8 @@ Optional: allow the payer to edit the remittance at checkout by setting `allowRe
 ### Partial settlement (multiple payments until total is reached)
 
 Set `allowPartialPayments: true` and provide the target `amount` to be fully settled across one or more sessions.
+
+State evolution: each successful session independently reaches authorized and then forwarded for its portion. The request remains non-terminal until the cumulative authorized amount meets the target; it can cycle back to inProgress for additional attempts. Temporary onHold/locked can appear per session when funds pause on the Technical Account. Once the target is covered, the request is effectively complete in forwarded. Refunds operate per session without reopening the request.
 
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
@@ -73,6 +81,8 @@ To compute the outstanding: list sessions with `/payment-requests/{requestId}/se
 ### Scheduled execution (future date)
 
 Set `executionDate` (ISO 8601). The user authenticates now; execution occurs at/after the scheduled time (bank support dependent).
+
+State evolution: after inProgress and authorized, the request remains pending execution until the scheduled time. You will not see forwarded until the bank executes. If execution fails or is revoked, the provider emits a negative outcome and the request converges to rejected. Refunds are available only after execution.
 
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
@@ -98,6 +108,8 @@ Bulk turns many payouts into a single user authorisation. You compute a total am
 
 What it enables: mass invoice runs, bill aggregation, marketplace or platform settlements with a single frictionless checkout. Repeated beneficiaries in your allocation are grouped automatically. Keep `allowPartialPayments` disabled; if the sum of additional payees is less than the total, the remainder goes to the primary payee.
 
+State evolution: authorization is single from the user’s perspective; settlement is mediated. After authorized, funds always land on the Technical Account, are processed immediately, and re-sent to beneficiaries. The request may appear onHold briefly while dispatch allocates amounts, then moves to forwarded. Subsequent reversals are reflected as refunded and are applied proportionally to the original allocation map.
+
 ## Conditional payment
 
 When outcomes depend on a later verification (delivery, inspection, return window), use Locked payments. You specify a `lockedUntil` date; after a successful checkout the funds are held in FlowPay’s technical account. Before the date, you can decide to release to the payee or refund the user. If you take no action by expiry, the platform automatically refunds the payer.
@@ -105,6 +117,8 @@ When outcomes depend on a later verification (delivery, inspection, return windo
 ![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgVXNlclxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUElcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja29mZmljZVxuICBVc2VyLT4-QVBJOiBQYXlzIGF0IGNoZWNrb3V0IChzdWNjZWVkZWQpXG4gIEFQSS0tPj5BcHA6IENhbGxiYWNrIChzdWNjZWVkZWQsIGxvY2tlZClcbiAgTm90ZSBvdmVyIEFQSTogRnVuZHMgaGVsZCB1bnRpbCBsb2NrZWRVbnRpbFxuICBBcHAtPj5BUEk6IFJlbGVhc2UgdG8gcGF5ZWUgT1IgY3JlYXRlIHJlZnVuZFxuICBBUEktLT4-VXNlcjogQXV0b-KAkXJlZnVuZCBpZiBubyBkZWNpc2lvbiBieSBsb2NrZWRVbnRpbFxuIn0=)
 
 What it enables: escrow‑like experiences, milestone‑based projects, dispute/return windows with automatic safety fallback.
+
+State evolution: after a successful checkout the session is authorized and the request enters locked until either a release instructs forwarding to the payee or the lock expires and a refund is performed. If no release occurs, expiry leads to refunded. Additional user attempts do not alter an existing lock for already authorized funds.
 
 ## Split payment
 
@@ -114,6 +128,8 @@ Split payment directs portions of a single checkout to different parties — for
 
 What it enables: marketplaces, app stores, franchise models, partner revenue sharing with full transparency in remittances.
 
+State evolution: similar to Bulk, the user authorizes once and funds always pass via the Technical Account, are processed immediately, and re-forwarded according to the split. The request may show a short onHold during dispatch, then advances to forwarded. Errors on outbound legs are handled by the dispatch engine and do not return the request to inProgress. Refunds mirror the original allocation proportions.
+
 ## PagoPA payment
 
 For public‑service payments in the Italian PagoPA ecosystem, RTP integrates a dedicated branch. You provide the entity tax code and payment notice number, and an email to receive the receipt. The hosted checkout guides the user through the PagoPA‑specific steps, while your integration pattern (redirects, callbacks, receipt download) remains the same.
@@ -121,6 +137,8 @@ For public‑service payments in the Italian PagoPA ecosystem, RTP integrates a 
 ![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja2VuZFxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUEkgKFBhZ29QQSlcbiAgcGFydGljaXBhbnQgVXNlciBhcyBQYXllclxuICBBcHAtPj5BUEk6IFBPU1QgL3BheW1lbnQtcmVxdWVzdHMgKFBhZ29QQSBmaWVsZHMpXG4gIEFQSS0tPj5BcHA6IDIwMSB7IHJlcXVlc3RJZCwgbGluayB9XG4gIEFwcC0tPj5Vc2VyOiBSZWRpcmVjdCB0byBsaW5rXG4gIFVzZXItPj5BUEk6IFBhZ29QQSBmbG93IGF0IGNoZWNrb3V0XG4gIEFQSS0tPj5Vc2VyOiBSZWNlaXB0IHNjcmVlbiArIGVtYWlsXG4gIEFQSS0tPj5BcHA6IENhbGxiYWNrICsgUERGIGF2YWlsYWJsZSB2aWEgR0VUXG4ifQ==)
 
 What it enables: PagoPA notice payments with consistent checkout and server‑side integration semantics. Bulk isn’t natively supported with PagoPA; contact FlowPay for options.
+
+State evolution: follows PagoPA’s own flow as defined in the Simplified Flow document. The request goes created → inProgress during the PagoPA journey, then to authorized on a positive PagoPA outcome, and to forwarded once remittance to the Creditor Entity completes. Invalid notices or cancellations converge to rejected. No Technical Account hop is used unless explicitly mandated by PagoPA reconciliation policies.
 
 ### How to enable PagoPA payment
 
@@ -363,9 +381,3 @@ curl -sS -X POST "$BASE_URL/payment-requests" \
 REQUEST_ID="..."
 curl -sS -X GET -H "X-API-Key: $API_KEY" -H "Accept: application/pdf" "$BASE_URL/payment-requests/$REQUEST_ID" -o receipt.pdf
 ```
-
-Conceptual background:
-
-- Bulk patterns: docs/bulk.md
-- PagoPA lifecycle: docs/pagopa_lifecycle.md
-- Chained/locked flows (background): docs/chain_lifecycle.md

@@ -727,7 +727,7 @@
             },
             "post": {
                 "summary": "Create a new payment request",
-                "description": "Endpoint to create a payment request between two parties, specifying payer and payee details.\n\nHow-to guides:\n- Simple RTP: docs/examples/rtp_simple.md\n- RTP with attachments: docs/examples/rtp_with_attachments.md\n- Split payment (Simplified Flow): docs/examples/split_payment.md\n- Locked payment: docs/examples/locked_payment.md\n- Bulk payments: docs/examples/bulk_payments.md\n\nSee also conceptual docs:\n- Bulk patterns: docs/bulk.md\n- PagoPA lifecycle: docs/pagopa_lifecycle.md\n- Chained/locked flows (background): docs/chain_lifecycle.md",
+                "description": "Endpoint to create a payment request between two parties, specifying payer and payee details.",
                 "operationId": "createPaymentRequest",
                 "tags": [
                     "Request To Pay"
@@ -848,6 +848,65 @@
                                         "format": "decimal",
                                         "minimum": 0.01,
                                         "description": "Payment amount as a decimal (e.g. 10.50)."
+                                    },
+                                    "allowedMethods": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/Technologies"
+                                        },
+                                        "description": "List of allowed payment technologies for this payment request. If not specified, all available technologies are allowed."
+                                    },
+                                    "paymentMethod": {
+                                        "type": "object",
+                                        "description": "Payment method selection for the request.`methodId` and `payload` are mutually exclusive, if neither is provided the payer will choose the payment method at checkout.",
+                                        "properties": {
+                                            "strict": {
+                                                "type": "boolean",
+                                                "default": false,
+                                                "description": "If true, the payer must use this payment method and cannot change it."
+                                            },
+                                            "technology": {
+                                                "$ref": "#/components/schemas/Technologies"
+                                            }
+                                        },
+                                        "required": [
+                                            "technology"
+                                        ],
+                                        "oneOf": [
+                                            {
+                                                "title": "Use saved payment method",
+                                                "properties": {
+                                                    "methodId": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "Identifier of the payment method to reuse (e.g. a saved wallet or AIS account)."
+                                                    }
+                                                },
+                                                "description": "Reference a saved payment method by ID."
+                                            },
+                                            {
+                                                "title": "Provide bank account payload",
+                                                "properties": {
+                                                    "technology": {
+                                                        "const": "BankAccount"
+                                                    },
+                                                    "payload": {
+                                                        "$ref": "#/components/schemas/BankAccountPaymentMethodPayload"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "title": "Provide BPay payload",
+                                                "properties": {
+                                                    "technology": {
+                                                        "const": "BPay"
+                                                    },
+                                                    "payload": {
+                                                        "$ref": "#/components/schemas/BPayPaymentMethodPayload"
+                                                    }
+                                                }
+                                            }
+                                        ]
                                     },
                                     "email": {
                                         "type": "string",
@@ -1014,7 +1073,7 @@
                                                         "lockedUntil": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                            "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer. See docs/chain_lifecycle.md for details."
+                                                            "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer. See the \"Chained/locked flows\" section for details."
                                                         },
                                                         "savePaymentMethod": {
                                                             "type": "boolean",
@@ -3043,14 +3102,64 @@
                 ],
                 "description": "Available callback types for the payment."
             },
-            "PaymentMethodTechnology": {
+            "Technologies": {
                 "type": "string",
-                "description": "Payment method technology allowed in the checkout.",
                 "enum": [
-                    "bankAccount",
-                    "card",
-                    "bancomatPay"
-                ]
+                    "BankAccount",
+                    "Card",
+                    "BPay",
+                    "SDD"
+                ],
+                "description": "Supported payment technologies."
+            },
+            "BankAccountPaymentMethodPayload": {
+                "type": "object",
+                "title": "Bank account payload",
+                "properties": {
+                    "iban": {
+                        "type": "string",
+                        "description": "IBAN of the account used for the payment."
+                    },
+                    "instant": {
+                        "type": "boolean",
+                        "description": "If true, requests an instant transfer when available."
+                    },
+                    "bankIdentifier": {
+                        "type": "string",
+                        "description": "Bank identifier (e.g. BIC or internal bank code)."
+                    }
+                },
+                "required": [
+                    "iban"
+                ],
+                "additionalProperties": false
+            },
+            "CardPaymentMethodPayload": {
+                "type": "object",
+                "title": "Card payload",
+                "description": "Card payments do not require additional payload fields.",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "BPayPaymentMethodPayload": {
+                "type": "object",
+                "title": "BPay payload",
+                "description": "BPay payments do not require additional payload fields.",
+                "properties": {
+                    "buyerPhoneNumber": {
+                        "type": "string",
+                        "description": "Buyer's phone number in E.164 format (e.g. +391234567890).",
+                        "pattern": "^\\+?[1-9]\\d{1,14}$"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "SDDPaymentMethodPayload": {
+                "type": "object",
+                "title": "SDD payload",
+                "description": "SEPA Direct Debit payments do not require additional payload fields.",
+                "properties": {},
+                "additionalProperties": false
             },
             "PaymentMethod": {
                 "type": "object",
@@ -3376,7 +3485,7 @@
                     "refunded",
                     "deleted"
                 ],
-                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner\u2019s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
+                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner’s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
             },
             "PaymentSessions": {
                 "type": "object",

@@ -18,11 +18,11 @@ Optionally, `requestId` and `sessionId` can be included for convenience. Always 
 
 ## Callback notifications
 
-If `callbackUrl` is provided, FlowPay sends server-to-server notifications when the payment session status changes. Typical events are `pending`, `succeeded`, `failed`, `expired`, `cancelled`.
+If `callbackUrl` is provided, FlowPay sends server-to-server notifications when the payment status changes via a single event type `payment.status_change`. Inspect the `status` field in the payload (enum `PaymentRequestStatus`: `created`, `inProgress`, `authorized`, `rejected`, `onHold`, `locked`, `forwarded`, `refunded`, `deleted`).
 
 - Method: POST
 - Headers: `Content-Type: application/json`
-- Payload: includes `requestId`, `sessionId`, `status`, and timestamps.
+- Payload: includes `requestId`, optional `sessionId`, `status`, and timestamps.
 
 Note: ensure idempotency on your endpoint; the same event may be retried.
 
@@ -33,4 +33,3 @@ Branding (logo, primary color, legal info) is configured per partner in the Flow
 ## Mobile and PWA behavior
 
 The checkout behaves as a mobile-friendly web app and supports handoff between desktop and mobile via QR code in the PDF returned by `GET /payment-requests/{requestId}` with `Accept: application/pdf`.
-
