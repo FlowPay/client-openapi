@@ -381,9 +381,3 @@ curl -sS -X POST "$BASE_URL/payment-requests" \
 REQUEST_ID="..."
 curl -sS -X GET -H "X-API-Key: $API_KEY" -H "Accept: application/pdf" "$BASE_URL/payment-requests/$REQUEST_ID" -o receipt.pdf
 ```
-
-Conceptual background:
-
-- Bulk patterns: docs/bulk.md
-- PagoPA lifecycle: docs/pagopa_lifecycle.md
-- Chained/locked flows (background): docs/chain_lifecycle.md
