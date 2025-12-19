@@ -10,14 +10,26 @@ extends:
   - recommended
   
 rules:
-  # A sample custom rule. Read more about rules: https://redocly.com/docs/cli/rules/
-  rule/operation-description:
-    subject: 
-      type: Operation
-      property: description
-    assertions:
-      defined: true
-      minLength: 30
+  operation-operationId:
+    severity: error
+
+  no-unused-components:
+    severity: warn
+
+  operation-description:
+    severity: off
+
+  no-unresolved-refs:
+    severity: error
+
+  no-ambiguous-paths:
+    severity: error
+  
+  security-defined:
+    severity: error
+  
+  tag-description:
+    severity: error
 
 theme:
   openapi:
