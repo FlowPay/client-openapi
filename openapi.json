@@ -284,26 +284,27 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "paymentMethodId": {
+                                    "tokenId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "ID of the payment method to use for the payment. If not specified, the customer's default payment method is used, if present."
-                                    },
+                                        "description": "ID of the tokenized payment method to use for the charge."
+                                    }
                                 },
                                 "required": [
-                                    "paymentMethodId"
+                                    "tokenId"
                                 ],
                                 "oneOf": [
                                     {
                                         "title": "Existing payment request",
                                         "properties": {
-                                            "intentId": {
+                                            "paymentRequestId": {
                                                 "type": "string",
-                                                "format": "uuid"
+                                                "format": "uuid",
+                                                "description": "UUID of the existing payment request to charge."
                                             }
                                         },
                                         "required": [
-                                            "intentId"
+                                            "paymentRequestId"
                                         ]
                                     },
                                     {
@@ -3114,7 +3115,7 @@
                             "card",
                             "bancomat_pay"
                         ]
-                    },
+                    }
                 },
                 "oneOf": [
                     {
