@@ -289,118 +289,58 @@
                                         "format": "uuid",
                                         "description": "ID of the payment method to use for the payment. If not specified, the customer's default payment method is used, if present."
                                     },
-                                    "debtor": {
-                                        "description": "Information about the actual debtor of the payment. If not provided, the customer associated with the provided payment method is used.",
-                                        "oneOf": [
-                                            {
-                                                "$ref": "#/components/schemas/ConsumerTIN"
-                                            },
-                                            {
-                                                "$ref": "#/components/schemas/BusinessTIN"
-                                            },
-                                            {
-                                                "title": "UUID of the debtor customer.",
-                                                "type": "string",
-                                                "format": "uuid",
-                                                "description": "UUID of the debtor customer."
-                                            }
-                                        ]
-                                    },
-                                    "ultimateDebtor": {
-                                        "type": "string",
-                                        "enum": [
-                                            "debtor",
-                                            "payee",
-                                            "payer",
-                                            "tenant",
-                                            "anonymous"
-                                        ],
-                                        "description": {
-                                            "$ref": "./docs/ultimate_debtor.md"
-                                        },
-                                        "default": "debtor"
-                                    },
-                                    "privateAttachments": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "format": "uuid",
-                                            "description": "Unique file identifier."
-                                        },
-                                        "description": "List of UUIDs of files attached to the payment that are visible only to FlowPay for compliance checks. These files are not shown to the payer during the payment process."
-                                    },
-                                    "remittanceInformation": {
-                                        "type": "string",
-                                        "minLength": 5,
-                                        "maxLength": 100,
-                                        "description": "Remittance information for the payment, visible to the payer and to the payee upon credit to the account."
-                                    },
-                                    "amount": {
-                                        "type": "number",
-                                        "format": "decimal",
-                                        "minimum": 0.01,
-                                        "description": "Payment amount as a decimal (e.g. 10.50)."
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
-                                    }
                                 },
-                                "required": [],
+                                "required": [
+                                    "paymentMethodId"
+                                ],
                                 "oneOf": [
                                     {
-                                        "title": "Standard payment",
+                                        "title": "Existing payment request",
                                         "properties": {
-                                            "amount": {
-                                                "type": "number",
-                                                "format": "decimal",
-                                                "minimum": 0.01,
-                                                "description": "Payment amount as a decimal (e.g. 10.50)."
-                                            },
-                                            "payee": {
-                                                "description": "Information about the payment payee. If not specified, the partner associated with the client and the IBAN configured for the client are used by default.",
+                                            "intentId": {
+                                                "type": "string",
+                                                "format": "uuid"
+                                            }
+                                        },
+                                        "required": [
+                                            "intentId"
+                                        ]
+                                    },
+                                    {
+                                        "title": "New operation",
+                                        "type": "object",
+                                        "properties": {
+                                            "debtor": {
+                                                "description": "Information about the actual debtor of the payment. If not provided, the customer associated with the provided payment method is used.",
                                                 "oneOf": [
                                                     {
-                                                        "$ref": "#/components/schemas/PhoneNumber"
+                                                        "$ref": "#/components/schemas/ConsumerTIN"
                                                     },
                                                     {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "name": {
-                                                                "type": "string",
-                                                                "description": "Name of the payee."
-                                                            },
-                                                            "iban": {
-                                                                "description": "IBAN of the payee's account.",
-                                                                "$ref": "#/components/schemas/IBAN"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "name",
-                                                            "iban"
-                                                        ]
+                                                        "$ref": "#/components/schemas/BusinessTIN"
+                                                    },
+                                                    {
+                                                        "title": "UUID of the debtor customer.",
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "UUID of the debtor customer."
                                                     }
                                                 ]
                                             },
-                                            "lockedUntil": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
-                                            }
-                                        },
-                                        "required": []
-                                    },
-                                    {
-                                        "title": "PagoPA",
-                                        "properties": {
-                                            "pagopaEcFiscalCode": {
-                                                "type": "string",
-                                                "description": "Tax code of the entity for PagoPA."
+                                            "privateAttachments": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "description": "Unique file identifier."
+                                                },
+                                                "description": "List of UUIDs of files attached to the payment that are visible only to FlowPay for compliance checks. These files are not shown to the payer during the payment process."
                                             },
-                                            "pagopaPaymentNotice": {
+                                            "remittanceInformation": {
                                                 "type": "string",
-                                                "description": "PagoPA payment notice code."
+                                                "minLength": 5,
+                                                "maxLength": 100,
+                                                "description": "Remittance information for the payment, visible to the payer and to the payee upon credit to the account."
                                             },
                                             "email": {
                                                 "type": "string",
@@ -408,10 +348,95 @@
                                                 "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
                                             }
                                         },
-                                        "required": [
-                                            "pagopaEcFiscalCode",
-                                            "pagopaPaymentNotice",
-                                            "email"
+                                        "oneOf": [
+                                            {
+                                                "title": "Standard payment",
+                                                "properties": {
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "decimal",
+                                                        "minimum": 0.01,
+                                                        "description": "Payment amount as a decimal (e.g. 10.50)."
+                                                    },
+                                                    "payee": {
+                                                        "description": "Information about the payment payee. If not specified, the partner associated with the client and the IBAN configured for the client are used by default.",
+                                                        "oneOf": [
+                                                            {
+                                                                "$ref": "#/components/schemas/PhoneNumber"
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "description": "Name of the payee."
+                                                                    },
+                                                                    "iban": {
+                                                                        "description": "IBAN of the payee's account.",
+                                                                        "$ref": "#/components/schemas/IBAN"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "name",
+                                                                    "iban"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "lockedUntil": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
+                                                    }
+                                                },
+                                                "required": []
+                                            },
+                                            {
+                                                "title": "PagoPA",
+                                                "properties": {
+                                                    "pagopaEcFiscalCode": {
+                                                        "type": "string",
+                                                        "description": "Tax code of the entity for PagoPA."
+                                                    },
+                                                    "pagopaPaymentNotice": {
+                                                        "type": "string",
+                                                        "description": "PagoPA payment notice code."
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
+                                                    }
+                                                },
+                                                "required": [
+                                                    "pagopaEcFiscalCode",
+                                                    "pagopaPaymentNotice",
+                                                    "email"
+                                                ]
+                                            },
+                                            {
+                                                "title": "Bollo auto",
+                                                "properties": {
+                                                    "vehicleType": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "car",
+                                                            "motorcycle",
+                                                            "trailer"
+                                                        ],
+                                                        "description": "Vehicle type"
+                                                    },
+                                                    "plate": {
+                                                        "type": "string",
+                                                        "description": "plate"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "plate",
+                                                    "VehicleType",
+                                                    "email"
+                                                ]
+                                            }
                                         ]
                                     }
                                 ]
@@ -843,61 +868,14 @@
                                     "allowedMethods": {
                                         "type": "array",
                                         "items": {
-                                            "$ref": "#/components/schemas/Technologies"
+                                            "$ref": "#/components/schemas/AllowedMethod"
                                         },
                                         "description": "List of allowed payment technologies for this payment request. If not specified, all available technologies are allowed."
                                     },
                                     "paymentMethod": {
                                         "type": "object",
                                         "description": "Payment method selection for the request.`methodId` and `payload` are mutually exclusive, if neither is provided the payer will choose the payment method at checkout.",
-                                        "properties": {
-                                            "strict": {
-                                                "type": "boolean",
-                                                "default": false,
-                                                "description": "If true, the payer must use this payment method and cannot change it."
-                                            },
-                                            "technology": {
-                                                "$ref": "#/components/schemas/Technologies"
-                                            }
-                                        },
-                                        "required": [
-                                            "technology"
-                                        ],
-                                        "oneOf": [
-                                            {
-                                                "title": "Use saved payment method",
-                                                "properties": {
-                                                    "methodId": {
-                                                        "type": "string",
-                                                        "format": "uuid",
-                                                        "description": "Identifier of the payment method to reuse (e.g. a saved wallet or AIS account)."
-                                                    }
-                                                },
-                                                "description": "Reference a saved payment method by ID."
-                                            },
-                                            {
-                                                "title": "Provide bank account payload",
-                                                "properties": {
-                                                    "technology": {
-                                                        "const": "BankAccount"
-                                                    },
-                                                    "payload": {
-                                                        "$ref": "#/components/schemas/BankAccountPaymentMethodPayload"
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "title": "Provide BPay payload",
-                                                "properties": {
-                                                    "technology": {
-                                                        "const": "BPay"
-                                                    },
-                                                    "payload": {
-                                                        "$ref": "#/components/schemas/BPayPaymentMethodPayload"
-                                                    }
-                                                }
-                                            }
-                                        ]
+                                        "$ref": "#/components/schemas/Technology"
                                     },
                                     "email": {
                                         "type": "string",
@@ -1120,6 +1098,29 @@
                                         "description": {
                                             "$ref": "./docs/pagopa_lifecycle.md"
                                         }
+                                    },
+                                    {
+                                        "title": "Bollo auto",
+                                        "properties": {
+                                            "vehicleType": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "car",
+                                                    "motorcycle",
+                                                    "trailer"
+                                                ],
+                                                "description": "Vehicle type"
+                                            },
+                                            "plate": {
+                                                "type": "string",
+                                                "description": "plate"
+                                            }
+                                        },
+                                        "required": [
+                                            "plate",
+                                            "VehicleType",
+                                            "email"
+                                        ]
                                     }
                                 ]
                             }
@@ -2238,7 +2239,7 @@
             ],
             "get": {
                 "summary": "Get consent session details",
-                "operationId": "getAisConsentSession",
+                "operationId": "getaisconsentsession",
                 "tags": [
                     "AIS"
                 ],
@@ -3093,17 +3094,64 @@
                 ],
                 "description": "Available callback types for the payment."
             },
-            "Technologies": {
+            "AllowedMethod": {
                 "type": "string",
                 "enum": [
                     "BankAccount",
                     "Card",
-                    "BPay",
-                    "SDD"
+                    "BANCOMAT",
+                    "charge"
                 ],
                 "description": "Supported payment technologies."
             },
-            "BankAccountPaymentMethodPayload": {
+            "Technology": {
+                "type": "object",
+                "properties": {
+                    "technology": {
+                        "type": "string",
+                        "enum": [
+                            "openbanking",
+                            "card",
+                            "bancomat_pay"
+                        ]
+                    },
+                },
+                "oneOf": [
+                    {
+                        "title": "Use saved payment method",
+                        "properties": {
+                            "methodId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifier of the payment method to reuse (e.g. a saved wallet or AIS account)."
+                            }
+                        },
+                        "description": "Reference a saved payment method by ID."
+                    },
+                    {
+                        "title": "Provide bank account information",
+                        "properties": {
+                            "technology": {
+                                "const": "openbanking"
+                            }
+                        },
+                        "$ref": "#/components/schemas/OpenbankingTechnology"
+                    },
+                    {
+                        "title": "BANCOMAT Pay",
+                        "properties": {
+                            "technology": {
+                                "const": "bancomat_pay"
+                            }
+                        },
+                        "$ref": "#/components/schemas/BPayTechnology"
+                    }
+                ],
+                "required": [
+                    "technology"
+                ]
+            },
+            "OpenbankingTechnology": {
                 "type": "object",
                 "title": "Bank account payload",
                 "properties": {
@@ -3117,11 +3165,13 @@
                     },
                     "bankIdentifier": {
                         "type": "string",
-                        "description": "Bank identifier (e.g. BIC or internal bank code)."
+                        "description": "Bank identifier from /banks API"
                     }
                 },
                 "required": [
-                    "iban"
+                    "instant",
+                    "iban",
+                    "bankIdentifier"
                 ],
                 "additionalProperties": false
             },
@@ -3132,7 +3182,7 @@
                 "properties": {},
                 "additionalProperties": false
             },
-            "BPayPaymentMethodPayload": {
+            "BPayTechnology": {
                 "type": "object",
                 "title": "BPay payload",
                 "description": "BPay payments do not require additional payload fields.",
@@ -3143,7 +3193,10 @@
                         "pattern": "^\\+?[1-9]\\d{1,14}$"
                     }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "required": [
+                    "buyerPhoneNumber"
+                ]
             },
             "SDDPaymentMethodPayload": {
                 "type": "object",
