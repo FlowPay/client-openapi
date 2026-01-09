@@ -451,7 +451,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Charge"
+                                    "$ref": "#/components/schemas/PaymentRequest"
                                 }
                             }
                         }
