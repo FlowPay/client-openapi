@@ -418,7 +418,7 @@
                                             {
                                                 "title": "Bollo auto",
                                                 "properties": {
-                                                    "vehicleType": {
+                                                    "pagopaVehicleType": {
                                                         "type": "string",
                                                         "enum": [
                                                             "car",
@@ -427,14 +427,14 @@
                                                         ],
                                                         "description": "Vehicle type"
                                                     },
-                                                    "plate": {
+                                                    "pagopaPlate": {
                                                         "type": "string",
                                                         "description": "plate"
                                                     }
                                                 },
                                                 "required": [
-                                                    "plate",
-                                                    "VehicleType",
+                                                    "pagopaPlate",
+                                                    "pagopaVehicleType",
                                                     "email"
                                                 ]
                                             }
@@ -1103,7 +1103,7 @@
                                     {
                                         "title": "Bollo auto",
                                         "properties": {
-                                            "vehicleType": {
+                                            "pagopaVehicleType": {
                                                 "type": "string",
                                                 "enum": [
                                                     "car",
@@ -1112,14 +1112,14 @@
                                                 ],
                                                 "description": "Vehicle type"
                                             },
-                                            "plate": {
+                                            "pagopaPlate": {
                                                 "type": "string",
                                                 "description": "plate"
                                             }
                                         },
                                         "required": [
-                                            "plate",
-                                            "VehicleType",
+                                            "pagopaPlate",
+                                            "pagopaVehicleType",
                                             "email"
                                         ]
                                     }
@@ -3164,7 +3164,7 @@
                         "type": "boolean",
                         "description": "If true, requests an instant transfer when available."
                     },
-                    "bankIdentifier": {
+                    "bank": {
                         "type": "string",
                         "description": "Bank identifier from /banks API"
                     }
@@ -3172,7 +3172,7 @@
                 "required": [
                     "instant",
                     "iban",
-                    "bankIdentifier"
+                    "bank"
                 ],
                 "additionalProperties": false
             },
