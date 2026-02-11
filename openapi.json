@@ -347,6 +347,11 @@
                                                 "type": "string",
                                                 "format": "email",
                                                 "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
+                                            },
+                                            "callbackUrl": {
+                                                "type": "string",
+                                                "format": "uri",
+                                                "description": "Single callback URL for the charge."
                                             }
                                         },
                                         "oneOf": [
@@ -364,6 +369,11 @@
                                                         "oneOf": [
                                                             {
                                                                 "$ref": "#/components/schemas/PhoneNumber"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "format": "uuid",
+                                                                "description": "UUID of the payee customer."
                                                             },
                                                             {
                                                                 "type": "object",
@@ -384,10 +394,87 @@
                                                             }
                                                         ]
                                                     },
-                                                    "lockedUntil": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer."
+                                                    "additionalPayees": {
+                                                        "type": "array",
+                                                        "description": "Additional beneficiaries for split/bulk charges.",
+                                                        "items": {
+                                                            "oneOf": [
+                                                                {
+                                                                    "type": "object",
+                                                                    "title": "Payment to mobile number",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "format": "decimal",
+                                                                            "minimum": 0.01
+                                                                        },
+                                                                        "phoneNumber": {
+                                                                            "$ref": "#/components/schemas/PhoneNumber"
+                                                                        },
+                                                                        "remittanceInformation": {
+                                                                            "type": "string",
+                                                                            "minLength": 5,
+                                                                            "maxLength": 100
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "phoneNumber",
+                                                                        "amount"
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "type": "object",
+                                                                    "title": "Payment to IBAN",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "format": "decimal",
+                                                                            "minimum": 0.01
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "iban": {
+                                                                            "$ref": "#/components/schemas/IBAN"
+                                                                        },
+                                                                        "remittanceInformation": {
+                                                                            "type": "string",
+                                                                            "minLength": 5,
+                                                                            "maxLength": 100
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "name",
+                                                                        "iban",
+                                                                        "amount"
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "type": "object",
+                                                                    "title": "Payment to customer",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "format": "decimal",
+                                                                            "minimum": 0.01
+                                                                        },
+                                                                        "customerId": {
+                                                                            "type": "string",
+                                                                            "format": "uuid"
+                                                                        },
+                                                                        "remittanceInformation": {
+                                                                            "type": "string",
+                                                                            "minLength": 5,
+                                                                            "maxLength": 100
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "customerId",
+                                                                        "amount"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
                                                     }
                                                 },
                                                 "required": []
@@ -811,7 +898,7 @@
                                             "debtor",
                                             "payee",
                                             "payer",
-                                            "tenant",
+                                            "app",
                                             "anonymous"
                                         ],
                                         "description": {
@@ -875,7 +962,7 @@
                                     },
                                     "paymentMethod": {
                                         "type": "object",
-                                        "description": "Payment method selection for the request.`methodId` and `payload` are mutually exclusive, if neither is provided the payer will choose the payment method at checkout.",
+                                        "description": "Payment method selection for the request. `tokenId` is optional and may be provided together with `technology` and payload fields when available.",
                                         "$ref": "#/components/schemas/Technology"
                                     },
                                     "email": {
@@ -910,6 +997,11 @@
                                                 "oneOf": [
                                                     {
                                                         "$ref": "#/components/schemas/PhoneNumber"
+                                                    },
+                                                    {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "UUID of the payee customer."
                                                     },
                                                     {
                                                         "type": "object",
@@ -1007,7 +1099,8 @@
                                                                         },
                                                                         "required": [
                                                                             "name",
-                                                                            "iban"
+                                                                            "iban",
+                                                                            "amount"
                                                                         ]
                                                                     },
                                                                     {
@@ -1034,7 +1127,8 @@
                                                                             }
                                                                         },
                                                                         "required": [
-                                                                            "customerId"
+                                                                            "customerId",
+                                                                            "amount"
                                                                         ]
                                                                     }
                                                                 ]
@@ -1049,11 +1143,6 @@
                                                             "type": "boolean",
                                                             "default": false,
                                                             "description": "Indicates whether to save the payment method for future use."
-                                                        },
-                                                        "executionDate": {
-                                                            "type": "string",
-                                                            "format": "date-time",
-                                                            "description": "Payment execution date and time in ISO 8601 format. If not provided, the payment is executed immediately."
                                                         }
                                                     }
                                                 },
@@ -1335,6 +1424,7 @@
                     {
                         "name": "requestId",
                         "in": "query",
+                        "required": true,
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -1347,11 +1437,15 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "succeeded",
-                                "pending",
-                                "expired",
-                                "failed",
-                                "cancelled"
+                                "created",
+                                "inProgress",
+                                "authorized",
+                                "rejected",
+                                "onHold",
+                                "locked",
+                                "forwarded",
+                                "refunded",
+                                "deleted"
                             ]
                         },
                         "description": "Payment session status to filter by."
@@ -3098,9 +3192,9 @@
             "AllowedMethod": {
                 "type": "string",
                 "enum": [
-                    "BankAccount",
-                    "Card",
-                    "BANCOMAT",
+                    "bankAccount",
+                    "card",
+                    "bancomat",
                     "charge"
                 ],
                 "description": "Supported payment technologies."
@@ -3112,40 +3206,107 @@
                         "type": "string",
                         "enum": [
                             "openbanking",
+                            "wallet",
+                            "sdd",
+                            "externalCollection",
                             "card",
-                            "bancomat_pay"
+                            "bancomatPay",
+                            "bancomatPayDirect",
+                            "pagoBancomat",
+                            "samsungPay",
+                            "escrow"
                         ]
+                    },
+                    "tokenId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Optional token identifier linked to the selected technology."
+                    },
+                    "payload": {
+                        "type": "object",
+                        "description": "Technology-specific payload."
                     }
                 },
                 "oneOf": [
                     {
-                        "title": "Use saved payment method",
-                        "properties": {
-                            "methodId": {
-                                "type": "string",
-                                "format": "uuid",
-                                "description": "Identifier of the payment method to reuse (e.g. a saved wallet or AIS account)."
-                            }
-                        },
-                        "description": "Reference a saved payment method by ID."
-                    },
-                    {
-                        "title": "Provide bank account information",
+                        "title": "Openbanking",
                         "properties": {
                             "technology": {
                                 "const": "openbanking"
                             }
-                        },
-                        "$ref": "#/components/schemas/OpenbankingTechnology"
+                        }
                     },
                     {
-                        "title": "BANCOMAT Pay",
+                        "title": "Wallet",
                         "properties": {
                             "technology": {
-                                "const": "bancomat_pay"
+                                "const": "wallet"
                             }
-                        },
-                        "$ref": "#/components/schemas/BPayTechnology"
+                        }
+                    },
+                    {
+                        "title": "SDD",
+                        "properties": {
+                            "technology": {
+                                "const": "sdd"
+                            }
+                        }
+                    },
+                    {
+                        "title": "External collection",
+                        "properties": {
+                            "technology": {
+                                "const": "externalCollection"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Card",
+                        "properties": {
+                            "technology": {
+                                "const": "card"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Bancomat pay",
+                        "properties": {
+                            "technology": {
+                                "const": "bancomatPay"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Bancomat pay direct",
+                        "properties": {
+                            "technology": {
+                                "const": "bancomatPayDirect"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Pago bancomat",
+                        "properties": {
+                            "technology": {
+                                "const": "pagoBancomat"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Samsung pay",
+                        "properties": {
+                            "technology": {
+                                "const": "samsungPay"
+                            }
+                        }
+                    },
+                    {
+                        "title": "Escrow",
+                        "properties": {
+                            "technology": {
+                                "const": "escrow"
+                            }
+                        }
                     }
                 ],
                 "required": [
@@ -3170,8 +3331,6 @@
                     }
                 },
                 "required": [
-                    "instant",
-                    "iban",
                     "bank"
                 ],
                 "additionalProperties": false
@@ -3399,10 +3558,15 @@
             "PaymentRequest": {
                 "type": "object",
                 "properties": {
-                    "requestId": {
+                    "paymentRequestId": {
                         "type": "string",
                         "format": "uuid",
                         "description": "Unique identifier of the payment request."
+                    },
+                    "appId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID of the client application that created the payment request."
                     },
                     "link": {
                         "type": "string",
@@ -3434,14 +3598,69 @@
                         "format": "uuid",
                         "description": "ID of the actual debtor. If not provided, the same `payerId` is used."
                     },
+                    "payeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID of the effective payee account for the main request."
+                    },
+                    "additionalPayees": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the additional payee."
+                                },
+                                "iban": {
+                                    "$ref": "#/components/schemas/IBAN",
+                                    "description": "IBAN of the additional payee."
+                                },
+                                "amount": {
+                                    "type": "number",
+                                    "format": "decimal",
+                                    "minimum": 0.01,
+                                    "description": "Amount assigned to the additional payee."
+                                },
+                                "remittance": {
+                                    "type": "string",
+                                    "description": "Remittance information used for the additional payee transfer."
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "iban",
+                                "amount",
+                                "remittance"
+                            ]
+                        },
+                        "description": "Additional outbound transfers generated for split/bulk requests."
+                    },
                     "attachments": {
                         "type": "array",
                         "items": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "UUID of files attached and visible to the payer at checkout."
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Attachment filename."
+                                },
+                                "url": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "description": "Public URL for the attachment."
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Attachment description."
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "url"
+                            ]
                         },
-                        "description": "List of UUIDs of files attached and visible to the payer."
+                        "description": "List of attachments visible to the payer."
                     },
                     "privateAttachments": {
                         "type": "array",
@@ -3481,8 +3700,8 @@
                         "description": "If `true`, the chosen payment method is saved and tokenised for future use."
                     },
                     "paymentMethod": {
-                        "description": "`PaymentMethod` object associated with this payment (if `savePaymentMethod` is `true`, this contains the tokenised method data).",
-                        "$ref": "#/components/schemas/PaymentMethod"
+                        "description": "Selected or tokenized payment method representation.",
+                        "$ref": "#/components/schemas/Technology"
                     },
                     "redirectUrl": {
                         "type": "string",
@@ -3494,10 +3713,10 @@
                         "format": "uri",
                         "description": "URL for server-to-server notifications about the payment status."
                     },
-                    "customerId": {
+                    "dueDate": {
                         "type": "string",
-                        "format": "uuid",
-                        "description": "UUID of the customer associated with this payment request."
+                        "format": "date-time",
+                        "description": "Payment due date."
                     },
                     "refundId": {
                         "type": "string",
@@ -3508,13 +3727,38 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Indicates whether the customer was registered for the first time through this payment request."
+                    },
+                    "allowedMethods": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AllowedMethod"
+                        },
+                        "description": "Allowed method groups for this payment request."
+                    },
+                    "mode": {
+                        "type": "string",
+                        "description": "Request presentation mode."
+                    },
+                    "paymentSessions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentSessions"
+                        },
+                        "description": "Sessions created for this payment request."
                     }
                 },
                 "required": [
-                    "requestId",
+                    "paymentRequestId",
+                    "appId",
+                    "payeeId",
+                    "allowRemittanceChange",
+                    "savePaymentMethod",
                     "createdAt",
-                    "amount",
-                    "customerId"
+                    "dueDate",
+                    "link",
+                    "newCustomer",
+                    "allowedMethods",
+                    "paymentSessions"
                 ]
             },
             "PaymentRequestStatus": {
@@ -3536,37 +3780,81 @@
                 "type": "object",
                 "description": "Contains the list of payment attempts and their outcomes",
                 "properties": {
-                    "sessionId": {
+                    "id": {
                         "type": "string",
                         "format": "uuid",
                         "description": "Unique identifier of the payment session."
                     },
-                    "startedAt": {
+                    "amount": {
+                        "type": "number",
+                        "format": "decimal",
+                        "minimum": 0.01,
+                        "description": "Session amount."
+                    },
+                    "intentId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Payment request identifier linked to this session."
+                    },
+                    "createdAt": {
                         "type": "string",
                         "format": "date-time",
                         "description": "Date and time when the session was created, in ISO 8601 format."
                     },
-                    "endedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Date and time when the session expired, in ISO 8601 format."
+                    "statuses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentStatus"
+                        },
+                        "description": "Chronological status history for this session."
                     },
                     "status": {
                         "type": "string",
                         "enum": [
-                            "succeeded",
-                            "pending",
-                            "expired",
-                            "failed",
-                            "cancelled"
+                            "created",
+                            "inProgress",
+                            "authorized",
+                            "rejected",
+                            "onHold",
+                            "locked",
+                            "forwarded",
+                            "refunded",
+                            "deleted"
                         ],
                         "description": "Status of the payment session."
+                    },
+                    "method": {
+                        "type": "object",
+                        "description": "Payment method technology payload used by the session.",
+                        "additionalProperties": true
                     }
                 },
                 "required": [
-                    "sessionId",
-                    "startedAt",
-                    "endedAt",
+                    "id",
+                    "amount",
+                    "status",
+                    "createdAt",
+                    "statuses",
+                    "method"
+                ]
+            },
+            "PaymentStatus": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentRequestStatus"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp of the status event."
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Optional message associated with the status."
+                    }
+                },
+                "required": [
                     "status"
                 ]
             },
