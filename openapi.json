@@ -811,7 +811,7 @@
                                             "debtor",
                                             "payee",
                                             "payer",
-                                            "tenant",
+                                            "app",
                                             "anonymous"
                                         ],
                                         "description": {
@@ -906,7 +906,7 @@
                                                 "description": "Payment amount as a decimal (e.g. 10.50)."
                                             },
                                             "payee": {
-                                                "description": "Information about the payment payee. If not specified, the partner associated with the client and the IBAN configured for the client are used by default.",
+                                                "description": "Information about the payment payee. It can be a phone number, an IBAN object, or a customer UUID. If not specified, the partner associated with the client and the IBAN configured for the client are used by default.",
                                                 "oneOf": [
                                                     {
                                                         "$ref": "#/components/schemas/PhoneNumber"
@@ -927,6 +927,12 @@
                                                             "name",
                                                             "iban"
                                                         ]
+                                                    },
+                                                    {
+                                                        "title": "UUID of the payee customer.",
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "UUID of the payee customer."
                                                     }
                                                 ]
                                             },
@@ -3098,9 +3104,9 @@
             "AllowedMethod": {
                 "type": "string",
                 "enum": [
-                    "BankAccount",
-                    "Card",
-                    "BANCOMAT",
+                    "bankAccount",
+                    "card",
+                    "bancomat",
                     "charge"
                 ],
                 "description": "Supported payment technologies."
@@ -3399,15 +3405,73 @@
             "PaymentRequest": {
                 "type": "object",
                 "properties": {
-                    "requestId": {
+                    "paymentRequestId": {
                         "type": "string",
                         "format": "uuid",
                         "description": "Unique identifier of the payment request."
                     },
+                    "appId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the app associated with the payment request."
+                    },
+                    "debtorId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "ID of the actual debtor. If not provided, the same `payerId` is used."
+                    },
+                    "payerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique ID of the entity that initiated the payment request (may match `debtorId` if not otherwise specified)."
+                    },
+                    "payeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier of the final payee receiving funds."
+                    },
+                    "additionalPayees": {
+                        "type": "array",
+                        "description": "List of additional beneficiaries to whom part of the payment amount can be allocated.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the additional payee."
+                                },
+                                "iban": {
+                                    "$ref": "#/components/schemas/IBAN",
+                                    "description": "IBAN of the additional payee account."
+                                },
+                                "amount": {
+                                    "type": "number",
+                                    "format": "decimal",
+                                    "minimum": 0.01,
+                                    "description": "Allocated payment amount for this payee."
+                                },
+                                "remittance": {
+                                    "type": "string",
+                                    "description": "Remittance information specific to this additional payee."
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "iban",
+                                "amount",
+                                "remittance"
+                            ]
+                        }
+                    },
+                    "allowRemittanceChange": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If `true`, the payer can change the remittance information during payment."
+                    },
                     "link": {
                         "type": "string",
                         "format": "uri",
-                        "description": "Link to the payment checkout"
+                        "description": "Link to the payment checkout."
                     },
                     "createdAt": {
                         "type": "string",
@@ -3424,33 +3488,40 @@
                         "type": "string",
                         "description": "Currency used (e.g. 'EUR')."
                     },
-                    "payerId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Unique ID of the entity that initiated the payment request (may match debtorId if not otherwise specified)."
-                    },
-                    "debtorId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "ID of the actual debtor. If not provided, the same `payerId` is used."
-                    },
                     "attachments": {
                         "type": "array",
+                        "description": "List of files attached to the payment request and visible at checkout.",
                         "items": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "UUID of files attached and visible to the payer at checkout."
-                        },
-                        "description": "List of UUIDs of files attached and visible to the payer."
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Attachment filename."
+                                },
+                                "url": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "description": "Download URL of the attachment."
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Optional attachment description."
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "url"
+                            ]
+                        }
                     },
                     "privateAttachments": {
                         "type": "array",
+                        "description": "List of UUIDs of files reserved for compliance checks (not shown to the payer).",
                         "items": {
                             "type": "string",
                             "format": "uuid",
                             "description": "UUID of private attached files (visible only to FlowPay for internal checks)."
-                        },
-                        "description": "List of UUIDs of files reserved for compliance checks (not shown to the payer)."
+                        }
                     },
                     "title": {
                         "type": "string",
@@ -3470,19 +3541,53 @@
                         "maxLength": 100,
                         "description": "Remittance information (e.g. reference), visible to both payer and payee."
                     },
-                    "allowRemittanceChange": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "If `true`, the payer can change the remittance information during payment."
-                    },
                     "savePaymentMethod": {
                         "type": "boolean",
                         "default": false,
                         "description": "If `true`, the chosen payment method is saved and tokenised for future use."
                     },
+                    "allowedMethods": {
+                        "type": "array",
+                        "description": "Allowed payment technologies for this payment request.",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "bankAccount",
+                                "card",
+                                "bancomat",
+                                "charge"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
                     "paymentMethod": {
-                        "description": "`PaymentMethod` object associated with this payment (if `savePaymentMethod` is `true`, this contains the tokenised method data).",
-                        "$ref": "#/components/schemas/PaymentMethod"
+                        "type": "object",
+                        "description": "Payment method selected for this payment request.",
+                        "properties": {
+                            "technology": {
+                                "type": "string",
+                                "enum": [
+                                    "bankAccount",
+                                    "card",
+                                    "bancomat",
+                                    "charge"
+                                ],
+                                "description": "Selected payment technology."
+                            },
+                            "tokenId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Token identifier of the selected payment method, when available."
+                            },
+                            "payload": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "description": "Provider-specific payload associated with the chosen payment method."
+                            }
+                        },
+                        "required": [
+                            "technology"
+                        ]
                     },
                     "redirectUrl": {
                         "type": "string",
@@ -3494,27 +3599,61 @@
                         "format": "uri",
                         "description": "URL for server-to-server notifications about the payment status."
                     },
-                    "customerId": {
+                    "email": {
                         "type": "string",
-                        "format": "uuid",
-                        "description": "UUID of the customer associated with this payment request."
+                        "format": "email",
+                        "description": "Email address associated with the payment request."
                     },
                     "refundId": {
                         "type": "string",
                         "format": "uuid",
                         "description": "UUID of the refund associated with this request, if present."
                     },
+                    "customization": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID of customization settings applied to this payment request."
+                    },
+                    "dueDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 timestamp after which the payment request expires."
+                    },
                     "newCustomer": {
                         "type": "boolean",
                         "default": false,
                         "description": "Indicates whether the customer was registered for the first time through this payment request."
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "checkout",
+                                "paylink"
+                            ],
+                        "default": "checkout",
+                        "description": "Payment request presentation mode."
+                    },
+                    "paymentSessions": {
+                        "type": "array",
+                        "description": "List of payment sessions generated for this payment request.",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
                     }
                 },
                 "required": [
-                    "requestId",
+                    "paymentRequestId",
+                    "appId",
+                    "payeeId",
+                    "allowRemittanceChange",
                     "createdAt",
-                    "amount",
-                    "customerId"
+                    "dueDate",
+                    "link",
+                    "savePaymentMethod",
+                    "newCustomer",
+                    "allowedMethods",
+                    "paymentSessions"
                 ]
             },
             "PaymentRequestStatus": {
