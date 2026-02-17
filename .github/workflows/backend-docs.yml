@@ -76,10 +76,22 @@ jobs:
         # with:
         #   submodules: true
 
-      - name: Checkout existing Pages (gh-pages)
+      - name: Check gh-pages branch availability
         if: ${{ inputs.publish == 'true' && (inputs.deploy_pages || 'true') == 'true' }}
+        id: ghpages
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" gh-pages >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=gh-pages branch::No gh-pages branch found. Building from empty site state."
+          fi
+
+      - name: Checkout existing Pages (gh-pages)
+        if: ${{ inputs.publish == 'true' && (inputs.deploy_pages || 'true') == 'true' && steps.ghpages.outputs.exists == 'true' }}
         uses: actions/checkout@v4
-        continue-on-error: true
         with:
           ref: gh-pages
           path: .gh-pages-prev
