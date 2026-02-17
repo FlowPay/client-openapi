@@ -175,6 +175,21 @@ jobs:
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
 
+      - name: Report GitHub Pages URLs
+        if: ${{ inputs.publish == 'true' && (inputs.deploy_pages || 'true') == 'true' && steps.deployment.outputs.page_url != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="${{ steps.deployment.outputs.page_url }}"
+          BRANCH_URL="${BASE_URL%/}/${BRANCH_DIR}/"
+          echo "::notice title=Pages base URL::${BASE_URL}"
+          echo "::notice title=Pages branch URL::${BRANCH_URL}"
+          {
+            echo "### GitHub Pages"
+            echo "- Base URL: ${BASE_URL}"
+            echo "- Branch URL (${BRANCH_RAW}): ${BRANCH_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Skipping publish (publish='${{ inputs.publish }}', deploy_pages='${{ inputs.deploy_pages }}')
         if: ${{ inputs.publish != 'true' || (inputs.deploy_pages || 'true') != 'true' }}
         run: echo "Skipping artifact upload and deploy (publish=${{ inputs.publish }}, deploy_pages=${{ inputs.deploy_pages }})"
