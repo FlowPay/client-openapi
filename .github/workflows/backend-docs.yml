@@ -165,12 +165,15 @@ jobs:
         if: ${{ inputs.publish == 'true' && (inputs.deploy_pages || 'true') == 'true' }}
         uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ inputs.output_dir || 'site' }}
 
       - name: Deploy to GitHub Pages
         if: ${{ inputs.publish == 'true' && (inputs.deploy_pages || 'true') == 'true' }}
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Skipping publish (publish='${{ inputs.publish }}', deploy_pages='${{ inputs.deploy_pages }}')
         if: ${{ inputs.publish != 'true' || (inputs.deploy_pages || 'true') != 'true' }}
