@@ -48,13 +48,6 @@ on:
         required: false
         default: "true"
         type: string
-    secrets:
-      SSH_PRIVATE_KEY:
-        description: Optional private SSH key for private Git dependencies (submodules, refs)
-        required: false
-      ssh_known_hosts:
-        description: Optional known_hosts entries (defaults to github.com via ssh-keyscan)
-        required: false
 
 permissions:
   contents: read
@@ -82,26 +75,6 @@ jobs:
         # If you use submodules to pull docs from private repos, set submodules: true in the caller
         # with:
         #   submodules: true
-
-      # SSH for private submodules or git-based $ref sources
-      - name: Setup ssh-agent with provided key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Configure known_hosts (github.com)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          touch ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-          if [[ -n "${{ secrets.ssh_known_hosts }}" ]]; then
-            printf "%s\n" "${{ secrets.ssh_known_hosts }}" >> ~/.ssh/known_hosts
-          else
-            ssh-keyscan -H -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
-          fi
 
       - name: Checkout existing Pages (gh-pages)
         if: ${{ inputs.publish == 'true' && (inputs.deploy_pages || 'true') == 'true' }}
