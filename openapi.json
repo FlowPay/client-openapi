@@ -961,8 +961,7 @@
                                         "description": "List of allowed payment technologies for this payment request. If not specified, all available technologies are allowed."
                                     },
                                     "paymentMethod": {
-                                        "type": "object",
-                                        "description": "Payment method selection for the request. `tokenId` is optional and may be provided together with `technology` and payload fields when available.",
+                                        "description": "Payment method selection for the request.",
                                         "$ref": "#/components/schemas/Technology"
                                     },
                                     "email": {
@@ -3206,107 +3205,88 @@
                         "type": "string",
                         "enum": [
                             "openbanking",
-                            "wallet",
-                            "sdd",
-                            "externalCollection",
                             "card",
-                            "bancomatPay",
-                            "bancomatPayDirect",
-                            "pagoBancomat",
-                            "samsungPay",
-                            "escrow"
+                            "bancomat_pay"
                         ]
-                    },
-                    "tokenId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Optional token identifier linked to the selected technology."
-                    },
-                    "payload": {
-                        "type": "object",
-                        "description": "Technology-specific payload."
                     }
                 },
                 "oneOf": [
                     {
-                        "title": "Openbanking",
-                        "properties": {
-                            "technology": {
-                                "const": "openbanking"
+                        "title": "Bank wire transfer",
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "technology": {
+                                        "const": "openbanking"
+                                    }
+                                },
+                                "required": [
+                                    "technology"
+                                ]
+                            },
+                            {
+                                "$ref": "#/components/schemas/OpenbankingTechnology"
                             }
-                        }
-                    },
-                    {
-                        "title": "Wallet",
-                        "properties": {
-                            "technology": {
-                                "const": "wallet"
-                            }
-                        }
-                    },
-                    {
-                        "title": "SDD",
-                        "properties": {
-                            "technology": {
-                                "const": "sdd"
-                            }
-                        }
-                    },
-                    {
-                        "title": "External collection",
-                        "properties": {
-                            "technology": {
-                                "const": "externalCollection"
-                            }
-                        }
+                        ]
                     },
                     {
                         "title": "Card",
-                        "properties": {
-                            "technology": {
-                                "const": "card"
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "technology": {
+                                        "const": "card"
+                                    }
+                                },
+                                "required": [
+                                    "technology"
+                                ]
+                            },
+                            {
+                                "$ref": "#/components/schemas/CardPaymentMethodPayload"
                             }
-                        }
+                        ]
                     },
                     {
-                        "title": "Bancomat pay",
-                        "properties": {
-                            "technology": {
-                                "const": "bancomatPay"
+                        "title": "BANCOMAT Pay",
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "technology": {
+                                        "const": "bancomat_pay"
+                                    }
+                                },
+                                "required": [
+                                    "technology"
+                                ]
+                            },
+                            {
+                                "$ref": "#/components/schemas/BPayTechnology"
                             }
-                        }
+                        ]
                     },
                     {
-                        "title": "Bancomat pay direct",
-                        "properties": {
-                            "technology": {
-                                "const": "bancomatPayDirect"
+                        "title": "Use saved payment method",
+                        "description": "Reference a saved payment method by ID.",
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "methodId": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifier of the payment method to reuse (e.g. a saved wallet or AIS account)."
+                                    }
+                                },
+                                "required": [
+                                    "technology",
+                                    "methodId"
+                                ]
                             }
-                        }
-                    },
-                    {
-                        "title": "Pago bancomat",
-                        "properties": {
-                            "technology": {
-                                "const": "pagoBancomat"
-                            }
-                        }
-                    },
-                    {
-                        "title": "Samsung pay",
-                        "properties": {
-                            "technology": {
-                                "const": "samsungPay"
-                            }
-                        }
-                    },
-                    {
-                        "title": "Escrow",
-                        "properties": {
-                            "technology": {
-                                "const": "escrow"
-                            }
-                        }
+                        ]
                     }
                 ],
                 "required": [
@@ -3323,6 +3303,7 @@
                     },
                     "instant": {
                         "type": "boolean",
+                        "default": true,
                         "description": "If true, requests an instant transfer when available."
                     },
                     "bank": {
@@ -3330,9 +3311,7 @@
                         "description": "Bank identifier from /banks API"
                     }
                 },
-                "required": [
-                    "bank"
-                ],
+                "required": [],
                 "additionalProperties": false
             },
             "CardPaymentMethodPayload": {
@@ -3354,9 +3333,7 @@
                     }
                 },
                 "additionalProperties": false,
-                "required": [
-                    "buyerPhoneNumber"
-                ]
+                "required": []
             },
             "SDDPaymentMethodPayload": {
                 "type": "object",
