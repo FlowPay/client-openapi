@@ -23,7 +23,7 @@ State evolution: most flows are linear. From created the first user attempt move
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
-  "payer": { "phone": "+39 333 1234567" },
+  "payer": "+39 333 1234567",
   "title": "Invoice #1001",
   "description": "Settlement for invoice 1001",
   "remittanceInformation": "INV-1001",
@@ -43,7 +43,7 @@ State evolution: identical to fixed-amount, with the value chosen during checkou
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
-  "payer": { "phone": "+39 333 1234567" },
+  "payer": "+39 333 1234567",
   "title": "Donate to ACME Foundation",
   "description": "Thank you for your support",
   "remittanceInformation": "DON-2024-09",
@@ -64,7 +64,7 @@ State evolution: each successful session independently reaches authorized and th
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
-  "payer": { "phone": "+39 333 1234567" },
+  "payer": "+39 333 1234567",
   "title": "Installments for Order #A2001",
   "description": "Pay in multiple steps",
   "remittanceInformation": "A2001",
@@ -88,7 +88,7 @@ State evolution: after inProgress and authorized, the request remains pending ex
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 EXEC_AT="2025-01-10T10:00:00Z" # choose your date/time (UTC)
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
-  "payer": { "phone": "+39 333 1234567" },
+  "payer": "+39 333 1234567",
   "title": "Scheduled payment",
   "description": "Executes later",
   "remittanceInformation": "SCH-10JAN",
@@ -147,7 +147,7 @@ Provide the PagoPA‑specific fields (`pagopaEcFiscalCode`, `pagopaPaymentNotice
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"; API_KEY="sk_test_xxx"
 curl -sS -X POST "$BASE_URL/payment-requests" -H "Content-Type: application/json" -H "X-API-Key: $API_KEY" -d '{
-  "payer": { "phone": "+39 333 1234567" },
+  "payer": "+39 333 1234567",
   "title": "PagoPA payment",
   "description": "PagoPA notice 1234567890",
   "remittanceInformation": "PPA-123",
@@ -203,7 +203,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d '{
-    "payer": { "phone": "+39 333 1234567" },
+    "payer": "+39 333 1234567",
     "title": "Order #A1001",
     "description": "Payment for order A1001",
     "remittanceInformation": "A1001",
@@ -251,7 +251,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d '{
-    "payer": { "phone": "+39 333 1234567" },
+    "payer": "+39 333 1234567",
     "title": "Order #SP-1001",
     "description": "Split payment",
     "remittanceInformation": "SP-1001",
@@ -325,7 +325,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d '{
-    "payer": { "phone": "+39 333 1234567" },
+    "payer": "+39 333 1234567",
     "title": "Bulk order #B-9001",
     "description": "Bulk payout to A,B,C",
     "remittanceInformation": "B-9001",
@@ -366,7 +366,7 @@ curl -sS -X POST "$BASE_URL/payment-requests" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d '{
-    "payer": { "phone": "+39 333 1234567" },
+    "payer": "+39 333 1234567",
     "title": "Order #A1002",
     "description": "Payment with attachment",
     "remittanceInformation": "A1002",
