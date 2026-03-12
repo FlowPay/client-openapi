@@ -4292,6 +4292,7 @@
             },
             "AisBalance": {
                 "type": "object",
+                "description": "AIS balance payload. Fixed metadata fields are always present; numeric balance fields depend on what the bank exposes and may vary by provider.",
                 "properties": {
                     "iban": {
                         "type": "string"
@@ -4304,12 +4305,32 @@
                         "type": "string",
                         "description": "ISO 4217 currency code.",
                         "example": "EUR"
+                    },
+                    "closingBooked": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "interimAvailable": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "expected": {
+                        "type": "number",
+                        "format": "double"
                     }
                 },
                 "additionalProperties": {
                     "type": "number",
                     "format": "double",
                     "description": "Balance amount keyed by normalized bank balance type (for example closingBooked or interimAvailable)."
+                },
+                "example": {
+                    "iban": "IT60X0542811101000000123456",
+                    "date": "2026-03-12T14:15:22Z",
+                    "currency": "EUR",
+                    "closingBooked": 5174.72,
+                    "interimAvailable": 5200,
+                    "expected": -262.01
                 },
                 "required": [
                     "date",
