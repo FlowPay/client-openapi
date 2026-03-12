@@ -2592,7 +2592,7 @@
                         "name": "accountId",
                         "in": "query",
                         "required": false,
-                        "description": "Filter by account identifier when the consent covers multiple accounts.",
+                        "description": "Legacy account filter. Pass the IBAN of the account to scope the transaction list.",
                         "schema": {
                             "type": "string"
                         }
@@ -4210,10 +4210,6 @@
             "AisAccount": {
                 "type": "object",
                 "properties": {
-                    "accountId": {
-                        "type": "string",
-                        "description": "Identifier of the account as provided by the ASPSP."
-                    },
                     "iban": {
                         "type": "string",
                         "description": "IBAN when available."
@@ -4229,7 +4225,6 @@
                     }
                 },
                 "required": [
-                    "accountId",
                     "currency"
                 ]
             },
@@ -4262,9 +4257,6 @@
             "AisBalance": {
                 "type": "object",
                 "properties": {
-                    "accountId": {
-                        "type": "string"
-                    },
                     "iban": {
                         "type": "string"
                     },
@@ -4284,7 +4276,6 @@
                     "description": "Balance amount keyed by normalized bank balance type (for example closingBooked or interimAvailable)."
                 },
                 "required": [
-                    "accountId",
                     "date",
                     "currency"
                 ]
@@ -4349,7 +4340,7 @@
                         "type": "string",
                         "description": "Stable identifier of the transaction."
                     },
-                    "accountId": {
+                    "iban": {
                         "type": "string"
                     },
                     "bookingDate": {
@@ -4380,7 +4371,6 @@
                 },
                 "required": [
                     "transactionId",
-                    "accountId",
                     "bookingDate",
                     "amount",
                     "currency"
