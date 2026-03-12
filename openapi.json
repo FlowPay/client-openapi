@@ -4222,6 +4222,42 @@
                         "type": "string",
                         "description": "ISO 4217 currency code.",
                         "example": "EUR"
+                    },
+                    "closingBooked": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "interimBooked": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "openingBooked": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "interimAvailable": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "forwardAvailable": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "creditLimit": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "expected": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "available": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "booked": {
+                        "type": "number",
+                        "format": "double"
                     }
                 },
                 "required": [
