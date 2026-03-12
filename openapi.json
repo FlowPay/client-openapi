@@ -4261,6 +4261,7 @@
                     }
                 },
                 "required": [
+                    "iban",
                     "currency"
                 ]
             },
@@ -4333,6 +4334,7 @@
                     "expected": -262.01
                 },
                 "required": [
+                    "iban",
                     "date",
                     "currency"
                 ]
@@ -4428,6 +4430,7 @@
                 },
                 "required": [
                     "transactionId",
+                    "iban",
                     "bookingDate",
                     "amount",
                     "currency"
