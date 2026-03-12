@@ -2531,7 +2531,7 @@
             ],
             "get": {
                 "summary": "List account balances",
-                "description": "Returns the latest balances for the accounts granted by the consent. For one-off consents balances are reported as of authorization time; for recurring consents they reflect the retrieval time.",
+                "description": "Returns the latest balances for the accounts granted by the consent. Each item contains fixed metadata plus dynamic numeric fields keyed by normalized bank balance type. For one-off consents balances are reported as of authorization time; for recurring consents they reflect the retrieval time.",
                 "operationId": "listAisConsentBalances",
                 "tags": [
                     "AIS"
@@ -4265,21 +4265,12 @@
                     "accountId": {
                         "type": "string"
                     },
-                    "asOf": {
+                    "iban": {
+                        "type": "string"
+                    },
+                    "date": {
                         "type": "string",
                         "format": "date-time"
-                    },
-                    "current": {
-                        "type": "number",
-                        "format": "double"
-                    },
-                    "available": {
-                        "type": "number",
-                        "format": "double"
-                    },
-                    "creditLimit": {
-                        "type": "number",
-                        "format": "double"
                     },
                     "currency": {
                         "type": "string",
@@ -4287,9 +4278,14 @@
                         "example": "EUR"
                     }
                 },
+                "additionalProperties": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Balance amount keyed by normalized bank balance type (for example closingBooked or interimAvailable)."
+                },
                 "required": [
                     "accountId",
-                    "asOf",
+                    "date",
                     "currency"
                 ]
             },
