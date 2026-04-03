@@ -2531,7 +2531,7 @@
             ],
             "get": {
                 "summary": "List account balances",
-                "description": "Returns the latest balances for the accounts granted by the consent. Each item contains fixed metadata plus dynamic numeric fields keyed by normalized bank balance type. For one-off consents balances are reported as of authorization time; for recurring consents they reflect the retrieval time.",
+                "description": "Returns the latest balances for the accounts granted by the consent. Each item contains fixed metadata plus dynamic numeric fields keyed by normalized bank balance type.\n\nFlowPay returns all and only the balance types received from the bank. Not every bank provides every balance type, so the set of balance keys may vary across providers and even across accounts of the same provider.\n\nBalance keys and meaning:\n- `closingBooked`: booked balance at the end of the last completed booking cycle.\n- `interimBooked`: booked balance calculated during the current booking cycle.\n- `openingBooked`: booked balance at the beginning of the reported period or booking cycle.\n- `interimAvailable`: available balance calculated during the current booking cycle.\n- `forwardAvailable`: projected available balance at a future point in time, when provided by the bank.\n- `creditLimit`: credit line or overdraft limit available on the account.\n- `expected`: expected balance including forecast or pending movements, when provided by the bank.\n- `available`: funds currently available for use according to the bank.\n- `booked`: booked balance reported by the bank when no more specific booked subtype is provided.\n\nFor one-off consents balances are reported as of authorization time; for recurring consents they reflect the retrieval time.\n\nIf useful for your integration, FlowPay is available to work with partners on an algorithm to select or prioritise the most relevant balance for each use case.",
                 "operationId": "listAisConsentBalances",
                 "tags": [
                     "AIS"
@@ -4209,6 +4209,7 @@
             },
             "AisAccount": {
                 "type": "object",
+                "description": "AIS account payload. Fixed metadata fields are always present. Balance fields are optional and are present only when returned by the bank.",
                 "properties": {
                     "iban": {
                         "type": "string",
@@ -4225,39 +4226,48 @@
                     },
                     "closingBooked": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Booked balance at the end of the last completed booking cycle."
                     },
                     "interimBooked": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Booked balance calculated during the current booking cycle."
                     },
                     "openingBooked": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Booked balance at the beginning of the reported period or booking cycle."
                     },
                     "interimAvailable": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Available balance calculated during the current booking cycle."
                     },
                     "forwardAvailable": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Projected available balance at a future point in time, when provided by the bank."
                     },
                     "creditLimit": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Credit line or overdraft limit available on the account."
                     },
                     "expected": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Expected balance including forecast or pending movements, when provided by the bank."
                     },
                     "available": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Funds currently available for use according to the bank."
                     },
                     "booked": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Booked balance reported by the bank when no more specific booked subtype is provided."
                     }
                 },
                 "required": [
@@ -4293,7 +4303,7 @@
             },
             "AisBalance": {
                 "type": "object",
-                "description": "AIS balance payload. Fixed metadata fields are always present; numeric balance fields depend on what the bank exposes and may vary by provider.",
+                "description": "AIS balance payload. Fixed metadata fields are always present; all balance fields are optional and are included only if returned by the bank.\n\nFlowPay returns all and only the balance types received from the bank. Not every bank provides every balance type, so the set of populated balance fields may vary across providers and even across accounts of the same provider.\n\nIf useful for your integration, FlowPay is available to work with partners on an algorithm to select or prioritise the most relevant balance for each use case.",
                 "properties": {
                     "iban": {
                         "type": "string"
@@ -4309,21 +4319,49 @@
                     },
                     "closingBooked": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Booked balance at the end of the last completed booking cycle."
+                    },
+                    "interimBooked": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Booked balance calculated during the current booking cycle."
+                    },
+                    "openingBooked": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Booked balance at the beginning of the reported period or booking cycle."
                     },
                     "interimAvailable": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Available balance calculated during the current booking cycle."
+                    },
+                    "forwardAvailable": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Projected available balance at a future point in time, when provided by the bank."
+                    },
+                    "creditLimit": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Credit line or overdraft limit available on the account."
                     },
                     "expected": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "description": "Expected balance including forecast or pending movements, when provided by the bank."
+                    },
+                    "available": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Funds currently available for use according to the bank."
+                    },
+                    "booked": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Booked balance reported by the bank when no more specific booked subtype is provided."
                     }
-                },
-                "additionalProperties": {
-                    "type": "number",
-                    "format": "double",
-                    "description": "Balance amount keyed by normalized bank balance type (for example closingBooked or interimAvailable)."
                 },
                 "example": {
                     "iban": "IT60X0542811101000000123456",
