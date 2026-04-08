@@ -265,8 +265,8 @@
                 }
             },
             "post": {
-                "summary": "Create a new payment request",
-                "description": "Endpoint to create a payment request between two parties, specifying payer and payee details.",
+                "summary": "Create a charge",
+                "description": "Creates a charge using a tokenized payment method. This endpoint is also used to release funds from a locked payment by charging the dedicated technical payment method of type `locked`. In that case the amount is implicit in the locked token and equals the original locked amount.",
                 "operationId": "createCharge",
                 "tags": [
                     "Charge"
@@ -277,7 +277,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Object containing debtor, payee and payment details.",
+                    "description": "Object containing charge details or, for locked flows, the release details for a dedicated technical payment method.",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -287,7 +287,37 @@
                                     "tokenId": {
                                         "type": "string",
                                         "format": "uuid",
-                                        "description": "ID of the tokenized payment method to use for the charge."
+                                        "description": "ID of the tokenized payment method to use for the charge. For locked flows, this is the dedicated technical payment method exposed once the initial collection has been reconciled."
+                                    },
+                                    "payee": {
+                                        "description": "Information about the payment payee. For locked-payment release, use this field only when the final payout destination was not already available at creation time.",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/components/schemas/PhoneNumber"
+                                            },
+                                            {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "description": "UUID of the payee customer."
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "description": "Name of the payee."
+                                                    },
+                                                    "iban": {
+                                                        "description": "IBAN of the payee's account.",
+                                                        "$ref": "#/components/schemas/IBAN"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "iban"
+                                                ]
+                                            }
+                                        ]
                                     }
                                 },
                                 "required": [
@@ -1136,7 +1166,7 @@
                                                         "lockedUntil": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                            "description": "If set, the funds for this payment are routed to a FlowPay technical account until the specified date. By that date it is possible to release the funds to the payee or refund the payer. If funds remain at expiry, they are automatically refunded to the payer. See the \"Chained/locked flows\" section for details."
+                                                            "description": "If set, the request is treated as a locked payment. Funds are routed to FlowPay's technical perimeter until the specified date. Before that date the partner may release the funds to the beneficiary or refund the payer. If no earlier decision is taken, the funds are automatically released to the beneficiary at expiry. See the Locked Payment section for details."
                                                         },
                                                         "savePaymentMethod": {
                                                             "type": "boolean",
@@ -2762,6 +2792,10 @@
                                             "previousStatus": {
                                                 "$ref": "#/components/schemas/PaymentRequestStatus",
                                                 "description": "Previous status, when available."
+                                            },
+                                            "lockedDetails": {
+                                                "$ref": "#/components/schemas/LockedPaymentDetails",
+                                                "description": "Locked-payment metadata, present when the request is in or near the locked lifecycle phase."
                                             }
                                         },
                                         "required": [
@@ -3535,6 +3569,11 @@
             "PaymentRequest": {
                 "type": "object",
                 "properties": {
+                    "lockedUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "If set, the request is a locked payment. Funds are held on FlowPay's technical perimeter until this timestamp. Before expiry the partner may release or refund the full amount; if no earlier decision is taken, FlowPay automatically releases funds to the beneficiary at `lockedUntil`."
+                    },
                     "paymentRequestId": {
                         "type": "string",
                         "format": "uuid",
@@ -3695,6 +3734,10 @@
                         "format": "date-time",
                         "description": "Payment due date."
                     },
+                    "lockedDetails": {
+                        "$ref": "#/components/schemas/LockedPaymentDetails",
+                        "description": "Additional technical details for locked payments, including automatic release state and the dedicated technical payment method once available."
+                    },
                     "refundId": {
                         "type": "string",
                         "format": "uuid",
@@ -3751,7 +3794,118 @@
                     "refunded",
                     "deleted"
                 ],
-                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: waiting for partner’s explicit unlock to dispatch funds.\n- forwarded: funds dispatched to the beneficiaries.\n- refunded: full refund executed for the entire transaction.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
+                "description": "Status of the payment request (Simplified Flow).\n\n- created: request created and visible to the user.\n- inProgress: user starts a session and authenticates with the provider.\n- authorized: provider confirms a positive outcome for the operation.\n- rejected: provider rejects/cancels the operation.\n- onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.\n- locked: funds have been reconciled on the dedicated technical wallet and are waiting for partner release, refund, or automatic release at `lockedUntil`.\n- forwarded: funds dispatched to the beneficiaries, including automatic release at `lockedUntil` for locked payments.\n- refunded: refund executed for the transaction. In locked flows this is the explicit alternative final outcome to release.\n- deleted: request removed by the partner (only if not in progress and not paid).\n\nFinal states: deleted, forwarded, rejected, refunded."
+            },
+            "AutomaticRelease": {
+                "type": "object",
+                "description": "State of the default automatic release prepared for a locked payment.",
+                "properties": {
+                    "scheduledFor": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp at which FlowPay automatically releases funds if no earlier release or refund is executed."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "scheduled",
+                            "cancelled",
+                            "executed",
+                            "failed"
+                        ],
+                        "description": "Lifecycle state of the automatic release."
+                    }
+                },
+                "required": [
+                    "scheduledFor",
+                    "status"
+                ]
+            },
+            "LockedTechnicalPaymentMethod": {
+                "type": "object",
+                "description": "Dedicated technical payment method generated for a locked payment after the initial collection has been reconciled.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier to use as `tokenId` when releasing a locked payment through `/charges`."
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "locked"
+                        ],
+                        "description": "Always `locked` for this technical payment method."
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the locked payment method can currently be used for an early release."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "decimal",
+                        "minimum": 0.01,
+                        "description": "Full amount bound to the locked operation."
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency of the locked amount."
+                    },
+                    "beneficiaryId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Beneficiary bound to the locked operation."
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "enabled",
+                    "amount",
+                    "currency",
+                    "beneficiaryId"
+                ]
+            },
+            "LockedPaymentDetails": {
+                "type": "object",
+                "description": "Technical and operational details specific to locked payments.",
+                "properties": {
+                    "fundsOwner": {
+                        "type": "string",
+                        "enum": [
+                            "payer"
+                        ],
+                        "description": "During the locked phase, funds remain attributable to the original payer."
+                    },
+                    "reconciliationStatus": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "reconciled"
+                        ],
+                        "description": "Status of the incoming collection reconciliation."
+                    },
+                    "payoutReadiness": {
+                        "type": "string",
+                        "enum": [
+                            "ready",
+                            "beneficiaryPayoutMissing"
+                        ],
+                        "description": "Whether the final payout coordinates are already available for release."
+                    },
+                    "automaticRelease": {
+                        "$ref": "#/components/schemas/AutomaticRelease"
+                    },
+                    "lockedPaymentMethod": {
+                        "$ref": "#/components/schemas/LockedTechnicalPaymentMethod"
+                    }
+                },
+                "required": [
+                    "fundsOwner",
+                    "reconciliationStatus",
+                    "payoutReadiness",
+                    "automaticRelease"
+                ]
             },
             "PaymentSessions": {
                 "type": "object",
