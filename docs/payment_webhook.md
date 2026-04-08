@@ -6,9 +6,13 @@ FlowPay delivers real-time, server-to-server notifications whenever a payment re
 
 There is a single, stable event for Request-to-Pay: `payment.status_change`. The current state is provided in the `status` field and reuses the API enum `PaymentRequestStatus` (`created`, `inProgress`, `authorized`, `rejected`, `onHold`, `locked`, `forwarded`, `refunded`, `deleted`). If the change originates from a specific checkout attempt, the event includes a `sessionId`. Multiple attempts may occur during a request’s lifecycle, and events may be delivered more than once; your handler must therefore be idempotent and tolerant of out-of-order delivery within the same `requestId`.
 
+For locked payments, deliveries may also include an optional `lockedDetails` object. When present, it contains the locked-payment metadata needed to continue the flow, such as reconciliation status, automatic-release state, and the dedicated technical payment method to use for an early release.
+
 ## Request Details
 
 Deliveries use HTTPS POST with a JSON payload encoded in UTF‑8. The request carries headers that establish identity, integrity and replay protection. In particular, `X-FlowPay-Event-Id` uniquely identifies the delivery, `X-FlowPay-Event-Type` is always `payment.status_change`, `X-FlowPay-Timestamp` contains Unix epoch seconds, `X-FlowPay-Signature` holds a detached Ed25519 signature, `X-FlowPay-Key-Id` identifies the public key to use for verification, and `X-FlowPay-Retry-Count` indicates the attempt number starting at zero. Any HTTP 2xx response acknowledges the event.
+
+In locked flows, treat `lockedDetails` as optional enrichment: use it when available, but always be prepared to recover the authoritative state with `GET /payment-requests/{requestId}`.
 
 ## Security and Verification
 

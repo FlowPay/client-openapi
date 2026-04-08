@@ -110,15 +110,15 @@ What it enables: mass invoice runs, bill aggregation, marketplace or platform se
 
 State evolution: authorization is single from the user’s perspective; settlement is mediated. After authorized, funds always land on the Technical Account, are processed immediately, and re-sent to beneficiaries. The request may appear onHold briefly while dispatch allocates amounts, then moves to forwarded. Subsequent reversals are reflected as refunded and are applied proportionally to the original allocation map.
 
-## Conditional payment
+## Locked payment
 
-When outcomes depend on a later verification (delivery, inspection, return window), use Locked payments. You specify a `lockedUntil` date; after a successful checkout the funds are held in FlowPay’s technical account. Before the date, you can decide to release to the payee or refund the user. If you take no action by expiry, the platform automatically refunds the payer.
+When outcomes depend on a later verification (delivery, inspection, return window, milestone approval), use Locked payments. You specify a `lockedUntil` date; after a successful checkout the funds are held on FlowPay’s technical perimeter and attributed to a dedicated technical wallet for that operation. Before the date, the partner may release the funds to the beneficiary or refund the payer. If no earlier decision is taken, FlowPay automatically releases the funds to the beneficiary at `lockedUntil`.
 
-![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgVXNlclxuICBwYXJ0aWNpcGFudCBBUEkgYXMgRmxvd1BheSBBUElcbiAgcGFydGljaXBhbnQgQXBwIGFzIFlvdXIgQmFja29mZmljZVxuICBVc2VyLT4-QVBJOiBQYXlzIGF0IGNoZWNrb3V0IChzdWNjZWVkZWQpXG4gIEFQSS0tPj5BcHA6IENhbGxiYWNrIChzdWNjZWVkZWQsIGxvY2tlZClcbiAgTm90ZSBvdmVyIEFQSTogRnVuZHMgaGVsZCB1bnRpbCBsb2NrZWRVbnRpbFxuICBBcHAtPj5BUEk6IFJlbGVhc2UgdG8gcGF5ZWUgT1IgY3JlYXRlIHJlZnVuZFxuICBBUEktLT4-VXNlcjogQXV0b-KAkXJlZnVuZCBpZiBubyBkZWNpc2lvbiBieSBsb2NrZWRVbnRpbFxuIn0=)
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIGF1dG9udW1iZXJcbiAgcGFydGljaXBhbnQgVXNlciBhcyBVc2VyXG4gIHBhcnRpY2lwYW50IEFQSSBhcyBGbG93UGF5IEFQSVxuICBwYXJ0aWNpcGFudCBBcHAgYXMgWW91ciBCYWNrb2ZmaWNlXG4gIEFwcC0-PkFQSTogUE9TVCAvcGF5bWVudC1yZXF1ZXN0cyAobG9ja2VkVW50aWwpXG4gIEFQSS0tPj5BcHA6IDIwMSB7IHJlcXVlc3RJZCwgbGluayB9XG4gIEFwcC0tPj5Vc2VyOiBSZWRpcmVjdCB0byBob3N0ZWQgY2hlY2tvdXRcbiAgVXNlci0-PkFQSTogQXV0aG9yaXplIGluaXRpYWwgcGF5bWVudFxuICBBUEktLT4-QXBwOiBDYWxsYmFjayAoYXV0aG9yaXplZCwgbG9ja2VkKVxuICBOb3RlIG92ZXIgQVBJOiBGdW5kcyBoZWxkIG9uIGRlZGljYXRlZCB0ZWNobmljYWwgd2FsbGV0IHVudGlsIGxvY2tlZFVudGlsXG4gIGFsdCBFYXJseSByZWxlYXNlXG4gICAgQXBwLT4-QVBJOiBQT1NUIC9jaGFyZ2VzIHdpdGggbG9ja2VkIHRva2VuSWRcbiAgICBBUEktLT4-QXBwOiBDYWxsYmFjayAoZm9yd2FyZGVkKVxuICBlbHNlIFJlZnVuZFxuICAgIEFwcC0-PkFQSTogUE9TVCAvcmVmdW5kc1xuICAgIEFQSS0tPj5BcHA6IENhbGxiYWNrIChyZWZ1bmRlZClcbiAgZWxzZSBObyBhY3Rpb24gYnkgZXhwaXJ5XG4gICAgQVBJLS0-PkFwcDogQ2FsbGJhY2sgKGZvcndhcmRlZCBhdCBsb2NrZWRVbnRpbClcbiAgZW5kIn0)
 
-What it enables: escrow‑like experiences, milestone‑based projects, dispute/return windows with automatic safety fallback.
+What it enables: escrow‑like experiences, milestone‑based projects, dispute/return windows, and any flow where the partner needs immediate authorization but delayed availability to the beneficiary.
 
-State evolution: after a successful checkout the session is authorized and the request enters locked until either a release instructs forwarding to the payee or the lock expires and a refund is performed. If no release occurs, expiry leads to refunded. Additional user attempts do not alter an existing lock for already authorized funds.
+State evolution: after a successful checkout the session is authorized, may pass briefly through `onHold` while funds are reconciled, and then enters `locked`. From that state the partner may release early to the beneficiary or refund the payer. If no explicit action is taken, expiry leads to `forwarded` through automatic release. Additional user attempts do not alter funds that are already locked.
 
 ## Split payment
 
@@ -170,9 +170,9 @@ This section explains the lifecycle of a payment request as defined in the Simpl
 - authorized: provider confirms a positive outcome for the operation.
 - rejected: provider rejects/cancels the operation.
 - onHold: funds are on the FlowPay technical account (TA) awaiting dispatch rules.
-- locked: waiting for partner’s explicit unlock to dispatch funds.
-- forwarded: funds dispatched to the beneficiaries.
-- refunded: full refund executed for the entire transaction.
+- locked: funds have been reconciled on the dedicated technical wallet and are waiting for partner release, refund, or automatic release at `lockedUntil`.
+- forwarded: funds dispatched to the beneficiaries, including automatic release at `lockedUntil` for locked payments.
+- refunded: refund executed for the transaction; in locked flows this is the explicit alternative final outcome to release.
 - deleted: request removed by the partner (only if not in progress and not paid).
 
 Final states are: deleted, forwarded, rejected, refunded.
@@ -274,13 +274,13 @@ Notes:
 
 ## Locked payment — example
 
-- Goal: escrow‑like behavior. Funds are held in FlowPay’s Technical Account until `lockedUntil`.
-- Data model: add `lockedUntil` (ISO 8601) at creation time.
-- Lifecycle: on `succeeded`, funds are held. Before expiry you may release to the payee (per enabled business rules) or refund the payer (`POST /refunds`). At expiry, automatic refund occurs if no action was taken.
+- Goal: escrow‑like behavior with optional early release and deterministic automatic release at expiry.
+- Data model: add `lockedUntil` (ISO 8601) at creation time. The beneficiary must be identified before authorization; final payout coordinates may already be known at creation time or completed later before release.
+- Lifecycle: after successful collection, funds are reconciled and the request enters `locked`. Before expiry you may retrieve the dedicated locked payment method and release the funds through `POST /charges`, or refund the payer through `POST /refunds`. If no explicit action is taken, FlowPay automatically releases the funds to the beneficiary at `lockedUntil`.
 
 ### How to enable Locked payment
 
-Add `lockedUntil` (ISO 8601). After a `succeeded` session, funds are held until that date. Before expiry, either instruct a release (per partner configuration) or create a refund via the API.
+Add `lockedUntil` (ISO 8601). After reconciliation, use `GET /payment-requests/{requestId}` or the webhook payload to retrieve `lockedDetails.lockedPaymentMethod.id`. Before expiry, either release the funds with `POST /charges` or refund the payer with `POST /refunds`.
 
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"
@@ -290,13 +290,46 @@ LOCK_UNTIL=$(date -u -v+3d +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d "+3 d
 curl -sS -X POST "$BASE_URL/payment-requests" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
-  -d "{\n    \"payer\": { \"phone\": \"+39 333 1234567\" },\n    \"title\": \"Escrow order #L-2001\",\n    \"description\": \"Locked until verification\",\n    \"remittanceInformation\": \"L-2001\",\n    \"amount\": 59.00,\n    \"currency\": \"EUR\",\n    \"redirectUrl\": \"https://merchant.example.com/return\",\n    \"callbackUrl\": \"https://merchant.example.com/api/payment/callback\",\n    \"payee\": { \"name\": \"ACME Vendor\", \"iban\": \"IT60X0542811101000000123456\" },\n    \"lockedUntil\": \"$LOCK_UNTIL\"\n  }"
+  -d '{
+    "payer": "+39 333 1234567",
+    "title": "Escrow order #L-2001",
+    "description": "Locked until verification",
+    "remittanceInformation": "L-2001",
+    "amount": 59.00,
+    "currency": "EUR",
+    "redirectUrl": "https://merchant.example.com/return",
+    "callbackUrl": "https://merchant.example.com/api/payment/callback",
+    "payee": { "name": "ACME Vendor", "iban": "IT60X0542811101000000123456" },
+    "lockedUntil": "'"$LOCK_UNTIL"'"
+  }'
 ```
 
-Refund example (per session):
+Early release example:
 
 ```bash
-SESSION_ID="..." # from sessions or callback
+REQUEST_ID="..." # from create response or callback
+
+LOCKED_TOKEN_ID=$(curl -sS -X GET "$BASE_URL/payment-requests/$REQUEST_ID" \
+  -H "X-API-Key: $API_KEY" | jq -r '.lockedDetails.lockedPaymentMethod.id')
+
+curl -sS -X POST "$BASE_URL/charges" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+    "tokenId": "'"$LOCKED_TOKEN_ID"'",
+    "payee": {
+      "name": "ACME Vendor",
+      "iban": "IT60X0542811101000000123456"
+    },
+    "remittanceInformation": "L-2001 RELEASE"
+  }'
+```
+
+Refund example (alternative final outcome):
+
+```bash
+SESSION_ID="..." # locked collection session id from sessions or callback
+
 curl -sS -X POST "$BASE_URL/refunds" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
@@ -306,6 +339,12 @@ curl -sS -X POST "$BASE_URL/refunds" \
     "reason": "other"
   }'
 ```
+
+Notes:
+
+- Locked payments are all-or-nothing: the release amount is implicit in the locked token and matches the original locked amount; refunds are documented for the full amount only.
+- If the final payee coordinates were not already available, provide them in the `payee` field of the locked release payload before expiry.
+- Treat `callbackUrl` as the primary orchestration signal and use `GET /payment-requests/{requestId}` as the recovery path if a webhook is missed.
 
 ## Bulk payments — example
 
