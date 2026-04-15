@@ -1740,6 +1740,21 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/CustomerCreate"
+                            },
+                            "examples": {
+                                "consumer": {
+                                    "value": {
+                                        "phoneNumber": "+390000000001",
+                                        "name": "Test",
+                                        "surname": "Customer",
+                                        "tin": "TSTCST00A00A000A",
+                                        "email": "test.customer@example.com",
+                                        "webhookUrl": "https://example.com/webhook",
+                                        "services": [
+                                            "srtp"
+                                        ]
+                                    }
+                                }
                             }
                         }
                     }
@@ -3074,6 +3089,11 @@
                         "type": "string",
                         "format": "email",
                         "description": "Email del cliente"
+                    },
+                    "webhookUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Callback URL used when a service is created or updated."
                     }
                 }
             },
