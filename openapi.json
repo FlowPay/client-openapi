@@ -3389,6 +3389,7 @@
             "OpenbankingTechnology": {
                 "type": "object",
                 "title": "Bank account payload",
+                "description": "Openbanking request payload. `bank` and `instant` are independent optional fields, so clients can send only the data they have available. `instant` defaults to `true` when omitted.",
                 "properties": {
                     "iban": {
                         "type": "string",
