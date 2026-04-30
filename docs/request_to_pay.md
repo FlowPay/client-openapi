@@ -130,6 +130,18 @@ What it enables: marketplaces, app stores, franchise models, partner revenue sha
 
 State evolution: similar to Bulk, the user authorizes once and funds always pass via the Technical Account, are processed immediately, and re-forwarded according to the split. The request may show a short onHold during dispatch, then advances to forwarded. Errors on outbound legs are handled by the dispatch engine and do not return the request to inProgress. Refunds mirror the original allocation proportions.
 
+## Payment Chain
+
+Payment Chain lets a partner create an RTP whose execution depends on funds expected later. The chain subject is the RTP `payer` and, when specified, the RTP `debtor`; the payout destination is defined by `payee` and, for split or bulk scenarios, `additionalPayees`.
+
+![](https://mermaid.ink/img/c2VxdWVuY2VEaWFncmFtCiAgYXV0b251bWJlcgogIHBhcnRpY2lwYW50IFBhcnRuZXIgYXMgUGFydG5lciBiYWNrZW5kCiAgcGFydGljaXBhbnQgQVBJIGFzIEZsb3dQYXkgQVBJCiAgcGFydGljaXBhbnQgQ2hhaW4gYXMgQ2hhaW4gdGVjaG5pY2FsIHBvc2l0aW9uCiAgcGFydGljaXBhbnQgRnVuZGluZyBhcyBGdW5kaW5nIEZsb3dQYXkgcGF5bWVudHMKICBwYXJ0aWNpcGFudCBGaW5hbCBhcyBGaW5hbCBwYXllZShzKQogIFBhcnRuZXItPj5BUEk6IFBPU1QgL3BheW1lbnQtcmVxdWVzdHMgKHBheWVyL2RlYnRvciA9IGNoYWluIHN1YmplY3QsIHBheW1lbnRNZXRob2Q6IGNoYWluKQogIE5vdGUgb3ZlciBQYXJ0bmVyLEFQSTogcGF5ZWUgYW5kIGFkZGl0aW9uYWxQYXllZXMgZGVmaW5lIHRoZSBmaW5hbCBzaW5nbGUsIHNwbGl0LCBvciBidWxrIHBheW1lbnQKICBBUEktLT4-UGFydG5lcjogMjAxIHsgcmVxdWVzdElkLCBsaW5rL3N0YXR1cyB9CiAgUGFydG5lci0-PkFQSTogQ29tcGxldGUgYXV0aG9yaXphdGlvbiAvIFNDQSBmb3IgY2hhaW4gbWV0aG9kCiAgQVBJLS0-PlBhcnRuZXI6IHBheW1lbnQuc3RhdHVzX2NoYW5nZSAoYXV0aG9yaXplZCkKICBBUEktPj5DaGFpbjogUHJlcGFyZSBkZWRpY2F0ZWQgdGVjaG5pY2FsIHBvc2l0aW9uCiAgbG9vcCBBZG1pdHRlZCBmdW5kaW5nIG9wZXJhdGlvbnMKICAgIEZ1bmRpbmctPj5BUEk6IENvbXBsZXRlIEZsb3dQYXkgcGF5bWVudCBsaW5rZWQgdG8gcmVxdWVzdAogICAgQVBJLT4-Q2hhaW46IFJlY29uY2lsZSBpbmNvbWluZyBmdW5kcwogIGVuZAogIGFsdCBSZWNvbmNpbGVkIGJhbGFuY2UgPj0gcmVxdWVzdCBhbW91bnQKICAgIEFQSS0-PkZpbmFsOiBFeGVjdXRlIFJUUCBwYXlvdXQgdXNpbmcgcGF5ZWUvYWRkaXRpb25hbFBheWVlcwogICAgQVBJLS0-PlBhcnRuZXI6IHBheW1lbnQuc3RhdHVzX2NoYW5nZSAoZm9yd2FyZGVkKQogIGVsc2UgRnVuZGluZyB3aW5kb3cgZXhwaXJlcyBiZWxvdyBhbW91bnQKICAgIEFQSS0-PkZpbmFsOiBMaXF1aWRhdGUgYXZhaWxhYmxlIGZ1bmRzIHRvIHBheWVyL2RlYnRvciB2ZXJpZmllZCBJQkFOCiAgICBBUEktLT4-UGFydG5lcjogcGF5bWVudC5zdGF0dXNfY2hhbmdlIChmb3J3YXJkZWQgb3IgcmVqZWN0ZWQpCiAgZW5kCg)
+
+What it enables: chained settlement, supplier or platform payouts funded by expected incoming FlowPay payments, convergence of multiple funding operations into one controlled technical position, and automatic execution of the RTP after the request amount is funded.
+
+State evolution: the chain is created with the standard Request To Pay API and `paymentMethod` set to `chain`. After authorization it moves to `authorized`; once admitted funds arrive it uses `onHold` while FlowPay reconciles balance, amount, deadline, excesses, and operational conditions. When the reconciled balance reaches the RTP `amount`, FlowPay forwards the RTP payout to `payee` and `additionalPayees`. If the amount is not reached within the operational window, available funds are liquidated to the payer/debtor or the request is rejected if no valid liquidation path exists.
+
+Detailed examples, lifecycle diagrams, and callback handling are documented in [Payment Chain](./payment_chain.md).
+
 ## PagoPA payment
 
 For public‑service payments in the Italian PagoPA ecosystem, RTP integrates a dedicated branch. You provide the entity tax code and payment notice number, and an email to receive the receipt. The hosted checkout guides the user through the PagoPA‑specific steps, while your integration pattern (redirects, callbacks, receipt download) remains the same.
