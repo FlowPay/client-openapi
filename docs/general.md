@@ -68,7 +68,7 @@ APIs allow users to initiate traditional payment types:
 In addition, FlowPay extends traditional payment methods by providing value-added services such as
 
 - **Bulk payment**: payer can initiate a single payment with a single Strong Customer Authentication (SCA) to pay multiple payment requests or documents at once.
-- **Payment chain**: user can authorise a payment to be executed when a previous payment has been successfully received.
+- **Payment Chain**: user can authorise an RTP that executes when admitted FlowPay funding operations have credited a dedicated technical position. See `docs/payment_chain.md`.
 - **Locked payment**: the user can authorise a payment to be executed if a previous payment has been successfully received. The check is performed by the client application that initiated the payment request.
 
 Each of these services may route funds via a FlowPay technical account when required by business rules, while preserving original payer/payee information in remittance data.

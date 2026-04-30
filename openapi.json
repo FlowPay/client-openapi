@@ -3265,7 +3265,8 @@
                     "bankAccount",
                     "card",
                     "bancomat",
-                    "charge"
+                    "charge",
+                    "chain"
                 ],
                 "description": "Supported payment technologies."
             },
@@ -3277,7 +3278,8 @@
                         "enum": [
                             "openbanking",
                             "card",
-                            "bancomat_pay"
+                            "bancomat_pay",
+                            "chain"
                         ]
                     }
                 },
@@ -3336,6 +3338,26 @@
                             },
                             {
                                 "$ref": "#/components/schemas/BPayTechnology"
+                            }
+                        ]
+                    },
+                    {
+                        "title": "Payment Chain",
+                        "description": "Authorise an RTP payment method that executes the request payout once admitted funding reaches the request amount.",
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "technology": {
+                                        "const": "chain"
+                                    }
+                                },
+                                "required": [
+                                    "technology"
+                                ]
+                            },
+                            {
+                                "$ref": "#/components/schemas/ChainTechnology"
                             }
                         ]
                     },
@@ -3405,6 +3427,13 @@
                 },
                 "additionalProperties": false,
                 "required": []
+            },
+            "ChainTechnology": {
+                "type": "object",
+                "title": "Payment Chain",
+                "description": "Payment Chain executes the RTP payout once admitted funding reaches the request amount. The RTP `payer`/`debtor` identifies the chain subject, while `payee` and `additionalPayees` define the final payout.",
+                "properties": {},
+                "additionalProperties": false
             },
             "SDDPaymentMethodPayload": {
                 "type": "object",
