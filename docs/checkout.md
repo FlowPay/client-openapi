@@ -22,7 +22,7 @@ If `callbackUrl` is provided, FlowPay sends server-to-server notifications when 
 
 - Method: POST
 - Headers: `Content-Type: application/json`
-- Payload: includes `requestId`, optional `sessionId`, `status`, and timestamps.
+- Payload: includes `requestId`, optional `sessionId`, `status`, and timestamps. For locked payments, the payload may also include a `paymentMethod` object whose `id` is the technical token to use for early release.
 
 Note: ensure idempotency on your endpoint; the same event may be retried.
 

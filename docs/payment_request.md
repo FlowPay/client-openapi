@@ -25,7 +25,7 @@ Each of these services uses the FlowPay technical account, but the payment retai
 
 If the lockedUntil field is used, the sum will be kept until the date is reached. Until then the client is able to issue a refund of this payment by using the "Refunds" endpoint, or unlock the payment earlier using the "Charge" endpoint.
 
-When a request to pay is locked a paymentMethod is returned that can be used on the "Charge" endpoint, to unlock the payment. When unlocking the payment no other field is necessary but a validation will be carried on in order to mantain data integrity.
+When a request to pay is locked, the `GET /payment-requests/{requestId}` response includes `lockedDetails.lockedPaymentMethod.id`, which can be used as `tokenId` on the "Charge" endpoint to unlock the payment. The webhook payload also exposes the same technical method as `paymentMethod.id`.
 
 ## Bulk Payment
 
