@@ -54,7 +54,21 @@ Endpoints:
 - `GET /ais/accounts/{accountId}/balances`: current and available balances.
 - `GET /ais/accounts/{accountId}/transactions`: list transactions, filterable by date.
 
+Transaction fields you will commonly see:
+
+- `bookingDate`: the date the bank booked the movement on the account ledger.
+- `valueDate`: the effective date used for value or interest purposes when the bank exposes it. It may differ from `bookingDate`.
+- `category`: the bank/provider transaction classification or type when available. FlowPay forwards it as best-effort enrichment, not as a normalized taxonomy.
+
+Consent status notes:
+
+- `canceled`: the consent stopped before or during authorization.
+- `revoked`: an already-authorized consent was explicitly withdrawn.
+- Sandbox revoke webhooks are not guaranteed to be exposed by every provider integration, so validate the webhook path against the engine delete flow when testing revocation.
+
 If no active consent exists, AIS endpoints return `403` and partners can create a new consent using the consent endpoint.
+
+When a consent session has expired, the consent-session `PATCH` operation can be used to re-arm it with a minimal body. Any field omitted in the request is inherited from the existing session, so callers only need to send the values they want to change.
 
 ## Payment Initiation Service (PIS)
 

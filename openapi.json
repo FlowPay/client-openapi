@@ -2317,7 +2317,7 @@
             },
             "patch": {
                 "summary": "Update a pending consent session",
-                "description": "Allows updating mutable fields while the session is still pending. Once the session is opened the update is rejected.",
+                "description": "Allows updating mutable fields while the session is still pending. If the session has expired, the same request re-arms it as a fresh pending attempt while reusing the stored values for omitted fields. Other terminal states remain rejected.",
                 "operationId": "updateAisConsentSession",
                 "tags": [
                     "AIS"
@@ -2361,7 +2361,7 @@
             },
             "delete": {
                 "summary": "Cancel or revoke a consent session",
-                "description": "Cancels pending or initiated sessions and revokes authorized ones when supported by the ASPSP.",
+                "description": "Cancels pending or initiated sessions and revokes authorized ones, which emits the `consent.revoked` webhook from the engine. Sandbox/provider-driven revoke callbacks may not be available, so exercise the path through the engine delete flow when validating webhooks.",
                 "operationId": "cancelAisConsentSession",
                 "tags": [
                     "AIS"
@@ -4196,7 +4196,7 @@
             },
             "AisConsentStatus": {
                 "type": "string",
-                "description": "State of the AIS consent session.",
+                "description": "State of the AIS consent session. `canceled` means the consent was stopped before or during authorization; `revoked` means an already-authorized consent was explicitly withdrawn. `expired` indicates the consent reached the end of its validity window.",
                 "enum": [
                     "pending",
                     "initiated",
@@ -4339,7 +4339,7 @@
             },
             "AisConsentSessionUpdateRequest": {
                 "type": "object",
-                "description": "Fields that can be updated while the consent session is still pending.",
+                "description": "Fields that can be updated while the consent session is still pending, or reused to re-arm an expired session.",
                 "properties": {
                     "idempotencyKey": {
                         "type": "string",
@@ -4672,11 +4672,13 @@
                     },
                     "bookingDate": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "description": "Bank booking/posting date used for ledger ordering and transaction visibility."
                     },
                     "valueDate": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "description": "Effective value date used by the bank for interest or account-value calculations when provided; it may differ from bookingDate."
                     },
                     "amount": {
                         "type": "number",
@@ -4693,7 +4695,8 @@
                         "type": "string"
                     },
                     "category": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Bank/provider transaction classification or type when available; forwarded as best-effort enrichment, not as a normalized FlowPay taxonomy."
                     }
                 },
                 "required": [
