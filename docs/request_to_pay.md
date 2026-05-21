@@ -292,7 +292,7 @@ Notes:
 
 ### How to enable Locked payment
 
-Add `lockedUntil` (ISO 8601). After reconciliation, use `GET /payment-requests/{requestId}` or the webhook payload to retrieve `lockedDetails.lockedPaymentMethod.id`. Before expiry, either release the funds with `POST /charges` or refund the payer with `POST /refunds`.
+Add `lockedUntil` (ISO 8601). After reconciliation, use `GET /payment-requests/{requestId}` to retrieve `lockedDetails.lockedPaymentMethod.id`. The webhook payload exposes the same technical method as `payload.paymentMethod.id`. Before expiry, either release the funds with `POST /charges` or refund the payer with `POST /refunds`.
 
 ```bash
 BASE_URL="https://api.sandbox.flowpay.it/v2/"

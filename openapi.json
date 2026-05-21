@@ -2717,9 +2717,27 @@
                                                 "$ref": "#/components/schemas/PaymentRequestStatus",
                                                 "description": "Previous status, when available."
                                             },
-                                            "lockedDetails": {
-                                                "$ref": "#/components/schemas/LockedPaymentDetails",
-                                                "description": "Locked-payment metadata, present when the request is in or near the locked lifecycle phase."
+                                            "paymentMethod": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "Identifier of the dedicated locked payment method. Use this value as `tokenId` on `POST /charges` for an early release."
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "locked"
+                                                        ],
+                                                        "description": "Always `locked` for the technical method emitted in locked payment webhooks."
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "type"
+                                                ],
+                                                "description": "Dedicated technical payment method emitted for locked flows when available."
                                             }
                                         },
                                         "required": [
@@ -3389,6 +3407,7 @@
             "OpenbankingTechnology": {
                 "type": "object",
                 "title": "Bank account payload",
+                "description": "Openbanking request payload. `bank` and `instant` are independent optional fields, so clients can send only the data they have available. `instant` defaults to `true` when omitted.",
                 "properties": {
                     "iban": {
                         "type": "string",
@@ -3951,14 +3970,6 @@
                         ],
                         "description": "Status of the incoming collection reconciliation."
                     },
-                    "payoutReadiness": {
-                        "type": "string",
-                        "enum": [
-                            "ready",
-                            "beneficiaryPayoutMissing"
-                        ],
-                        "description": "Whether the final payout coordinates are already available for release."
-                    },
                     "automaticRelease": {
                         "$ref": "#/components/schemas/AutomaticRelease"
                     },
@@ -3969,7 +3980,6 @@
                 "required": [
                     "fundsOwner",
                     "reconciliationStatus",
-                    "payoutReadiness",
                     "automaticRelease"
                 ]
             },
