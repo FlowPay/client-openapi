@@ -54,17 +54,7 @@ Endpoints:
 - `GET /ais/accounts/{accountId}/balances`: current and available balances.
 - `GET /ais/accounts/{accountId}/transactions`: list transactions, filterable by date.
 
-Transaction fields you will commonly see:
-
-- `bookingDate`: the date the bank booked the movement on the account ledger.
-- `valueDate`: the effective date used for value or interest purposes when the bank exposes it. It may differ from `bookingDate`.
-- `category`: the bank/provider transaction classification or type when available. FlowPay forwards it as best-effort enrichment, not as a normalized taxonomy.
-
-Consent status notes:
-
-- `canceled`: the consent stopped before or during authorization.
-- `revoked`: an already-authorized consent was explicitly withdrawn.
-- Sandbox revoke webhooks are not guaranteed to be exposed by every provider integration, so validate the webhook path against the engine delete flow when testing revocation.
+For field-level semantics, see the AIS schema descriptions in the OpenAPI file. In short: `bookingDate` is the booking/posting date, `valueDate` is the bank's effective/value date when provided, and `category` is best-effort transaction enrichment rather than a normalized taxonomy. On the consent side, `canceled` means the flow stopped before authorization, while `revoked` means an already-authorized consent was withdrawn.
 
 If no active consent exists, AIS endpoints return `403` and partners can create a new consent using the consent endpoint.
 
