@@ -2298,7 +2298,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Consent session details.",
+                        "description": "Consent session details. Authorized sessions may be refreshed against the banking connector by the AIS engine before returning; terminal connector states are returned as status `expired`.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2309,6 +2309,9 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -2426,6 +2429,12 @@
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "410": {
+                        "$ref": "#/components/responses/Gone"
+                    },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
                     }
@@ -2470,6 +2479,12 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "410": {
+                        "$ref": "#/components/responses/Gone"
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -2516,6 +2531,12 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "410": {
+                        "$ref": "#/components/responses/Gone"
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -2941,6 +2962,30 @@
             },
             "Conflict": {
                 "description": "Conflict in the resource state.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "integer",
+                                    "description": "Error code."
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error description."
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "Gone": {
+                "description": "The requested resource is no longer valid or available.",
                 "content": {
                     "application/json": {
                         "schema": {
