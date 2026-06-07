@@ -2597,6 +2597,71 @@
                     }
                 }
             }
+        },
+        "/.well-known/jwks.json": {
+            "get": {
+                "summary": "List FlowPay JWKS",
+                "description": "Returns the JSON Web Key Set (JWKS) containing the public keys used by FlowPay to sign payloads. Use these keys to verify the signatures of incoming webhooks.",
+                "operationId": "getJWKs",
+                "tags": [
+                    "Well Known"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWKS containing FlowPay public keys.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "keys": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/JWK"
+                                            },
+                                            "description": "Array of JSON Web Keys (JWKs)."
+                                        }
+                                    },
+                                    "required": [
+                                        "keys"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
+        "/.well-known/jwks/{kid}": {
+            "get": {
+                "summary": "Get a JWK by Key ID",
+                "description": "Returns the JSON Web Key (JWK) corresponding to the specified key ID (kid). Use this endpoint to retrieve a specific public key for verifying signatures.",
+                "operationId": "getJWK",
+                "tags": [
+                    "Well Known"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWK corresponding to the specified key ID.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JWK"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
         }
     },
     "webhooks": {
@@ -4732,6 +4797,42 @@
                     "per",
                     "hasNext",
                     "appliedDateWindow"
+                ]
+            },
+            "JWK": {
+                "type": "object",
+                "properties": {
+                    "kty": {
+                        "type": "string",
+                        "description": "Parameter identifying the cryptographic algorithm family used with the key."
+                    },
+                    "use": {
+                        "type": "string",
+                        "description": "Parameter identifying the intended use of the public key."
+                    },
+                    "kid": {
+                        "type": "string",
+                        "description": "Parameter used to match a specific key. The `kid` value is a case-sensitive string."
+                    },
+                    "alg": {
+                        "type": "string",
+                        "description": "Parameter identifying the specific algorithm used with the key."
+                    },
+                    "crv": {
+                        "type": "string",
+                        "description": "Parameter identifying the cryptographic curve used with the key."
+                    },
+                    "x": {
+                        "type": "string",
+                        "description": "Parameter representing the x coordinate for the elliptic curve point."
+                    }
+                },
+                "required": [
+                    "kty",
+                    "kid",
+                    "alg",
+                    "crv",
+                    "x"
                 ]
             }
         }
