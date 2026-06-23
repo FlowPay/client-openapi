@@ -523,13 +523,12 @@
                                                     "email": {
                                                         "type": "string",
                                                         "format": "email",
-                                                        "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
+                                                        "description": "Optional email address to which the payment receipt will be sent."
                                                     }
                                                 },
                                                 "required": [
                                                     "pagopaEcFiscalCode",
-                                                    "pagopaPaymentNotice",
-                                                    "email"
+                                                    "pagopaPaymentNotice"
                                                 ]
                                             },
                                             {
@@ -547,12 +546,16 @@
                                                     "pagopaPlate": {
                                                         "type": "string",
                                                         "description": "plate"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "description": "Optional email address to which the payment receipt will be sent."
                                                     }
                                                 },
                                                 "required": [
                                                     "pagopaPlate",
-                                                    "pagopaVehicleType",
-                                                    "email"
+                                                    "pagopaVehicleType"
                                                 ]
                                             }
                                         ]
@@ -1206,13 +1209,12 @@
                                             "email": {
                                                 "type": "string",
                                                 "format": "email",
-                                                "description": "Email address to which the payment receipt will be sent. Mandatory for PagoPA."
+                                                "description": "Optional email address to which the payment receipt will be sent."
                                             }
                                         },
                                         "required": [
                                             "pagopaEcFiscalCode",
-                                            "pagopaPaymentNotice",
-                                            "email"
+                                            "pagopaPaymentNotice"
                                         ],
                                         "description": {
                                             "$ref": "./docs/pagopa_lifecycle.md"
@@ -1233,12 +1235,16 @@
                                             "pagopaPlate": {
                                                 "type": "string",
                                                 "description": "plate"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "Optional email address to which the payment receipt will be sent."
                                             }
                                         },
                                         "required": [
                                             "pagopaPlate",
-                                            "pagopaVehicleType",
-                                            "email"
+                                            "pagopaVehicleType"
                                         ]
                                     }
                                 ]
@@ -2273,6 +2279,9 @@
                             }
                         }
                     },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
                     }
@@ -2298,7 +2307,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Consent session details.",
+                        "description": "Consent session details. Authorized sessions may be refreshed against the banking connector by the AIS engine before returning; terminal connector states are returned as status `expired`.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2310,6 +2319,9 @@
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
                     }
@@ -2317,7 +2329,7 @@
             },
             "patch": {
                 "summary": "Update a pending consent session",
-                "description": "Allows updating mutable fields while the session is still pending. Once the session is opened the update is rejected.",
+                "description": "Allows updating mutable fields while the session is still pending. If the session has expired, the same request re-arms it as a fresh pending attempt while reusing the stored values for omitted fields. Other terminal states remain rejected.",
                 "operationId": "updateAisConsentSession",
                 "tags": [
                     "AIS"
@@ -2361,7 +2373,7 @@
             },
             "delete": {
                 "summary": "Cancel or revoke a consent session",
-                "description": "Cancels pending or initiated sessions and revokes authorized ones when supported by the ASPSP.",
+                "description": "Cancels pending or initiated sessions and revokes authorized ones, which emits the `consent.revoked` webhook from the engine. Sandbox/provider-driven revoke callbacks may not be available, so exercise the path through the engine delete flow when validating webhooks.",
                 "operationId": "cancelAisConsentSession",
                 "tags": [
                     "AIS"
@@ -2426,6 +2438,12 @@
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "410": {
+                        "$ref": "#/components/responses/Gone"
+                    },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
                     }
@@ -2470,6 +2488,12 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "410": {
+                        "$ref": "#/components/responses/Gone"
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -2517,6 +2541,12 @@
                     "404": {
                         "$ref": "#/components/responses/NotFound"
                     },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "410": {
+                        "$ref": "#/components/responses/Gone"
+                    },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
                     }
@@ -2531,7 +2561,7 @@
             ],
             "get": {
                 "summary": "List transactions",
-                "description": "Returns transactions constrained to the AIS domain window (authorizedAt \u00b1180 days). Requested dates are clamped automatically and the applied window is returned in the payload.",
+                "description": "Returns transactions constrained to the AIS domain window. Requested dates are clamped automatically and the applied window is returned in the payload. For one-off consents the window ends at `authorizedAt`; for recurring consents it ends at request time. In both cases the earliest allowed date is `authorizedAt` minus 90 days.",
                 "operationId": "listAisConsentTransactions",
                 "tags": [
                     "AIS"
@@ -2546,7 +2576,7 @@
                         "name": "accountId",
                         "in": "query",
                         "required": false,
-                        "description": "Legacy account filter. Pass the IBAN of the account to scope the transaction list.",
+                        "description": "Optional account filter. Pass the `accountId` returned by the accounts endpoint, or the account IBAN.",
                         "schema": {
                             "type": "string"
                         }
@@ -2780,6 +2810,102 @@
                 }
             }
         },
+        "aisConsentWebhook": {
+            "post": {
+                "summary": "AIS consent status update",
+                "operationId": "aisConsentWebhook",
+                "description": {
+                    "$ref": "./docs/ais_webhook.md"
+                },
+                "tags": [
+                    "AIS"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-FlowPay-Event-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Unique identifier of this AIS consent event. Reused across retries; use for idempotency and deduplication."
+                    },
+                    {
+                        "name": "X-FlowPay-Event-Type",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/AisConsentWebhookEventType"
+                        },
+                        "description": "AIS consent event type."
+                    },
+                    {
+                        "name": "X-FlowPay-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "UNIX epoch seconds used to compute the signature."
+                    },
+                    {
+                        "name": "X-FlowPay-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Detached Ed25519 signature over `${timestamp}.${rawBody}` encoded as Base64URL. Verify with the public key identified by `X-FlowPay-Key-Id` from `/.well-known/jwks.json`."
+                    },
+                    {
+                        "name": "X-FlowPay-Key-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Key identifier of the signing key. Fetch the public key from `/.well-known/jwks.json`."
+                    },
+                    {
+                        "name": "X-FlowPay-Retry-Count",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "description": "Zero-based delivery attempt index. `0` is the first delivery; retries increment this value."
+                    }
+                ],
+                "requestBody": {
+                    "description": "AIS consent event payload.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AisConsentWebhookEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook notification received successfully. Return any 2xx status to acknowledge delivery."
+                    },
+                    "default": {
+                        "description": "Error processing the webhook. Non-2xx responses are treated as failed delivery attempts and may be retried.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "customerDataDeletionWebhook": {
             "post": {
                 "summary": "Customer data deletion notification",
@@ -2963,6 +3089,30 @@
                     }
                 }
             },
+            "Gone": {
+                "description": "The requested resource is no longer valid or available.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "integer",
+                                    "description": "Error code."
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error description."
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
             "DefaultError": {
                 "description": "Unexpected error.",
                 "content": {
@@ -3088,7 +3238,9 @@
                                 "srtp"
                             ]
                         },
-                        "example": "[srtp]",
+                        "example": [
+                            "srtp"
+                        ],
                         "description": "Servizi da attivare sul cliente"
                     },
                     "name": {
@@ -3268,15 +3420,6 @@
                 "description": "European IBAN (format: ISO 2-letter country code, followed by 2 check digits and up to 30 alphanumeric characters).",
                 "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$"
             },
-            "PaymentCallbackEnum": {
-                "type": "string",
-                "enum": [
-                    "success",
-                    "error",
-                    "cancel"
-                ],
-                "description": "Available callback types for the payment."
-            },
             "AllowedMethod": {
                 "type": "string",
                 "enum": [
@@ -3451,13 +3594,6 @@
                 "type": "object",
                 "title": "Payment Chain",
                 "description": "Payment Chain executes the RTP payout once admitted funding reaches the request amount. The RTP `payer`/`debtor` identifies the chain subject, while `payee` and `additionalPayees` define the final payout.",
-                "properties": {},
-                "additionalProperties": false
-            },
-            "SDDPaymentMethodPayload": {
-                "type": "object",
-                "title": "SDD payload",
-                "description": "SEPA Direct Debit payments do not require additional payload fields.",
                 "properties": {},
                 "additionalProperties": false
             },
@@ -4196,7 +4332,7 @@
             },
             "AisConsentStatus": {
                 "type": "string",
-                "description": "State of the AIS consent session.",
+                "description": "State of the AIS consent session. `canceled` means the consent was stopped before or during authorization; `revoked` means an already-authorized consent was explicitly withdrawn. `expired` indicates the consent reached the end of its validity window.",
                 "enum": [
                     "pending",
                     "initiated",
@@ -4227,10 +4363,15 @@
             "AisConsentSession": {
                 "type": "object",
                 "properties": {
-                    "id": {
+                    "sessionId": {
                         "type": "string",
                         "format": "uuid",
                         "description": "Consent session identifier."
+                    },
+                    "appId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Authenticated client application that owns the consent session."
                     },
                     "status": {
                         "$ref": "#/components/schemas/AisConsentStatus"
@@ -4292,7 +4433,8 @@
                     }
                 },
                 "required": [
-                    "id",
+                    "sessionId",
+                    "appId",
                     "status",
                     "consentKind",
                     "services",
@@ -4339,7 +4481,7 @@
             },
             "AisConsentSessionUpdateRequest": {
                 "type": "object",
-                "description": "Fields that can be updated while the consent session is still pending.",
+                "description": "Full update payload accepted by the public gateway. The gateway requires all mutable fields; expired sessions can be re-armed with a complete payload.",
                 "properties": {
                     "idempotencyKey": {
                         "type": "string",
@@ -4347,10 +4489,12 @@
                     },
                     "fullName": {
                         "type": "string",
-                        "maxLength": 200
+                        "maxLength": 200,
+                        "description": "End-user full name to display in the consent journey."
                     },
                     "bankId": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "FlowPay bank identifier to preselect the ASPSP."
                     },
                     "consentKind": {
                         "$ref": "#/components/schemas/AisConsentKind"
@@ -4359,17 +4503,29 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/AisService"
-                        }
+                        },
+                        "description": "AIS services requested from the bank."
                     },
                     "callbackUrl": {
                         "type": "string",
-                        "format": "uri"
+                        "format": "uri",
+                        "description": "URL that will receive webhook notifications."
                     },
                     "redirectUrl": {
                         "type": "string",
-                        "format": "uri"
+                        "format": "uri",
+                        "description": "URL where the user should be redirected after completing SCA."
                     }
-                }
+                },
+                "required": [
+                    "fullName",
+                    "bankId",
+                    "consentKind",
+                    "services",
+                    "callbackUrl",
+                    "idempotencyKey",
+                    "redirectUrl"
+                ]
             },
             "AisConsentSessionCreated": {
                 "type": "object",
@@ -4439,8 +4595,12 @@
             },
             "AisAccount": {
                 "type": "object",
-                "description": "AIS account payload. Fixed metadata fields are always present. Balance fields are optional and are present only when returned by the bank.",
+                "description": "AIS account payload. Fixed metadata fields are always present. Balance fields are optional and are present only when returned by the bank. `accountId` is the stable filter value to pass to the transactions endpoint; when the upstream bank does not provide a distinct identifier, FlowPay falls back to the IBAN.",
                 "properties": {
+                    "accountId": {
+                        "type": "string",
+                        "description": "Account identifier exposed by FlowPay for AIS filtering. Falls back to IBAN when no distinct upstream identifier is available."
+                    },
                     "iban": {
                         "type": "string",
                         "description": "IBAN when available."
@@ -4501,9 +4661,16 @@
                     }
                 },
                 "required": [
-                    "iban",
                     "currency"
-                ]
+                ],
+                "example": {
+                    "accountId": "IT60X0542811101000000123456",
+                    "iban": "IT60X0542811101000000123456",
+                    "name": "Main account",
+                    "currency": "EUR",
+                    "closingBooked": 5174.72,
+                    "interimAvailable": 5200
+                }
             },
             "AisAccountPage": {
                 "type": "object",
@@ -4535,6 +4702,10 @@
                 "type": "object",
                 "description": "AIS balance payload. Fixed metadata fields are always present; all balance fields are optional and are included only if returned by the bank.\n\nFlowPay returns all and only the balance types received from the bank. Not every bank provides every balance type, so the set of populated balance fields may vary across providers and even across accounts of the same provider.\n\nIf useful for your integration, FlowPay is available to work with partners on an algorithm to select or prioritise the most relevant balance for each use case.",
                 "properties": {
+                    "accountId": {
+                        "type": "string",
+                        "description": "Account identifier exposed by FlowPay. Falls back to IBAN when no distinct upstream identifier is available."
+                    },
                     "iban": {
                         "type": "string"
                     },
@@ -4594,6 +4765,7 @@
                     }
                 },
                 "example": {
+                    "accountId": "IT60X0542811101000000123456",
                     "iban": "IT60X0542811101000000123456",
                     "date": "2026-03-12T14:15:22Z",
                     "currency": "EUR",
@@ -4602,7 +4774,6 @@
                     "expected": -262.01
                 },
                 "required": [
-                    "iban",
                     "date",
                     "currency"
                 ]
@@ -4635,7 +4806,7 @@
             },
             "AisAppliedDateWindow": {
                 "type": "object",
-                "description": "Window enforced by FlowPay when retrieving transactions.",
+                "description": "Window enforced by FlowPay when retrieving transactions. FlowPay clamps requested dates to the authorized AIS window: from `authorizedAt - 90 days` to `authorizedAt` for one-off consents, or to request time for recurring consents.",
                 "properties": {
                     "from": {
                         "type": "string",
@@ -4667,16 +4838,22 @@
                         "type": "string",
                         "description": "Stable identifier of the transaction."
                     },
+                    "accountId": {
+                        "type": "string",
+                        "description": "Account identifier exposed by FlowPay. Falls back to IBAN when no distinct upstream identifier is available."
+                    },
                     "iban": {
                         "type": "string"
                     },
                     "bookingDate": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "description": "Bank booking/posting date used for ledger ordering and transaction visibility."
                     },
                     "valueDate": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "description": "Effective value date used by the bank for interest or account-value calculations when provided; it may differ from bookingDate."
                     },
                     "amount": {
                         "type": "number",
@@ -4693,16 +4870,28 @@
                         "type": "string"
                     },
                     "category": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Bank/provider transaction classification or type when available; forwarded as best-effort enrichment, not as a normalized FlowPay taxonomy."
                     }
                 },
                 "required": [
                     "transactionId",
-                    "iban",
                     "bookingDate",
                     "amount",
                     "currency"
-                ]
+                ],
+                "example": {
+                    "transactionId": "bank-tx-123",
+                    "accountId": "IT60X0542811101000000123456",
+                    "iban": "IT60X0542811101000000123456",
+                    "bookingDate": "2026-03-12",
+                    "valueDate": "2026-03-12",
+                    "amount": -42.5,
+                    "currency": "EUR",
+                    "description": "Card payment",
+                    "counterparty": "Example Merchant",
+                    "category": "card"
+                }
             },
             "AisTransactionsPage": {
                 "type": "object",
@@ -4733,6 +4922,106 @@
                     "hasNext",
                     "appliedDateWindow"
                 ]
+            },
+            "AisConsentWebhookEventType": {
+                "type": "string",
+                "description": "AIS consent webhook event type emitted after a persisted local consent status transition.",
+                "enum": [
+                    "consent.authorized",
+                    "consent.denied",
+                    "consent.canceled",
+                    "consent.revoked",
+                    "consent.expired"
+                ]
+            },
+            "AisConsentWebhookPayload": {
+                "type": "object",
+                "properties": {
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "AIS consent session identifier."
+                    },
+                    "appId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Client application that owns the consent session."
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/AisConsentStatus",
+                        "description": "Consent status after the transition."
+                    },
+                    "previousStatus": {
+                        "$ref": "#/components/schemas/AisConsentStatus",
+                        "description": "Consent status before the transition, when available."
+                    },
+                    "authorizedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp when the consent became authorized, when applicable."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Consent validity end reported by the banking connector, when available."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Failure, denial, or expiration reason captured by FlowPay, when available."
+                    },
+                    "version": {
+                        "type": "integer",
+                        "description": "Internal session version at the time the event was queued."
+                    }
+                },
+                "required": [
+                    "sessionId",
+                    "appId",
+                    "status",
+                    "version"
+                ]
+            },
+            "AisConsentWebhookEvent": {
+                "type": "object",
+                "description": "AIS consent webhook envelope delivered to the consent session callbackUrl.",
+                "properties": {
+                    "eventId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Stable event identifier. Matches `X-FlowPay-Event-Id` and is reused across retries."
+                    },
+                    "eventType": {
+                        "$ref": "#/components/schemas/AisConsentWebhookEventType"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Event creation timestamp."
+                    },
+                    "payload": {
+                        "$ref": "#/components/schemas/AisConsentWebhookPayload"
+                    }
+                },
+                "required": [
+                    "eventId",
+                    "eventType",
+                    "timestamp",
+                    "payload"
+                ],
+                "example": {
+                    "eventId": "6f43a2a7-94e1-423d-a0b1-9b21e955e3df",
+                    "eventType": "consent.authorized",
+                    "timestamp": "2026-03-12T14:15:22Z",
+                    "payload": {
+                        "sessionId": "00000000-0000-0000-0000-000000000000",
+                        "appId": "11111111-1111-1111-1111-111111111111",
+                        "status": "authorized",
+                        "previousStatus": "initiated",
+                        "authorizedAt": "2026-03-12T14:15:20Z",
+                        "validUntil": "2026-09-08T14:15:20Z",
+                        "version": 3
+                    }
+                }
             }
         }
     }

@@ -54,7 +54,11 @@ Endpoints:
 - `GET /ais/accounts/{accountId}/balances`: current and available balances.
 - `GET /ais/accounts/{accountId}/transactions`: list transactions, filterable by date.
 
+For field-level semantics, see the AIS schema descriptions in the OpenAPI file. In short: `bookingDate` is the booking/posting date, `valueDate` is the bank's effective/value date when provided, and `category` is best-effort transaction enrichment rather than a normalized taxonomy. On the consent side, `canceled` means the flow stopped before authorization, while `revoked` means an already-authorized consent was withdrawn.
+
 If no active consent exists, AIS endpoints return `403` and partners can create a new consent using the consent endpoint.
+
+When a consent session has expired, the consent-session `PATCH` operation can be used to re-arm it with a minimal body. Any field omitted in the request is inherited from the existing session, so callers only need to send the values they want to change.
 
 ## Payment Initiation Service (PIS)
 
