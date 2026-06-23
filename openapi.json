@@ -2810,6 +2810,102 @@
                 }
             }
         },
+        "aisConsentWebhook": {
+            "post": {
+                "summary": "AIS consent status update",
+                "operationId": "aisConsentWebhook",
+                "description": {
+                    "$ref": "./docs/ais_webhook.md"
+                },
+                "tags": [
+                    "AIS"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-FlowPay-Event-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Unique identifier of this AIS consent event. Reused across retries; use for idempotency and deduplication."
+                    },
+                    {
+                        "name": "X-FlowPay-Event-Type",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/AisConsentWebhookEventType"
+                        },
+                        "description": "AIS consent event type."
+                    },
+                    {
+                        "name": "X-FlowPay-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "UNIX epoch seconds used to compute the signature."
+                    },
+                    {
+                        "name": "X-FlowPay-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Detached Ed25519 signature over `${timestamp}.${rawBody}` encoded as Base64URL. Verify with the public key identified by `X-FlowPay-Key-Id` from `/.well-known/jwks.json`."
+                    },
+                    {
+                        "name": "X-FlowPay-Key-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Key identifier of the signing key. Fetch the public key from `/.well-known/jwks.json`."
+                    },
+                    {
+                        "name": "X-FlowPay-Retry-Count",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "description": "Zero-based delivery attempt index. `0` is the first delivery; retries increment this value."
+                    }
+                ],
+                "requestBody": {
+                    "description": "AIS consent event payload.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AisConsentWebhookEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook notification received successfully. Return any 2xx status to acknowledge delivery."
+                    },
+                    "default": {
+                        "description": "Error processing the webhook. Non-2xx responses are treated as failed delivery attempts and may be retried.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "customerDataDeletionWebhook": {
             "post": {
                 "summary": "Customer data deletion notification",
@@ -4826,6 +4922,106 @@
                     "hasNext",
                     "appliedDateWindow"
                 ]
+            },
+            "AisConsentWebhookEventType": {
+                "type": "string",
+                "description": "AIS consent webhook event type emitted after a persisted local consent status transition.",
+                "enum": [
+                    "consent.authorized",
+                    "consent.denied",
+                    "consent.canceled",
+                    "consent.revoked",
+                    "consent.expired"
+                ]
+            },
+            "AisConsentWebhookPayload": {
+                "type": "object",
+                "properties": {
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "AIS consent session identifier."
+                    },
+                    "appId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Client application that owns the consent session."
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/AisConsentStatus",
+                        "description": "Consent status after the transition."
+                    },
+                    "previousStatus": {
+                        "$ref": "#/components/schemas/AisConsentStatus",
+                        "description": "Consent status before the transition, when available."
+                    },
+                    "authorizedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Timestamp when the consent became authorized, when applicable."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Consent validity end reported by the banking connector, when available."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Failure, denial, or expiration reason captured by FlowPay, when available."
+                    },
+                    "version": {
+                        "type": "integer",
+                        "description": "Internal session version at the time the event was queued."
+                    }
+                },
+                "required": [
+                    "sessionId",
+                    "appId",
+                    "status",
+                    "version"
+                ]
+            },
+            "AisConsentWebhookEvent": {
+                "type": "object",
+                "description": "AIS consent webhook envelope delivered to the consent session callbackUrl.",
+                "properties": {
+                    "eventId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Stable event identifier. Matches `X-FlowPay-Event-Id` and is reused across retries."
+                    },
+                    "eventType": {
+                        "$ref": "#/components/schemas/AisConsentWebhookEventType"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Event creation timestamp."
+                    },
+                    "payload": {
+                        "$ref": "#/components/schemas/AisConsentWebhookPayload"
+                    }
+                },
+                "required": [
+                    "eventId",
+                    "eventType",
+                    "timestamp",
+                    "payload"
+                ],
+                "example": {
+                    "eventId": "6f43a2a7-94e1-423d-a0b1-9b21e955e3df",
+                    "eventType": "consent.authorized",
+                    "timestamp": "2026-03-12T14:15:22Z",
+                    "payload": {
+                        "sessionId": "00000000-0000-0000-0000-000000000000",
+                        "appId": "11111111-1111-1111-1111-111111111111",
+                        "status": "authorized",
+                        "previousStatus": "initiated",
+                        "authorizedAt": "2026-03-12T14:15:20Z",
+                        "validUntil": "2026-09-08T14:15:20Z",
+                        "version": 3
+                    }
+                }
             }
         }
     }
