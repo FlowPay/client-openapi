@@ -2141,6 +2141,59 @@
                 }
             }
         },
+        "/ais/check-iban/{iban}/{vatCode}": {
+            "get": {
+                "summary": "Check IBAN ownership",
+                "description": "Checks whether an IBAN is associated with the supplied VAT code for the authenticated client application.",
+                "operationId": "checkAisIban",
+                "tags": [
+                    "AIS"
+                ],
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "iban",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/IBAN"
+                        },
+                        "description": "IBAN to check."
+                    },
+                    {
+                        "name": "vatCode",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "VAT code or tax identifier to match against the IBAN owner."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IBAN check completed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AisCheckIbanResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
+        },
         "/ais/consent-sessions": {
             "post": {
                 "summary": "Create a consent session",
@@ -4591,6 +4644,24 @@
                     "page",
                     "per",
                     "hasNext"
+                ]
+            },
+            "AisCheckIbanResponse": {
+                "type": "object",
+                "description": "Result of an IBAN ownership check against the supplied VAT code.",
+                "properties": {
+                    "result": {
+                        "type": "string",
+                        "enum": [
+                            "valid",
+                            "invalid",
+                            "notSupported"
+                        ],
+                        "description": "IBAN ownership check result. `notSupported` means FlowPay could not perform an autonomous ownership check for the supplied IBAN."
+                    }
+                },
+                "required": [
+                    "result"
                 ]
             },
             "AisAccount": {
