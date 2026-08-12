@@ -808,7 +808,7 @@
         "/payment-requests": {
             "get": {
                 "summary": "List all created payment requests",
-                "description": "Returns a paginated list of created payment requests. Filters can be combined. `dateFrom` and `dateTo` apply to the request creation timestamp using inclusive bounds; `status` is evaluated against the effective state of the most recently updated payment session.",
+                "description": "Returns a paginated list of created payment requests. `dateFrom` and `dateTo` can be combined and apply to the request creation timestamp using inclusive bounds. Lifecycle status filtering belongs to payment-session lists and is not supported here.",
                 "operationId": "listPaymentRequests",
                 "tags": [
                     "Request To Pay"
@@ -856,15 +856,6 @@
                         },
                         "example": "2026-07-31T23:59:59Z",
                         "description": "Inclusive upper bound for the payment request `createdAt`, encoded as an ISO 8601 date-time (for example, `2026-07-31T23:59:59Z`). Unix timestamps are not supported. Must be greater than or equal to `dateFrom` when both are provided."
-                    },
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "schema": {
-                            "$ref": "#/components/schemas/PaymentRequestStatus"
-                        },
-                        "example": "authorized",
-                        "description": "Returns requests whose most recently updated payment session has this effective state. A request without sessions is treated as `created`."
                     }
                 ],
                 "responses": {
