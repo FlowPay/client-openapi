@@ -23,7 +23,7 @@ Each of these services uses the FlowPay technical account, but the payment retai
 
 ## Filtering Payment Requests
 
-`GET /payment-requests` supports creation-date and lifecycle-status filters. `dateFrom` and `dateTo` are inclusive ISO 8601 timestamps applied to `createdAt`; either bound can be used on its own. `status` is evaluated against the effective state of the most recently updated payment session. A request without sessions is treated as `created`; an expired `inProgress` session is treated as `deleted`, consistently with the status returned in the response.
+`GET /payment-requests` supports creation-date and lifecycle-status filters. Like the other list date filters, `dateFrom` and `dateTo` use ISO 8601 date-time strings (for example, `2026-07-01T00:00:00Z`). The bounds are inclusive, apply to `createdAt`, and can be used independently. Unix timestamps are not supported. `status` is evaluated against the effective state of the most recently updated payment session. A request without sessions is treated as `created`; an expired `inProgress` session is treated as `deleted`, consistently with the status returned in the response.
 
 The supported status values are `created`, `inProgress`, `authorized`, `rejected`, `onHold`, `locked`, `forwarded`, `refunded`, and `deleted`.
 
@@ -35,7 +35,7 @@ curl -sS \
   "$BASE_URL/payment-requests?dateFrom=2026-07-01T00:00:00Z&dateTo=2026-07-31T23:59:59Z&status=authorized&limit=20&offset=0"
 ```
 
-If `dateFrom` or `dateTo` is not a valid ISO 8601 timestamp, or if `dateFrom` is later than `dateTo`, the API returns `400 Bad Request`.
+If `dateFrom` or `dateTo` is not a valid ISO 8601 date-time, or if `dateFrom` is later than `dateTo`, the API returns `400 Bad Request`.
 
 ## Locked Payment
 

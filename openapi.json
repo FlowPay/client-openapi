@@ -845,7 +845,7 @@
                             "format": "date-time"
                         },
                         "example": "2026-07-01T00:00:00Z",
-                        "description": "Inclusive lower bound for the payment request `createdAt` timestamp, encoded as ISO 8601."
+                        "description": "Inclusive lower bound for the payment request `createdAt`, encoded as an ISO 8601 date-time (for example, `2026-07-01T00:00:00Z`). Unix timestamps are not supported."
                     },
                     {
                         "name": "dateTo",
@@ -855,7 +855,7 @@
                             "format": "date-time"
                         },
                         "example": "2026-07-31T23:59:59Z",
-                        "description": "Inclusive upper bound for the payment request `createdAt` timestamp, encoded as ISO 8601. Must be greater than or equal to `dateFrom` when both are provided."
+                        "description": "Inclusive upper bound for the payment request `createdAt`, encoded as an ISO 8601 date-time (for example, `2026-07-31T23:59:59Z`). Unix timestamps are not supported. Must be greater than or equal to `dateFrom` when both are provided."
                     },
                     {
                         "name": "status",
@@ -2327,7 +2327,8 @@
                         "name": "createdFrom",
                         "in": "query",
                         "required": false,
-                        "description": "Lower bound (inclusive) for `createdAt` in ISO 8601.",
+                        "description": "Lower bound (inclusive) for `createdAt`, encoded as an ISO 8601 date-time. Unix timestamps are not supported.",
+                        "example": "2026-07-01T00:00:00Z",
                         "schema": {
                             "type": "string",
                             "format": "date-time"
@@ -2337,7 +2338,8 @@
                         "name": "createdTo",
                         "in": "query",
                         "required": false,
-                        "description": "Upper bound (inclusive) for `createdAt` in ISO 8601.",
+                        "description": "Upper bound (inclusive) for `createdAt`, encoded as an ISO 8601 date-time. Unix timestamps are not supported.",
+                        "example": "2026-07-31T23:59:59Z",
                         "schema": {
                             "type": "string",
                             "format": "date-time"
