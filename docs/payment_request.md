@@ -21,6 +21,22 @@ In addition, FlowPay extends traditional payment methods by providing value-adde
 
 Each of these services uses the FlowPay technical account, but the payment retains the original payer and payee information.
 
+## Filtering Payment Requests
+
+`GET /payment-requests` supports creation-date and lifecycle-status filters. `dateFrom` and `dateTo` are inclusive ISO 8601 timestamps applied to `createdAt`; either bound can be used on its own. `status` is evaluated against the effective state of the most recently updated payment session. A request without sessions is treated as `created`; an expired `inProgress` session is treated as `deleted`, consistently with the status returned in the response.
+
+The supported status values are `created`, `inProgress`, `authorized`, `rejected`, `onHold`, `locked`, `forwarded`, `refunded`, and `deleted`.
+
+Example: list payment requests created during July 2026 whose latest status is `authorized`:
+
+```bash
+curl -sS \
+  -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/payment-requests?dateFrom=2026-07-01T00:00:00Z&dateTo=2026-07-31T23:59:59Z&status=authorized&limit=20&offset=0"
+```
+
+If `dateFrom` or `dateTo` is not a valid ISO 8601 timestamp, or if `dateFrom` is later than `dateTo`, the API returns `400 Bad Request`.
+
 ## Locked Payment
 
 If the lockedUntil field is used, the sum will be kept until the date is reached. Until then the client is able to issue a refund of this payment by using the "Refunds" endpoint, or unlock the payment earlier using the "Charge" endpoint.

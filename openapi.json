@@ -808,7 +808,7 @@
         "/payment-requests": {
             "get": {
                 "summary": "List all created payment requests",
-                "description": "Returns a paginated list of all created payment requests.",
+                "description": "Returns a paginated list of created payment requests. Filters can be combined. `dateFrom` and `dateTo` apply to the request creation timestamp using inclusive bounds; `status` is evaluated against the effective state of the most recently updated payment session.",
                 "operationId": "listPaymentRequests",
                 "tags": [
                     "Request To Pay"
@@ -836,6 +836,35 @@
                             "default": 0
                         },
                         "description": "Number of items to skip."
+                    },
+                    {
+                        "name": "dateFrom",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "example": "2026-07-01T00:00:00Z",
+                        "description": "Inclusive lower bound for the payment request `createdAt` timestamp, encoded as ISO 8601."
+                    },
+                    {
+                        "name": "dateTo",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "example": "2026-07-31T23:59:59Z",
+                        "description": "Inclusive upper bound for the payment request `createdAt` timestamp, encoded as ISO 8601. Must be greater than or equal to `dateFrom` when both are provided."
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/PaymentRequestStatus"
+                        },
+                        "example": "authorized",
+                        "description": "Returns requests whose most recently updated payment session has this effective state. A request without sessions is treated as `created`."
                     }
                 ],
                 "responses": {
