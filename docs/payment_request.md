@@ -21,6 +21,20 @@ In addition, FlowPay extends traditional payment methods by providing value-adde
 
 Each of these services uses the FlowPay technical account, but the payment retains the original payer and payee information.
 
+## Filtering Payment Requests
+
+`GET /payment-requests` supports creation-date filters. Like the other list date filters, `dateFrom` and `dateTo` use ISO 8601 date-time strings (for example, `2026-07-01T00:00:00Z`). The bounds are inclusive, apply to `createdAt`, and can be used independently. Unix timestamps are not supported. Lifecycle status filtering belongs to payment-session lists and is not supported on payment requests.
+
+Example: list payment requests created during July 2026:
+
+```bash
+curl -sS \
+  -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/payment-requests?dateFrom=2026-07-01T00:00:00Z&dateTo=2026-07-31T23:59:59Z&limit=20&offset=0"
+```
+
+If `dateFrom` or `dateTo` is not a valid ISO 8601 date-time, or if `dateFrom` is later than `dateTo`, the API returns `400 Bad Request`.
+
 ## Locked Payment
 
 If the lockedUntil field is used, the sum will be kept until the date is reached. Until then the client is able to issue a refund of this payment by using the "Refunds" endpoint, or unlock the payment earlier using the "Charge" endpoint.
