@@ -6,7 +6,9 @@ Each `additionalPayees` item may optionally include its own `lockedUntil`. That 
 
 Locked movements are supported for bulk payment requests only. Split payment requests (`ultimateDebtor: payee`) cannot contain a top-level or per-movement `lockedUntil`.
 
-The response identifies every movement with its `id`; locked movements additionally expose `lockedUntil`, `status`, and `lockedPaymentMethod` when available. Movements are independent: releasing one locked movement does not change the others.
+The response identifies every movement with its `id`. Ordinary movements expose the generated wallet-payment identifier; for locked movements the `id` is the child payment-request identifier. Locked movements additionally expose `lockedUntil`, `status`, and `lockedPaymentMethod` when available. Movements are independent: releasing one locked movement does not change the others.
+
+If the aggregate root has already been created and provisioning of a locked child fails, the API returns `409 Conflict` and retains the resources already created. The response exposes the retained aggregate through the `Location` and `X-FlowPay-Payment-Request-Id` headers. Inspect that aggregate before recovery and do not blindly recreate the request.
 
 [![](https://mermaid.ink/img/pako:eNqFk81um0AQx18FTQ-5kGgxsGAOkUzanqoqcqxWqris2cFZFXbdZYnsWL70efpUeZIuH66hiRVOszO_-c9_PzhArjhCArVhBj8KttGsyqRjPy405kYo6XxZ9pkUJRYiF0zvF8719a2z4Fy0BCvv2R6xThyPkJfff17h6QU8fJO-u0DPwrfoS1aiM_1_setYru77qg26xGrRjjg7WvXK3-052HG26I0kp8V0spVp7W4wDi5stOCQGN2gCxXqirVLOLRdGZhHrDCDxIZrVtvIHeW_MS3YusS6BQ79mAwKJc1nVoly3_ddLdVaGXXlOk-oOZPMddq-ctA6tTyI52GQR7e7UXGrRdWevyqV7oEPnKNf5K-ZVGmOekwG1M-LYkQy-3qeWHvu6c_NmCxmRTzRHJHvyw4GVrgzY84jPglwxNX4q0GZ49emWk8lT3tqyWMmj_Zmtkz-UKo6XY5WzeYRkoKVtV01W37-Of5lNcrOaiMNJPNo1olAcoAdJF4Y3ZCQ0HlMI0r9yPNd2EMyC2KbpkEc0LmtUhIeXXju5pKbICC2jYRhHAbRPPKpC6wx6mEv85Ot3sgn-5iVHnwc_wL-ZjBd?type=png)](https://mermaid.live/edit#pako:eNqFk81um0AQx18FTQ-5kGgxsGAOkUzanqoqcqxWqris2cFZFXbdZYnsWL70efpUeZIuH66hiRVOszO_-c9_PzhArjhCArVhBj8KttGsyqRjPy405kYo6XxZ9pkUJRYiF0zvF8719a2z4Fy0BCvv2R6xThyPkJfff17h6QU8fJO-u0DPwrfoS1aiM_1_setYru77qg26xGrRjjg7WvXK3-052HG26I0kp8V0spVp7W4wDi5stOCQGN2gCxXqirVLOLRdGZhHrDCDxIZrVtvIHeW_MS3YusS6BQ79mAwKJc1nVoly3_ddLdVaGXXlOk-oOZPMddq-ctA6tTyI52GQR7e7UXGrRdWevyqV7oEPnKNf5K-ZVGmOekwG1M-LYkQy-3qeWHvu6c_NmCxmRTzRHJHvyw4GVrgzY84jPglwxNX4q0GZ49emWk8lT3tqyWMmj_Zmtkz-UKo6XY5WzeYRkoKVtV01W37-Of5lNcrOaiMNJPNo1olAcoAdJF4Y3ZCQ0HlMI0r9yPNd2EMyC2KbpkEc0LmtUhIeXXju5pKbICC2jYRhHAbRPPKpC6wx6mEv85Ot3sgn-5iVHnwc_wL-ZjBd)
 
@@ -45,7 +47,7 @@ The additionalPayees parameter will be populated like this. You can specify a pe
 
 The payment request created will have an amount of 250€; the payer can now pay it with a single payment.
 The wire transfer allowed with the PIS on a bulk payment is addressed to the FlowPay technical account (TA).
-When the TA receives the payment, it splits the amount among the beneficiaries, groups them by their IBANs and names, and sends the payments to them with wire transfers.
+When the TA receives and reconciles the payment, ordinary movements follow the normal bulk dispatch flow to their beneficiaries. Locked movements are instead funded into their own dedicated locked wallets and remain there until the partner releases or refunds them, or until FlowPay automatically releases them at their individual `lockedUntil` deadlines.
 
 In case of a bulk payment to the same beneficiary, the payment initiation effective beneficiary is the beneficiary itself, so the payer can easily recognize the transaction. Otherwise, the payment initiation effective beneficiary is FlowPay.
 Wire transfers to beneficiaries are sent with the same original payer, so beneficiaries can easily identify the payer.
