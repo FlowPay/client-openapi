@@ -1749,7 +1749,8 @@
                                         "enum": [
                                             "card",
                                             "bankAccount"
-                                        ]
+                                        ],
+                                        "description": "Only card is currently supported. Requests with bankAccount return 400 Bad Request."
                                     },
                                     "callbackUrl": {
                                         "type": "string",
@@ -1769,7 +1770,8 @@
                                 },
                                 "required": [
                                     "type"
-                                ]
+                                ],
+                                "additionalProperties": false
                             }
                         }
                     }
