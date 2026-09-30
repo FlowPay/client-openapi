@@ -82,7 +82,10 @@ The additionalPayees parameter will be populated like this (you can also specify
 
 The payment request created will have an amount of 250€, payer can now pay it with a single payments.
 The wire transfer allowed with the PIS on a bulk payment is addressed to the FlowPay technical account (TA).
-When the TA receives the payment, it splits the amount among the beneficiaries, groups them by their IBANs and names, and sends the payments to them with wire transfers.
+
+A bulk can mix ordinary and locked movements by setting `lockedUntil` on individual `additionalPayees`. A top-level `lockedUntil` applies only to the positive residual amount assigned to the main payee; it is not propagated to additional payees, and the aggregate root remains a bulk request. Locked movements are not supported for split requests (`ultimateDebtor: payee`).
+
+When the TA receives and reconciles the payment, ordinary movements follow the normal bulk dispatch flow to their beneficiaries. Locked movements are funded into dedicated locked wallets and remain there until early release, refund, or automatic release at their individual `lockedUntil` deadlines.
 
 In case of a bulk payment to the same beneficiary, the payment initiation effective beneficiary is the beneficiary itself, so the payer can easily recognize the transaction. Otherwise, the payment initiation effective beneficiary is FlowPay.
 Wire transfers to beneficiaries are sent with the same original payer, so beneficiaries can easily identify the payer.

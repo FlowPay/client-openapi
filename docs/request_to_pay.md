@@ -108,7 +108,9 @@ Bulk turns many payouts into a single user authorisation. You compute a total am
 
 What it enables: mass invoice runs, bill aggregation, marketplace or platform settlements with a single frictionless checkout. Repeated beneficiaries in your allocation are grouped automatically. Keep `allowPartialPayments` disabled; if the sum of additional payees is less than the total, the remainder goes to the primary payee.
 
-State evolution: authorization is single from the user’s perspective; settlement is mediated. After authorized, funds always land on the Technical Account, are processed immediately, and re-sent to beneficiaries. The request may appear onHold briefly while dispatch allocates amounts, then moves to forwarded. Subsequent reversals are reflected as refunded and are applied proportionally to the original allocation map.
+Mixed bulk can combine ordinary and locked movements. Set `lockedUntil` on an individual `additionalPayees` item to hold only that movement. A top-level `lockedUntil` applies only to the positive residual amount assigned to the main payee; it is not propagated to the additional payees, and the aggregate root remains a bulk request. Locked movements are not supported for split requests (`ultimateDebtor: payee`).
+
+State evolution: authorization is single from the user’s perspective and the aggregate funding first lands on the Technical Account. After that collection is reconciled, ordinary movements follow the normal bulk dispatch flow. Each locked movement is instead funded into its own dedicated locked wallet and remains independent until early release, refund, or automatic release at its own `lockedUntil`. The aggregate can remain `onHold` while the collection is being reconciled and does not introduce a separate aggregate `locked` state for mixed or all-locked bulks.
 
 ## Locked payment
 

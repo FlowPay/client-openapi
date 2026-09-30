@@ -1116,6 +1116,11 @@
                                                                                 "minLength": 5,
                                                                                 "maxLength": 100,
                                                                                 "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
+                                                                            },
+                                                                            "lockedUntil": {
+                                                                                "type": "string",
+                                                                                "format": "date-time",
+                                                                                "description": "Optional lock deadline for this additional movement. Supported only for bulk requests; split requests (ultimateDebtor: payee) cannot contain locked movements. The movement gets its own locked wallet and payment method."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -1147,6 +1152,11 @@
                                                                                 "minLength": 5,
                                                                                 "maxLength": 100,
                                                                                 "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
+                                                                            },
+                                                                            "lockedUntil": {
+                                                                                "type": "string",
+                                                                                "format": "date-time",
+                                                                                "description": "Optional lock deadline for this additional movement. Supported only for bulk requests; split requests (ultimateDebtor: payee) cannot contain locked movements. The movement gets its own locked wallet and payment method."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -1176,6 +1186,11 @@
                                                                                 "minLength": 5,
                                                                                 "maxLength": 100,
                                                                                 "description": "Remittance information specific to this payee. If not provided, the `remittanceInformation` from the main request will be used."
+                                                                            },
+                                                                            "lockedUntil": {
+                                                                                "type": "string",
+                                                                                "format": "date-time",
+                                                                                "description": "Optional lock deadline for this additional movement. Supported only for bulk requests; split requests (ultimateDebtor: payee) cannot contain locked movements. The movement gets its own locked wallet and payment method."
                                                                             }
                                                                         },
                                                                         "required": [
@@ -1189,7 +1204,7 @@
                                                         "lockedUntil": {
                                                             "type": "string",
                                                             "format": "date-time",
-                                                            "description": "If set, the request is treated as a locked payment. Funds are routed to FlowPay's technical perimeter until the specified date. Before that date the partner may release the funds to the beneficiary or refund the payer. If no earlier decision is taken, the funds are automatically released to the beneficiary at expiry. See the Locked Payment section for details."
+                                                            "description": "Lock deadline for the main movement. Without additionalPayees, the request is a locked payment. In a bulk request, this field applies only to the positive residual amount assigned to the main payee; it is not propagated to additional payees and the aggregate root remains a bulk request. A bulk with top-level lockedUntil therefore requires amount to exceed the sum of additionalPayees amounts. Split requests (ultimateDebtor: payee) cannot contain locked movements."
                                                         },
                                                         "savePaymentMethod": {
                                                             "type": "boolean",
@@ -1211,6 +1226,43 @@
                                                     "required": [
                                                         "amount"
                                                     ]
+                                                }
+                                            },
+                                            {
+                                                "if": {
+                                                    "properties": {
+                                                        "ultimateDebtor": {
+                                                            "const": "payee"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "ultimateDebtor"
+                                                    ]
+                                                },
+                                                "then": {
+                                                    "not": {
+                                                        "anyOf": [
+                                                            {
+                                                                "required": [
+                                                                    "lockedUntil"
+                                                                ]
+                                                            },
+                                                            {
+                                                                "properties": {
+                                                                    "additionalPayees": {
+                                                                        "contains": {
+                                                                            "required": [
+                                                                                "lockedUntil"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "additionalPayees"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
                                                 }
                                             }
                                         ]
@@ -1285,6 +1337,92 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequest"
+                    },
+                    "409": {
+                        "description": "The payment-request aggregate was created, but at least one locked child could not be provisioned. Existing resources are retained. Inspect the aggregate identified by the response headers before taking recovery action; do not blindly recreate the request.",
+                        "headers": {
+                            "Location": {
+                                "required": true,
+                                "description": "Relative URL of the retained payment-request aggregate.",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "/payment-requests/d290f1ee-6c54-4b01-90e6-d701748f0851"
+                                }
+                            },
+                            "X-FlowPay-Payment-Request-Id": {
+                                "required": true,
+                                "description": "Identifier of the retained payment-request aggregate.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error description including the retained aggregate identifier and the upstream failure context."
+                                        },
+                                        "additionalData": {
+                                            "type": "object",
+                                            "properties": {
+                                                "statusCode": {
+                                                    "type": "integer",
+                                                    "const": 409
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                },
+                                                "headers": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "Location": {
+                                                            "type": "string"
+                                                        },
+                                                        "X-FlowPay-Payment-Request-Id": {
+                                                            "type": "string",
+                                                            "format": "uuid"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "Location",
+                                                        "X-FlowPay-Payment-Request-Id"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "statusCode",
+                                                "reason",
+                                                "headers"
+                                            ]
+                                        },
+                                        "statusCode": {
+                                            "type": "integer",
+                                            "const": 409
+                                        },
+                                        "correlationId": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    },
+                                    "required": [
+                                        "error",
+                                        "message",
+                                        "additionalData",
+                                        "statusCode"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "default": {
                         "$ref": "#/components/responses/DefaultError"
@@ -3874,6 +4012,11 @@
                         "format": "uuid",
                         "description": "Unique identifier of the payment request."
                     },
+                    "bulkIntentId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the aggregate bulk intent, when this request is a child movement."
+                    },
                     "appId": {
                         "type": "string",
                         "format": "uuid",
@@ -3936,9 +4079,38 @@
                                 "remittance": {
                                     "type": "string",
                                     "description": "Remittance information used for the additional payee transfer."
+                                },
+                                "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "description": "Unique identifier of the movement. For ordinary movements this identifies the generated wallet payment; for locked movements it is the child payment-request identifier used to address that movement independently."
+                                },
+                                "lockedUntil": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "description": "Lock deadline for this movement, when it is locked."
+                                },
+                                "status": {
+                                    "$ref": "#/components/schemas/PaymentRequestStatus",
+                                    "description": "Current status of this movement."
+                                },
+                                "lockedPaymentMethod": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["locked"]
+                                        }
+                                    },
+                                    "required": ["id", "type"]
                                 }
                             },
                             "required": [
+                                "id",
                                 "name",
                                 "iban",
                                 "amount",
