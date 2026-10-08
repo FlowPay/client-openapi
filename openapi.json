@@ -1229,40 +1229,42 @@
                                                 }
                                             },
                                             {
-                                                "if": {
-                                                    "properties": {
-                                                        "ultimateDebtor": {
-                                                            "const": "payee"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "ultimateDebtor"
-                                                    ]
-                                                },
-                                                "then": {
-                                                    "not": {
-                                                        "anyOf": [
-                                                            {
-                                                                "required": [
-                                                                    "lockedUntil"
-                                                                ]
+                                                "not": {
+                                                    "allOf": [
+                                                        {
+                                                            "properties": {
+                                                                "ultimateDebtor": {
+                                                                    "const": "payee"
+                                                                }
                                                             },
-                                                            {
-                                                                "properties": {
-                                                                    "additionalPayees": {
-                                                                        "contains": {
-                                                                            "required": [
-                                                                                "lockedUntil"
-                                                                            ]
-                                                                        }
-                                                                    }
+                                                            "required": [
+                                                                "ultimateDebtor"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "anyOf": [
+                                                                {
+                                                                    "required": [
+                                                                        "lockedUntil"
+                                                                    ]
                                                                 },
-                                                                "required": [
-                                                                    "additionalPayees"
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
+                                                                {
+                                                                    "properties": {
+                                                                        "additionalPayees": {
+                                                                            "contains": {
+                                                                                "required": [
+                                                                                    "lockedUntil"
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "additionalPayees"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
                                                 }
                                             }
                                         ]
