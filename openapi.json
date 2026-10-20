@@ -64,6 +64,10 @@
         {
             "name": "AIS",
             "description": "Account Information Service: consent, accounts, balances, transactions."
+        },
+        {
+            "name": "SRTP",
+            "description": "Proposed contract for querying the registry of creditors enabled for pagoPA SEPA Request To Pay. Runtime availability is outside this specification change."
         }
     ],
     "paths": {
@@ -2842,6 +2846,103 @@
                     }
                 }
             }
+        },
+        "/srtp/payees": {
+            "get": {
+                "summary": "List SRTP payees",
+                "description": "Proposed gateway contract for the pagoPA SRTP payees registry. Uses the same optional limit/offset parameters and PaginatedResult response as the gateway customer and refund lists. Payee fields retain their upstream constraints; the provider page/size pagination is adapted to the gateway contract and is not exposed. RequestId and Version retain their upstream meaning; Version selects the SRTP provider API version (for example v1), independently of the FlowPay /v2 base URL. Authentication and errors follow the FlowPay gateway contract. This specification change does not implement the endpoint.",
+                "operationId": "getSrtpPayees",
+                "tags": [
+                    "SRTP"
+                ],
+                "externalDocs": {
+                    "description": "Official pagoPA SRTP Payees API",
+                    "url": "https://developer.pagopa.it/it/srtp/api/srtp-payees"
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/SrtpRequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/SrtpVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/LimitParam"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OffsetParam"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of payees enabled for pagoPA SRTP.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PaginatedResult"
+                                        },
+                                        {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SrtpPayee"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                "example": {
+                                    "total": 2,
+                                    "limit": 20,
+                                    "offset": 0,
+                                    "count": 2,
+                                    "items": [
+                                        {
+                                            "payeeId": "02438750586",
+                                            "name": "Roma Capitale"
+                                        },
+                                        {
+                                            "payeeId": "80015010723",
+                                            "name": "Comune di Bari"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/DefaultError",
+                        "description": "Missing or invalid FlowPay API key."
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/DefaultError",
+                        "description": "The authenticated application is not permitted to access the SRTP registry."
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/DefaultError",
+                        "description": "Too many requests."
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/DefaultError",
+                        "description": "Internal server error."
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/DefaultError"
+                    }
+                }
+            }
         }
     },
     "webhooks": {
@@ -3228,6 +3329,24 @@
                     "minimum": 1,
                     "maximum": 200,
                     "default": 50
+                }
+            },
+            "SrtpRequestId": {
+                "name": "RequestId",
+                "in": "header",
+                "description": "Unique identifier for the API request, used for tracing and correlation.",
+                "required": true,
+                "schema": {
+                    "$ref": "#/components/schemas/SrtpRequestId"
+                }
+            },
+            "SrtpVersion": {
+                "name": "Version",
+                "in": "header",
+                "description": "Specifies the version of the API the client wishes to use.",
+                "required": true,
+                "schema": {
+                    "$ref": "#/components/schemas/SrtpVersion"
                 }
             }
         },
@@ -5287,6 +5406,60 @@
                         "validUntil": "2026-09-08T14:15:20Z",
                         "version": 3
                     }
+                }
+            },
+            "SrtpRequestId": {
+                "description": "A unique identifier for tracking a single request across system boundaries, essential for logging and debugging.",
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+                "minLength": 36,
+                "maxLength": 36,
+                "example": "bd615b4a-066d-443e-8dd2-a28a39931fef"
+            },
+            "SrtpVersion": {
+                "description": "The version of the API being requested.",
+                "type": "string",
+                "pattern": "^v[1-9]\\d{0,63}$",
+                "minLength": 1,
+                "maxLength": 65,
+                "example": "v1"
+            },
+            "SrtpName": {
+                "description": "The official registered name of the Payee.",
+                "type": "string",
+                "pattern": "^[ -~]{1,64}$",
+                "minLength": 1,
+                "maxLength": 64,
+                "example": "Roma Capitale"
+            },
+            "SrtpPayeeId": {
+                "description": "The unique identifier of the Payee in the registry. This is the Italian 11-digit VAT number (*Partita IVA*) or 16-digit fiscal code (*Codice Fiscale*).",
+                "type": "string",
+                "pattern": "\\d{11}|\\d{16}",
+                "minLength": 11,
+                "maxLength": 16,
+                "example": "02438750586"
+            },
+            "SrtpPayee": {
+                "description": "Represents a single Payee entry in the registry.",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "payeeId": {
+                        "$ref": "#/components/schemas/SrtpPayeeId"
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/SrtpName"
+                    }
+                },
+                "required": [
+                    "payeeId",
+                    "name"
+                ],
+                "example": {
+                    "payeeId": "02438750586",
+                    "name": "Roma Capitale"
                 }
             }
         }
