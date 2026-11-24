@@ -4863,6 +4863,10 @@
                 "type": "object",
                 "description": "AIS account payload. Fixed metadata fields are always present. Balance fields are optional and are present only when returned by the bank. `accountId` is the stable filter value to pass to the transactions endpoint; when the upstream bank does not provide a distinct identifier, FlowPay falls back to the IBAN.",
                 "properties": {
+                    "ownerName": {
+                        "type": "string",
+                        "description": "Account holder name provided by the bank, when available. Distinct from the account label."
+                    },
                     "accountId": {
                         "type": "string",
                         "description": "Account identifier exposed by FlowPay for AIS filtering. Falls back to IBAN when no distinct upstream identifier is available."
